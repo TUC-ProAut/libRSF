@@ -93,8 +93,8 @@ To run them, the following syntax have to be used:
       cdce  -     Closed form Dynamic Covariance Estimation
       mm    -     Max-Mixture (an approximation of a Gaussian mixture)
       sm    -     Sum-Mixture (an exact Gaussian mixture)
-      stmm  -     Self-tuning Max-Mixture
-      stsm  -     Self-tuning Sum-Mixture      
+      stmm  -     Adaptive Max-Mixture using the EM Algorithm
+      stsm  -     Adaptive Sum-Mixture using the EM Algorithm  
 
 A full example could be:
 
