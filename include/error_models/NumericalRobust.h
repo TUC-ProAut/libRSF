@@ -1,0 +1,62 @@
+/***************************************************************************
+ * libRSF - A Robust Sensor Fusion Library
+ *
+ * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ *
+ * libRSF is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * libRSF is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with libRSF.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
+ ***************************************************************************/
+
+/**
+ * @file NumericalRobust.h
+ * @author Tim Pfeifer
+ * @date 22.08.2017
+ * @brief File containing numerical robust functions that might be helpful for some calculation in factor graphs. (Especially Sum-Mixture!)
+ * @copyright GNU Public License.
+ *
+ */
+
+#ifndef NUMERICALRANGE_H
+#define NUMERICALRANGE_H
+
+#include <ceres/ceres.h>
+
+namespace libRSF
+{
+  template <typename T>
+  T ScaledLogSumExp(const T* Exponents, const T* Scaling, const double NumberOfGaussians)
+  {
+    T Sum, MaxExp;
+
+    Sum = T(0.0);
+    MaxExp = Exponents[0];
+
+    for(size_t nGauss = 1; nGauss < NumberOfGaussians; ++nGauss)
+    {
+      if(MaxExp < Exponents[nGauss])
+        MaxExp = Exponents[nGauss];
+    }
+
+    for(size_t nGauss = 0; nGauss < NumberOfGaussians; ++nGauss)
+    {
+      Sum += ceres::exp(Exponents[nGauss] - MaxExp) * Scaling[nGauss];
+    }
+
+    return ceres::log(Sum) + MaxExp;
+  }
+}
+
+#endif // NUMERICALRANGE_H
