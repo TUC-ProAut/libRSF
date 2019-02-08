@@ -13,7 +13,18 @@ Main features are:
 This work is released under the GNU General Public License version 3.
 
 ### Citation
+This library is the implementation of the following paper [1]. Further references will be added with additional content.
 
+[1] Tim Pfeifer and Peter Protzel, Expectation-Maximization for Adaptive Mixture Models in Graph Optimization, Proc. of Intl. Conf. on Robotics and Automation (ICRA), 2019
+
+BibTeX:
+
+        @InProceedings{Pfeifer2019,
+        author    = {Tim Pfeifer and Peter Protzel},
+        title     = {Expectation-Maximization for Adaptive Mixture Models in Graph Optimization},
+        booktitle = {Proc. of Intl. Conf. on Robotics and Automation (ICRA)},
+        year      = {2019},
+        }
 
 ## Installation
 
@@ -52,14 +63,14 @@ The library and its applications can be build following this instructions:
 After building the library, some applications are provided. Usually they corresponding directly to a publication.
 
 #### ICRA 2019
-These two applications are made for the ICRA 2019 conferece, the corresponding paper is [1].
-One can beused for GNSS datasets and calculated a 3D position in the ECEF frame, while the other one is for the 2D UWB ranging dataset.
+These two applications are made for the ICRA 2019 conference, the corresponding paper is [1].
+One can be used for GNSS datasets and calculated a 3D position in the ECEF frame, while the other one is for the 2D UWB ranging dataset.
 To run them, the following syntax have to be used:
 
       libRSF/build/applications/ICRA19_GNSS     <input file> <output file> error: <error model>
       libRSF/build/applications/ICRA19_Ranging  <input file> <output file> error: <error model>
       
-- **\<input file\>** is the dataset you want to process, the format is explained by readmes in the datasets folder
+- **\<input file\>** is the dataset you want to process, the format is explained by readme files in the datasets folder
 - **\<output file\>** is the estimated Trajectory. The output file contains several columns that represent timestamps and estimated positions:
       
       For 3D estimation:
@@ -67,19 +78,19 @@ To run them, the following syntax have to be used:
       Column 2    - X coordinate in the ECEF frame [m]
       Column 3    - Y coordinate in the ECEF frame [m]
       Column 4    - Z coordinate in the ECEF frame [m]
-      Column 5-13 - Covariance matrix of the estinmated position in row-major format (Currently not used!)
+      Column 5-13 - Covariance matrix of the estimated position in row-major format (Currently not used!)
       
       For 2D estimation:
       Column 1    - Timestamp [s]
       Column 2    - X coordinate in a local frame [m]
       Column 3    - Y coordinate in a local frame [m]
-      Column 4-7  - Covariance matrix of the estinmated position in row-major format (Currently not used!)
+      Column 4-7  - Covariance matrix of the estimated position in row-major format (Currently not used!)
       
 - **\<error model\>** is one of the following error models:
 
       gauss -     A Gaussian distribution
-      dcs   -     Dynamic Covaraince Scaling
-      cdce  -     Closed form Dynamic Covaraince Estimation
+      dcs   -     Dynamic Covariance Scaling
+      cdce  -     Closed form Dynamic Covariance Estimation
       mm    -     Max-Mixture (an approximation of a Gaussian mixture)
       sm    -     Sum-Mixture (an exact Gaussian mixture)
       stmm  -     Self-tuning Max-Mixture
