@@ -60,7 +60,7 @@ The library and its applications can be build following this instructions:
       make all -j8
       
 ## Applications
-After building the library, some applications are provided. Usually they corresponding directly to a publication.
+After building the library, some applications are provided. Usually they correspond directly to a publication.
 
 #### ICRA 2019
 These two applications are made for the ICRA 2019 conference, the corresponding paper is [1].
@@ -70,7 +70,7 @@ To run them, the following syntax have to be used:
       libRSF/build/applications/ICRA19_GNSS     <input file> <output file> error: <error model>
       libRSF/build/applications/ICRA19_Ranging  <input file> <output file> error: <error model>
       
-- **\<input file\>** is the dataset you want to process, the format is explained by readme files in the datasets folder
+- **\<input file\>** is the dataset you want to process, the format is explained by readme files in the datasets folder.
 - **\<output file\>** is the estimated Trajectory. The output file contains several columns that represent timestamps and estimated positions:
       
       For 3D estimation:
