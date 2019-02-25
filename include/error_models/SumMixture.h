@@ -39,6 +39,16 @@
 
 namespace libRSF
 {
+  /** \brief The robust Sum-Mixture error model
+   * Based on:
+   * D. M. Rosen, M. Kaess, and J. J. Leonard
+   * “Robust incremental online inference over sparse factor graphs: Beyond the Gaussian case”
+   * Proc. of Intl. Conf. on Robotics and Automation (ICRA), Karlsruhe, 2013.
+   * DOI: 10.1109/ICRA.2013.6630699
+   *
+   * \param Mixture Underlying mixture distribution
+   *
+   */
   template <int Dimension, typename MixtureType>
   class SumMixture : public ErrorModel <Dimension, 1>
   {

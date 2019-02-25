@@ -38,6 +38,16 @@
 
 namespace libRSF
 {
+  /** \brief The robust Max-Mixture error model
+   * Based on:
+   * E. Olson and P. Agarwal
+   * “Inference on networks of mixtures for robust robot mapping”
+   * Proc. of Robotics: Science and Systems (RSS), Sydney, 2012.
+   * DOI: 10.15607/RSS.2012.VIII.040
+   *
+   * \param Mixture Underlying mixture distribution
+   *
+   */
   template <int Dimension, typename MixtureType>
   class MaxMixture : public ErrorModel <Dimension, Dimension+1>
   {

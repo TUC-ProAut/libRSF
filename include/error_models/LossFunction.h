@@ -38,6 +38,16 @@ using ceres::LossFunction;
 
 namespace libRSF
 {
+  /** \brief The robust Dynamic Covariance Scaling loss function
+   * Based on:
+   * P. Agarwal, G. D. Tipaldi, L. Spinello, C. Stachniss and W. Burgard
+   * "Robust map optimization using dynamic covariance scaling"
+   * 2013 IEEE International Conference on Robotics and Automation, Karlsruhe, 2013
+   * DOI: 10.1109/ICRA.2013.6630557
+   *
+   * \param Phi Tuning parameter of DCS
+   *
+   */
   class DCSLoss : public LossFunction
   {
     public:
@@ -50,6 +60,16 @@ namespace libRSF
       const double Phi_;
   };
 
+  /** \brief The robust closed form of Dynamic Covariance Estimation
+   * Based on:
+   * T. Pfeifer, S. Lange and P. Protzel
+   * "Dynamic Covariance Estimation — A parameter free approach to robust Sensor Fusion"
+   * 2017 IEEE International Conference on Multisensor Fusion and Integration for Intelligent Systems (MFI), Daegu, 2017
+   * DOI: 10.1109/MFI.2017.8170347
+   *
+   * \param Sigma Standard deviation without outliers
+   *
+   */
   class cDCELoss : public LossFunction
   {
     public:
