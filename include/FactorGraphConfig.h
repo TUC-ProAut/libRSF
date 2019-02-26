@@ -33,8 +33,6 @@
 #define FACTORGRAPHCONFIG_H
 
 #include <ceres/ceres.h>
-#include <fstream>
-#include <jsoncpp/json/json.h>
 #include "FactorGraph.h"
 
 /** Range Error Model */

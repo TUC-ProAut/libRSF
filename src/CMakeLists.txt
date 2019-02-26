@@ -66,5 +66,5 @@ include_directories(${INCLUDEDIR})
 
 add_library(libRSF SHARED ${SOURCEFILES} ${HEADERFILES})
 
-target_link_libraries(libRSF ${CERES_LIBRARIES} ${OpenCV_LIBS} ${JSONCPP_LIBRARIES}) #Threads::Threads
+target_link_libraries(libRSF ${CERES_LIBRARIES})
 
