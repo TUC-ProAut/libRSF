@@ -17,6 +17,8 @@ This library is the implementation of [1] and [2]. Further references will be ad
 
 [1] Tim Pfeifer and Peter Protzel, Expectation-Maximization for Adaptive Mixture Models in Graph Optimization, Proc. of Intl. Conf. on Robotics and Automation (ICRA), 2019
 
+[2] Tim Pfeifer and Peter Protzel, Incrementally learned Mixture Models for GNSS Localization, Proc. of Intelligent Vehicles Symposium (IV), 2019
+
 BibTeX:
 
         @InProceedings{Pfeifer2019,
@@ -25,10 +27,6 @@ BibTeX:
         booktitle = {Proc. of Intl. Conf. on Robotics and Automation (ICRA)},
         year      = {2019},
         }
-
-[2] Tim Pfeifer and Peter Protzel, Incrementally learned Mixture Models for GNSS Localization, Proc. of Intelligent Vehicles Symposium (IV), 2019
-
-BibTeX:
 
         @InProceedings{Pfeifer2019a,
         author    = {Tim Pfeifer and Peter Protzel},
