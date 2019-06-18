@@ -31,7 +31,6 @@
 
 #include "ICRA19_Ranging.h"
 
-
 /** @brief Generates a delta time measurement object from two timestamps
  *
  * @param TimestampOld a double timestamp
@@ -310,8 +309,6 @@ int main(int argc, char** argv)
     Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, Timestamp);
 
     /** add motion model or odometry */
-    libRSF::SensorData DeltaTime = GenerateDeltaTime(TimestampOld, Timestamp);
-
     libRSF::StateList MotionList;
     MotionList.add(POSITION_STATE, TimestampOld);
     MotionList.add(POSITION_STATE, Timestamp);

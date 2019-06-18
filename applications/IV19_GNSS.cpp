@@ -21,15 +21,15 @@
  ***************************************************************************/
 
 /**
- * @file ICRA19_GNSS.cpp
+ * @file IV19_GNSS.cpp
  * @author Tim Pfeifer
- * @date 17 Sep 2018
- * @brief File containing an application for 3D pose estimation based on pseudo range measurements. This special version is made for ICRA 2019.
+ * @date 04 Jun 2019
+ * @brief File containing an application for 3D pose estimation based on pseudo range measurements. This special version is made for the Intelligent Vehicles Symposium 2019.
  * @copyright GNU Public License.
  *
  */
 
-#include "ICRA19_GNSS.h"
+#include "IV19_GNSS.h"
 
 /** @brief Generates a delta time measurement object from two timestamps
  *
@@ -76,23 +76,22 @@ void InitGraph(libRSF::FactorGraph &Graph,
   AddPseudorangeMeasurements(SimpleGraph, Measurements, SimpleConfig, TimestampFirst);
 
   /** solve */
+  Options.minimizer_progress_to_stdout = false;
   SimpleGraph.solve(Options);
 
   /**add first state variables */
   Graph.addState(POSITION_STATE, libRSF::StateType::Pose3, TimestampFirst);
   Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::Val1, TimestampFirst);
-  Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::Val1, TimestampFirst);
   Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, TimestampFirst);
+  Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::Val1, TimestampFirst);
 
   /** copy values to real graph */
   Graph.getStateData().getElement(POSITION_STATE, TimestampFirst).setMean(SimpleGraph.getStateData().getElement(POSITION_STATE, TimestampFirst).getMean());
   Graph.getStateData().getElement(CLOCK_ERROR_STATE, TimestampFirst).setMean(SimpleGraph.getStateData().getElement(CLOCK_ERROR_STATE, TimestampFirst).getMean());
 
-
   /** add first set of measurements */
   AddPseudorangeMeasurements(Graph, Measurements, Config, TimestampFirst);
 }
-
 
 /** @brief Adds a pseudorange measurement to the graph
  *
@@ -122,57 +121,101 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
     /** get measurement */
     Pseudorange = Measurements.getElement("Range 3D", Timestamp, SatCounter);
 
-    /** default error model */
-    static libRSF::GaussianMixture<1> GMM((ceres::Vector(2) << 0, 0).finished(),
-                                           (ceres::Vector(2) << 10, 100).finished(),
-                                           (ceres::Vector(2) << 0.5, 0.5).finished());
-
     /** add factor */
     switch(Config.RangeErrorModel.Type)
     {
-    case ROBUST_NONE:
-      NoisePseudorange.setStdDev(Pseudorange.getStdDev());
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange);
-      break;
+      case ROBUST_NONE:
+        NoisePseudorange.setStdDev(Pseudorange.getStdDev());
+        Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange);
+        break;
 
-    case ROBUST_DCS:
-      NoisePseudorange.setStdDev(Pseudorange.getStdDev());
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::DCSLoss(1.0));
-      break;
+      case ROBUST_DCS:
+        NoisePseudorange.setStdDev(Pseudorange.getStdDev());
+        Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::DCSLoss(1.0));
+        break;
 
-    case ROBUST_CDCE:
-      NoisePseudorange.setStdDev(Eigen::Matrix<double, 1, 1>::Ones());
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::cDCELoss(Pseudorange.getStdDev()[0]));
-      break;
+      case ROBUST_CDCE:
+        NoisePseudorange.setStdDev(Eigen::Matrix<double, 1, 1>::Ones());
+        Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::cDCELoss(Pseudorange.getStdDev()[0]));
+        break;
 
-    case ROBUST_MM:
-      static libRSF::MaxMix1 NoisePseudorangeMaxMix(GMM);
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeMaxMix);
+      case ROBUST_MM:
+        static libRSF::GaussianMixture<1> GMM_MM;
+        if (GMM_MM.getNumberOfComponents() == 0)
+        {
+          InitGMM(GMM_MM, GMM_N, 10);
+        }
+        static libRSF::MaxMix1 NoisePseudorangeMaxMix(GMM_MM);
 
-      break;
+        Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeMaxMix);
 
-    case ROBUST_SM:
-      static libRSF::SumMix1 NoisePseudorangeSumMix(GMM);
+        break;
 
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeSumMix);
+      case ROBUST_SM:
+        static libRSF::GaussianMixture<1> GMM_SM;
+        if (GMM_SM.getNumberOfComponents() == 0)
+        {
+          InitGMM(GMM_SM, GMM_N, 10);
+        }
+        static libRSF::SumMix1 NoisePseudorangeSumMix(GMM_SM);
 
-      break;
+        Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeSumMix);
 
-    case ROBUST_STSM:
-      static libRSF::SumMix1 NoisePseudorangeSumMixST(GMM);
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeSumMixST);
+        break;
 
-      break;
+      case ROBUST_STSM:
+        static libRSF::GaussianMixture<1> GMM_SMST;
+        if (GMM_SMST.getNumberOfComponents() == 0)
+        {
+          InitGMM(GMM_SMST, GMM_N, 10);
+        }
+        static libRSF::SumMix1 NoisePseudorangeSumMixST(GMM_SMST);
 
-    case ROBUST_STMM:
-      static libRSF::MaxMix1 NoisePseudorangeMaxMixST(GMM);
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeMaxMixST);
+        Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeSumMixST);
 
-      break;
+        break;
 
-    default:
-      std::cerr << "Error: Wrong pseudorange error model model: " << Config.RangeErrorModel.Type << std::endl;
-      break;
+      case ROBUST_STMM:
+        static libRSF::GaussianMixture<1> GMM_MMST;
+        if (GMM_MMST.getNumberOfComponents() == 0)
+        {
+          InitGMM(GMM_MMST, GMM_N, 10);
+        }
+        static libRSF::MaxMix1 NoisePseudorangeMaxMixST(GMM_MMST);
+
+        Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeMaxMixST);
+
+        break;
+
+      case ROBUST_STSM_VBI:
+          /** fill empty GMM */
+          static libRSF::GaussianMixture<1> GMM_SMST_VBI;
+          if (GMM_SMST_VBI.getNumberOfComponents() == 0)
+          {
+            InitGMM(GMM_SMST_VBI, 2, 10);
+          }
+          static libRSF::SumMix1 NoisePseudorangeSumMixST_VBI(GMM_SMST_VBI);
+
+          Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeSumMixST_VBI);
+
+          break;
+
+      case ROBUST_STMM_VBI:
+          /** fill empty GMM */
+          static libRSF::GaussianMixture<1> GMM_MMST_VBI;
+          if (GMM_MMST_VBI.getNumberOfComponents() == 0)
+          {
+            InitGMM(GMM_MMST_VBI, 2, 10);
+          }
+          static libRSF::MaxMix1 NoisePseudorangeMaxMixST_VBI(GMM_MMST_VBI);
+
+          Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeMaxMixST_VBI);
+
+          break;
+
+      default:
+        std::cerr << "Error: Wrong pseudorange error model model: " << Config.RangeErrorModel.Type << std::endl;
+        break;
     }
   }
 }
@@ -181,42 +224,23 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
 *
 * @param Graph reference to the factor graph object
 * @param Config reference to the factor graph config object that specifies the motion model
-* @param NumberOfComponents how many Gaussian components should be used
 * @param Timestamp current timestamp
 * @return nothing
 *
 */
 void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config,
-                    int NumberOfComponents,
                     double Timestamp)
 {
-  if(Config.RangeErrorModel.Type == ROBUST_STSM || Config.RangeErrorModel.Type == ROBUST_STMM)
+  if(Config.RangeErrorModel.Type == ROBUST_STSM || Config.RangeErrorModel.Type == ROBUST_STMM ||
+      Config.RangeErrorModel.Type == ROBUST_STSM_VBI || Config.RangeErrorModel.Type == ROBUST_STMM_VBI)
   {
+    /** compute resudiuals of the factor graph */
     std::vector<double> ErrorData;
-
-    libRSF::GaussianMixture<1> GMM;
-
-    /** fill empty GMM */
-    if(GMM.getNumberOfComponents() == 0)
-    {
-      libRSF::GaussianComponent<1> Component;
-
-      for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
-      {
-
-        Component.setParamsStdDev((ceres::Vector(1) << pow(10, nComponent+1)).finished(),
-                                  (ceres::Vector(1) << 0.0).finished(),
-                                  (ceres::Vector(1) << 1.0/NumberOfComponents).finished());
-
-        GMM.addComponent(Component);
-      }
-    }
-
     Graph.computeUnweightedError(libRSF::FactorType::Pseudorange3, ErrorData);
 
     /** remove zeros in MM results (unused dimension!) */
-    if(Config.RangeErrorModel.Type == ROBUST_STMM)
+    if(Config.RangeErrorModel.Type == ROBUST_STMM || Config.RangeErrorModel.Type == ROBUST_STMM_VBI)
     {
       for(int i = ErrorData.size() - 1; i > 0; i -= 2)
       {
@@ -224,22 +248,93 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       }
     }
 
-    /** call the EM algorithm */
-    GMM.estimateWithEM(ErrorData);
-
-    /** remove offset of the first "LOS" component */
-    GMM.removeOffset();
-
-    /** apply error model */
-    if(Config.RangeErrorModel.Type == ROBUST_STSM)
+    if(Config.RangeErrorModel.Type == ROBUST_STSM || Config.RangeErrorModel.Type == ROBUST_STMM)
     {
-      libRSF::SumMix1 NewSMModel(GMM);
-      Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewSMModel);
+      /** fill empty GMM */
+      libRSF::GaussianMixture<1> GMM;
+
+      if(GMM.getNumberOfComponents() == 0)
+      {
+        InitGMM(GMM, GMM_N, 10);
+      }
+
+      /** call the EM algorithm */
+      GMM.estimateWithEM(ErrorData);
+
+      /** remove offset of the first "LOS" component */
+      GMM.removeOffset();
+
+      /** apply error model */
+      if(Config.RangeErrorModel.Type == ROBUST_STSM)
+      {
+        libRSF::SumMix1 NewSMModel(GMM);
+        Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewSMModel);
+      }
+      else if(Config.RangeErrorModel.Type == ROBUST_STMM)
+      {
+        libRSF::MaxMix1 NewMMModel(GMM);
+        Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewMMModel);
+      }
+
     }
-    else if(Config.RangeErrorModel.Type == ROBUST_STMM)
+    else if(Config.RangeErrorModel.Type == ROBUST_STSM_VBI || Config.RangeErrorModel.Type == ROBUST_STMM_VBI)
     {
-      libRSF::MaxMix1 NewMMModel(GMM);
-      Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewMMModel);
+      /** initialize GMM */
+      static libRSF::GaussianMixture<1> GMMAdaptive;
+      libRSF::GaussianComponent<1> Component;
+
+      if(GMMAdaptive.getNumberOfComponents() == 0)
+      {
+        Component.setParamsStdDev((ceres::Vector(1) << 10.0).finished(),
+                                  (ceres::Vector(1) << 0.0).finished(),
+                                  (ceres::Vector(1) << 1.0).finished());
+        GMMAdaptive.addComponent(Component);
+      }
+
+      /** calculate statistics for GMM initialization*/
+      std::vector<double> v = ErrorData;
+      double sum = std::accumulate(v.begin(), v.end(), 0.0);
+      double mean = sum / v.size();
+
+      std::vector<double> diff(v.size());
+      std::transform(v.begin(), v.end(), diff.begin(), [mean](double x)
+      {
+        return x - mean;
+      });
+      double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+      double stdev = std::sqrt(sq_sum / v.size());
+
+      /** add just one component per timestamp */
+      if(GMMAdaptive.getNumberOfComponents() >= VBI_N_MAX)
+      {
+        GMMAdaptive.sortComponentsByWeight();
+        GMMAdaptive.removeLastComponent();
+      }
+
+      Component.setParamsStdDev((ceres::Vector(1) << stdev).finished(),
+                                (ceres::Vector(1) << 0.0).finished(),
+                                (ceres::Vector(1) << 1.0/GMMAdaptive.getNumberOfComponents()).finished());
+
+
+      GMMAdaptive.addComponent(Component);
+
+      /** estimate GMM with Variational Inference */
+      GMMAdaptive.estimateWithVBI(ErrorData, VBI_NU);
+
+      /** remove offset*/
+      GMMAdaptive.removeOffset();
+
+      /** apply error model */
+      if(Config.RangeErrorModel.Type == ROBUST_STSM_VBI)
+      {
+        libRSF::SumMix1 NewSMModel(GMMAdaptive);
+        Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewSMModel);
+      }
+      else if(Config.RangeErrorModel.Type == ROBUST_STMM_VBI)
+      {
+        libRSF::MaxMix1 NewMMModel(GMMAdaptive);
+        Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewMMModel);
+      }
     }
   }
 }
@@ -262,18 +357,18 @@ int main(int argc, char** argv)
   SolverOptions.use_nonmonotonic_steps = true;
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
-  SolverOptions.max_num_iterations = 1000;
   SolverOptions.num_threads = 8;
-  SolverOptions.max_solver_time_in_seconds = 0.25;
-
-  const int NumberOfComponents = 2;
+  SolverOptions.max_num_iterations = 100;
 
   /** read input data */
   libRSF::SensorDataSet InputData;
   libRSF::ReadDataFromFile(Config.InputFile, InputData);
 
   /** Build optimization problem from sensor data */
-  libRSF::FactorGraph Graph;
+  ceres::Problem::Options Options;
+  Options.enable_fast_removal = true;
+  libRSF::FactorGraph Graph(Options);
+
   libRSF::StateDataSet Result;
   libRSF::SensorData DeltaTime;
 
@@ -289,7 +384,7 @@ int main(int argc, char** argv)
 
   /** solve multiple times with refined model to achieve good initial convergence */
   Graph.solve(SolverOptions);
-  TuneErrorModel(Graph, Config, NumberOfComponents, Timestamp);
+  TuneErrorModel(Graph, Config, Timestamp);
   Graph.solve(SolverOptions);
 
   /** safe result at first timestamp */
@@ -303,6 +398,7 @@ int main(int argc, char** argv)
 
   /** hard coded constant clock error drift (CCED) model noise properties */
   ceres::Vector StdCCED(2);
+
   if(strcmp(Config.InputFile, "Data_Chemnitz.txt") == 0)
   {
     StdCCED << 0.1, 0.009; /** set CCED standard deviation for Chemnitz City dataset */
@@ -311,6 +407,7 @@ int main(int argc, char** argv)
   {
     StdCCED << 0.05, 0.01; /** set CCED standard deviation for smartLoc datasets */
   }
+
   libRSF::GaussianDiagonal<2> NoiseCCED(StdCCED);
 
   /** iterate over timestamps */
@@ -320,8 +417,8 @@ int main(int argc, char** argv)
 
     /** add position, orientation and clock error */
     Graph.addState(POSITION_STATE, libRSF::StateType::Pose3, Timestamp);
-    Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, Timestamp);
     Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::Val1, Timestamp);
+    Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, Timestamp);
     Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::Val1, Timestamp);
 
     /** add odometry */
@@ -344,7 +441,7 @@ int main(int argc, char** argv)
     AddPseudorangeMeasurements(Graph, InputData, Config, Timestamp);
 
     /** tune self-tuning error model */
-    TuneErrorModel(Graph, Config, NumberOfComponents, Timestamp);
+    TuneErrorModel(Graph, Config, Timestamp);
 
     /** solve the estimation problem */
     Graph.solve(SolverOptions);

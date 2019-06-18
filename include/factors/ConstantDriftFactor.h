@@ -34,7 +34,7 @@
 
 #include <ceres/ceres.h>
 #include "MeasurementFactor.h"
-#include "../Geometry.h"
+#include "../VectorMath.h"
 
 namespace libRSF
 {

@@ -17,10 +17,10 @@ Every column holds an measurement element corresponding to its identifier:
 1 - range3
 2 - time stamp [s]
 3 - pseudorange mean [m]
-3 - pseudorange standard deviation [m]
-4 - satellite position ECEF-X [m]
-5 - satellite position ECEF-Y [m]
-6 - satellite position ECEF-Z [m]
+4 - pseudorange standard deviation [m]
+5 - satellite position ECEF-X [m]
+6 - satellite position ECEF-Y [m]
+7 - satellite position ECEF-Z [m]
 8 - satellite ID
 9 - satellite elevation angle [deg]
 10 - carrier-to-noise density ratio [dBHz]

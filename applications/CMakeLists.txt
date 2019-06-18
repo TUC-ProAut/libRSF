@@ -23,3 +23,6 @@ target_link_libraries(ICRA19_Ranging ${CERES_LIBRARIES} libRSF)
 
 add_executable(ICRA19_GNSS ICRA19_GNSS.cpp)
 target_link_libraries(ICRA19_GNSS ${CERES_LIBRARIES} libRSF)
+
+add_executable(IV19_GNSS IV19_GNSS.cpp)
+target_link_libraries(IV19_GNSS ${CERES_LIBRARIES} libRSF)

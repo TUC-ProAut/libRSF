@@ -43,12 +43,8 @@
 #define ROBUST_SM     6
 #define ROBUST_STSM   9
 #define ROBUST_STMM   10
-#define RANGE_MM_GR   12
-#define RANGE_SM_GR   13
-#define RANGE_STMM_GR 14
-#define RANGE_STSM_GR 15
-#define RANGE_STSM_VBI  16
-#define RANGE_STMM_VBI  17
+#define ROBUST_STSM_VBI  16
+#define ROBUST_STMM_VBI  17
 
 namespace libRSF
 {

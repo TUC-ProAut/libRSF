@@ -75,6 +75,14 @@ namespace libRSF
         {
           RangeErrorModel.Type = ROBUST_STMM;
         }
+        else if(strcmp(argv[ArgCounter], "stmm_vbi") == 0)
+        {
+          RangeErrorModel.Type = ROBUST_STMM_VBI;
+        }
+        else if(strcmp(argv[ArgCounter], "stsm_vbi") == 0)
+        {
+          RangeErrorModel.Type = ROBUST_STSM_VBI;
+        }
         else
         {
           std::cerr << "Wrong range error model: " << argv[ArgCounter];

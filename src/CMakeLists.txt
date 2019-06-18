@@ -35,6 +35,7 @@ set(SOURCEFILES
   FileAccess.cpp
   Geometry.cpp
   ListInTime.cpp
+  VectorMath.cpp
   )
 
 # factors of the graph

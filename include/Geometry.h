@@ -66,40 +66,6 @@ namespace libRSF
 
     return RelativeMotion;
   }
-  template <int Dimension, typename T1, typename T2>
-  void VectorDifference(const T1* const Vector1, const T2* const Vector2,  T1* Difference)
-  {
-    for(int nDim = 0; nDim < Dimension; nDim++)
-    {
-      Difference[nDim] = Vector1[nDim] - Vector2[nDim];
-    }
-  }
-
-  template <int Dimension, typename T>
-  T VectorLength(const T* const Vector)
-  {
-    T SquaredSum = T(0.0);
-
-    for(int nDim = 0; nDim < Dimension; nDim++)
-    {
-      SquaredSum += ceres::pow(Vector[nDim], 2);
-    }
-
-    /** for stability of the derivation */
-    if(SquaredSum < T(1e-10))
-      SquaredSum += T(1e-10);
-
-    return ceres::sqrt(SquaredSum);
-  }
-
-  template <int Dimension, typename T1, typename T2>
-  T1 VectorDistance(const T1* const Vector1, const T2* const Vector2)
-  {
-    T1 Difference[Dimension];
-    VectorDifference<Dimension, T1, T2>(Vector1, Vector2, Difference);
-    return T1(VectorLength<Dimension, T1>(Difference));
-  }
-
 }
 
 #endif // GEOMETRY_H

@@ -34,6 +34,7 @@
 
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
+#include "../VectorMath.h"
 
 namespace libRSF
 {
@@ -48,13 +49,31 @@ namespace libRSF
 
       ~GaussianComponent() {};
 
-      void setParamsStdDev(ceres::Vector StdDev, ceres::Vector Mean, ceres::Vector Weight)
+      void setParamsStdDev(Vector StdDev, Vector Mean, Vector Weight)
       {
         _Mean = Mean;
         _Weight = Weight;
 
         /** write information matrix directly */
         _SqrtInformation = StdDev.cwiseInverse().asDiagonal();
+
+        updateScaling();
+      }
+
+      void setParamsInformation(ceres::Matrix Information, Vector Mean, Vector Weight)
+      {
+        _Mean = Mean;
+        _Weight = Weight;
+        _SqrtInformation = SquareRoot(Information);
+
+        updateScaling();
+      }
+
+      void setParamsSqrtInformation(ceres::Matrix SqrtInformation, Vector Mean, Vector Weight)
+      {
+        _Mean = Mean;
+        _Weight = Weight;
+        _SqrtInformation = SqrtInformation;
 
         updateScaling();
       }
@@ -83,11 +102,12 @@ namespace libRSF
       template <typename T>
       Eigen::Matrix < T, Dimension, 1 > getExponentialPart(T * const Error) const
       {
-        Eigen::Map <Eigen::Matrix<T, Dimension, 1> > ErrorMap(Error);
+        Eigen::Map <const Eigen::Matrix<T, Dimension, 1>> ErrorMap(Error);
         Eigen::Matrix <T, Dimension, 1> WeightedError;
 
         /** shift by mean */
         WeightedError = ErrorMap + _Mean.template cast<T>();
+
         /** scale with information matrix */
         WeightedError = _SqrtInformation.template cast<T>() * WeightedError;
 
@@ -142,7 +162,7 @@ namespace libRSF
           Covariance += (Errors.row(n) + _Mean).transpose() * (Errors.row(n) + _Mean) * Likelihoods(n);
         }
         Covariance.array() /= LikelihoodSum;
-        _SqrtInformation = Covariance.inverse().llt().matrixL();
+        _SqrtInformation = InverseSquareRoot(Covariance);
 
         /** check for degenerated SqrtInfo matrix */
         if(!(_SqrtInformation.array().isFinite().all()))

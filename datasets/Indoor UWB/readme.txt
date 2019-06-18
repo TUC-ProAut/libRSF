@@ -17,10 +17,10 @@ Every column holds an measurement element corresponding to its identifier:
 1 - range2
 2 - time stamp [s]
 3 - pseudorange mean [m]
-3 - pseudorange standard deviation [m]
-4 - UWB module position X [m]
-5 - UWB module position Y [m]
-6 - UWB module ID
+4 - pseudorange standard deviation [m]
+5 - UWB module position X [m]
+6 - UWB module position Y [m]
+7 - UWB module ID
 
 ## odometry ##
 1 - odom2diff

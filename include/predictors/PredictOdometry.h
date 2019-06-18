@@ -34,6 +34,7 @@
 
 #include <ceres/ceres.h>
 #include "../Geometry.h"
+#include "../VectorMath.h"
 
 namespace libRSF
 {
@@ -44,18 +45,18 @@ namespace libRSF
   void PredictOdometry4DOFGlobal(const T* PoseOld, T* PoseNew, const T* YawOld, T* YawNew, const ceres::Vector &Odometry, double DeltaTime)
   {
     Eigen::Matrix<T, 3, 1> ZAxis, Axis;
-    Eigen::Matrix<T, 4, 1> QuartPose, QuartYaw, QuartOld;
+    Eigen::Matrix<T, 4, 1> QuatPose, QuatYaw, QuatOld;
 
-    QuartYaw << cos(YawOld[0]/2.0), T(0), T(0), sin(YawOld[0]/2.0);
+    QuatYaw << cos(YawOld[0]/2.0), T(0), T(0), sin(YawOld[0]/2.0);
     ZAxis << T(0), T(0), T(1);
 
     ceres::CrossProduct(ZAxis.data(), PoseOld, Axis.data());
 
-    QuartPose[0] = ceres::DotProduct(ZAxis.data(), PoseOld) + VectorLength<3>(ZAxis.data())*VectorLength<3>(PoseOld);
-    QuartPose[1] = Axis[0];
-    QuartPose[2] = Axis[1];
-    QuartPose[3] = Axis[2];
-    ceres::QuaternionProduct(QuartPose.data(), QuartYaw.data(), QuartOld.data());
+    QuatPose[0] = ceres::DotProduct(ZAxis.data(), PoseOld) + VectorLength<3>(ZAxis.data())*VectorLength<3>(PoseOld);
+    QuatPose[1] = Axis[0];
+    QuatPose[2] = Axis[1];
+    QuatPose[3] = Axis[2];
+    ceres::QuaternionProduct(QuatPose.data(), QuatYaw.data(), QuatOld.data());
 
     T Translation[3], TranslationRot[3];
 
@@ -63,7 +64,7 @@ namespace libRSF
     Translation[1] = T(Odometry[1]*DeltaTime);
     Translation[2] = T(Odometry[2]*DeltaTime);
 
-    ceres::QuaternionRotatePoint(QuartOld.data(), Translation, TranslationRot);
+    ceres::QuaternionRotatePoint(QuatOld.data(), Translation, TranslationRot);
 
     PoseNew[0] = TranslationRot[0] + PoseOld[0];
     PoseNew[1] = TranslationRot[1] + PoseOld[1];

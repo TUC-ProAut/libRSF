@@ -67,9 +67,9 @@ namespace libRSF
       {
         T PositionError[3];
         T PositionErrorBody[3];
-        T QuartOldInv [4];
-        T QuartPose [4];
-        T ZAxis[3], QuartOld[4], QuartYaw[4];
+        T QuatOldInv [4];
+        T QuatPose [4];
+        T ZAxis[3], QuatOld[4], QuatYaw[4];
 
         Eigen::Matrix<T, 4, 1> ErrorVector, Displacement;
 
@@ -78,17 +78,17 @@ namespace libRSF
         ZAxis[1] = T(0.0);
         ZAxis[2] = T(1.0);
 
-        RotationBetween(ZAxis, Pos1, QuartPose);
+        RotationBetween(ZAxis, Pos1, QuatPose);
 
-        QuartYaw[0] = ceres::cos(Yaw1[0] / 2.0);
-        QuartYaw[1] = T(0.0);
-        QuartYaw[2] = T(0.0);
-        QuartYaw[3] = ceres::sin(Yaw1[0] / 2.0);
+        QuatYaw[0] = ceres::cos(Yaw1[0] / 2.0);
+        QuatYaw[1] = T(0.0);
+        QuatYaw[2] = T(0.0);
+        QuatYaw[3] = ceres::sin(Yaw1[0] / 2.0);
 
-        ceres::QuaternionProduct(QuartPose, QuartYaw, QuartOld);
+        ceres::QuaternionProduct(QuatPose, QuatYaw, QuatOld);
 
         /** invert quaternion */
-        libRSF::InvertQuaterion(QuartOld, QuartOldInv);
+        libRSF::InvertQuaterion(QuatOld, QuatOldInv);
 
         /** calculate translation */
         PositionError[0] = Pos2[0] - Pos1[0];
@@ -96,7 +96,7 @@ namespace libRSF
         PositionError[2] = Pos2[2] - Pos1[2];
 
         /** rotate translation back in body frame */
-        ceres::QuaternionRotatePoint(QuartOldInv, PositionError, PositionErrorBody);
+        ceres::QuaternionRotatePoint(QuatOldInv, PositionError, PositionErrorBody);
 
         /** weight position error */
         Displacement[0] = PositionErrorBody[0] ;

@@ -35,6 +35,8 @@
 #include <algorithm>
 #include <ceres/ceres.h>
 
+#include <unsupported/Eigen/SpecialFunctions>
+
 #include "GaussianComponent.h"
 #include "../StateData.h"
 
@@ -55,6 +57,11 @@ namespace libRSF
       void addComponent(GaussianComponent<Dimension> Gaussian)
       {
         _Mixture.emplace_back(Gaussian);
+      }
+
+      void removeLastComponent()
+      {
+        _Mixture.pop_back();
       }
 
       void clear()
@@ -139,7 +146,6 @@ namespace libRSF
 
           double LikelihoodChange = std::abs(LikelihoodSumOld - LikelihoodSumNew)/LikelihoodSumNew;
 
-          /** remove small components */
           if(Adaptive)
           {
             for(size_t m = 0; m < M; ++m)
@@ -173,6 +179,18 @@ namespace libRSF
         }
 
         return false;
+      }
+
+      /** variational bayesian inference */
+      void estimateWithVBI(std::vector<double> &Data, double Nu);
+
+      void printParameter()
+      {
+        std::cout << "Mean" <<' ' << "StdDev" <<' ' << "Weight" <<std::endl;
+        for(size_t n = 0; n < _Mixture.size(); ++n)
+        {
+          std::cout << _Mixture.at(n).getMean() <<' ' << _Mixture.at(n).getSqrtInformation().inverse() <<' ' << _Mixture.at(n).getWeight() <<std::endl;
+        }
       }
 
       /** query error values for a specific component */
