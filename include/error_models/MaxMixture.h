@@ -99,7 +99,7 @@ namespace libRSF
           for(int nComponent = 1; nComponent <= NumberOfComponents; ++nComponent)
           {
             ErrorShadow << _Mixture.getExponentialPartOfComponent(nComponent, Error),
-                           sqrt(ceres::fmax(T(-log(_Mixture.getLinearPartOfComponent(nComponent, Error) / _Normalization)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
+                           sqrt(ceres::fmax(2.0 * T(-log(_Mixture.getLinearPartOfComponent(nComponent, Error) / _Normalization)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
 
             /** keep only the most likely component */
             if(ErrorShadow.squaredNorm() < Loglike || ceres::IsNaN(Loglike))

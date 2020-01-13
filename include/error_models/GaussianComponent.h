@@ -134,7 +134,7 @@ namespace libRSF
         Eigen::Matrix<double, Eigen::Dynamic, Dimension> WeightedError = (Errors.array().rowwise() + _Mean.transpose().array()).matrix();
 
         /** multiply each row with square root information */
-        for (size_t n = 0; n < WeightedError.rows(); ++n)
+        for (Eigen::Index n = 0; n < WeightedError.rows(); ++n)
         {
           WeightedError.row(n) = WeightedError.row(n) * _SqrtInformation;
         }
@@ -157,9 +157,10 @@ namespace libRSF
         }
 
         Eigen::Matrix<double, Dimension, Dimension> Covariance = Eigen::Matrix<double, Dimension, Dimension>::Zero();
-        for (size_t n = 0; n < Errors.rows(); ++n)
+        for (Eigen::Index n = 0; n < Errors.rows(); ++n)
         {
-          Covariance += (Errors.row(n) + _Mean).transpose() * (Errors.row(n) + _Mean) * Likelihoods(n);
+          Eigen::Matrix<double, Dimension, 1> Diff = Errors.row(n).transpose() + _Mean;
+          Covariance += Diff * Diff.transpose() * Likelihoods(n);
         }
         Covariance.array() /= LikelihoodSum;
         _SqrtInformation = InverseSquareRoot(Covariance);

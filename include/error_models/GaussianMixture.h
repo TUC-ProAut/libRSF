@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <ceres/ceres.h>
 
+#include <Eigen/Dense>
 #include <unsupported/Eigen/SpecialFunctions>
 
 #include "GaussianComponent.h"
@@ -116,11 +117,11 @@ namespace libRSF
 
       bool estimateWithEM(std::vector<double> &Data, bool Adaptive = false)
       {
-        size_t N = Data.size();
+        size_t N = Data.size()/Dimension;
         size_t M = _Mixture.size();
 
         /** map data to eigen vector */
-        ErrorMatType DataVector = Eigen::Map<const ErrorMatType, Eigen::Unaligned>(Data.data(), N, Dimension);
+        ErrorMatType DataVector = Eigen::Map<const ErrorMatType, Eigen::Unaligned, Eigen::Stride<1,Dimension>>(Data.data(), N, Dimension);
 
         /** convergence criteria*/
         double LikelihoodSumOld = 1e40;
@@ -146,6 +147,7 @@ namespace libRSF
 
           double LikelihoodChange = std::abs(LikelihoodSumOld - LikelihoodSumNew)/LikelihoodSumNew;
 
+          /** remove small components */
           if(Adaptive)
           {
             for(size_t m = 0; m < M; ++m)
