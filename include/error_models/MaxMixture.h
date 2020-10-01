@@ -32,9 +32,10 @@
 #ifndef MAXMIXTURE_H
 #define MAXMIXTURE_H
 
-#include <ceres/ceres.h>
 #include "ErrorModel.h"
 #include "GaussianMixture.h"
+
+#include <ceres/ceres.h>
 
 namespace libRSF
 {
@@ -48,58 +49,48 @@ namespace libRSF
    * \param Mixture Underlying mixture distribution
    *
    */
-  template <int Dimension, typename MixtureType>
-  class MaxMixture : public ErrorModel <Dimension, Dimension+1>
+  template <int Dim, typename MixtureType>
+  class MaxMixture : public ErrorModel <Dim, Dim+1>
   {
     public:
 
       MaxMixture()
       {
-        _Normalization = -std::numeric_limits<double>::infinity();
+        _Normalization = std::numeric_limits<double>::lowest();
       }
 
-      explicit MaxMixture(MixtureType &Mixture)
+      virtual ~MaxMixture() = default;
+
+      explicit MaxMixture(const MixtureType &Mixture)
       {
-        addMixture(Mixture);
+        this->addMixture(Mixture);
       }
 
       void clear()
       {
-        _Normalization = -std::numeric_limits<double>::infinity();
+        _Normalization = std::numeric_limits<double>::lowest();
         _Mixture.clear();
       }
 
-      void addMixture(MixtureType &Mixture)
-      {
-        _Mixture = Mixture;
-
-        _Normalization = _Mixture.getMaximumOfComponent(1);
-
-        size_t NumberOfComponents = _Mixture.getNumberOfComponents();
-        for(int nComponent = 2; nComponent <= NumberOfComponents; ++nComponent)
-        {
-          _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
-        }
-      }
-
       template <typename T>
-      bool Evaluate(T* Error) const
+      bool weight(const VectorT<T, Dim> &RawError, T* Error) const
       {
         if(this->_Enable)
         {
+          /** map the error pointer to a matrix */
+          VectorRef<T, Dim+1> ErrorMap(Error);
+
           T Loglike = T(NAN);
 
-          /** map the error pointer to a matrix */
-          Eigen::Map<Eigen::Matrix<T, Dimension + 1, 1> > ErrorMap(Error);
-          Eigen::Matrix<T, Dimension + 1, 1> ErrorShadow, ErrorShadowBest;
+          MatrixT<T, Dim + 1, 1> ErrorShadow, ErrorShadowBest;
 
           size_t NumberOfComponents = _Mixture.getNumberOfComponents();
 
           /** calculate Log-Likelihood for each Gaussian component */
-          for(int nComponent = 1; nComponent <= NumberOfComponents; ++nComponent)
+          for(int nComponent = 0; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
           {
-            ErrorShadow << _Mixture.getExponentialPartOfComponent(nComponent, Error),
-                           sqrt(ceres::fmax(2.0 * T(-log(_Mixture.getLinearPartOfComponent(nComponent, Error) / _Normalization)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
+            ErrorShadow << _Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError),
+                           sqrt(ceres::fmax(-2.0 * T(log(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError) / _Normalization)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
 
             /** keep only the most likely component */
             if(ErrorShadow.squaredNorm() < Loglike || ceres::IsNaN(Loglike))
@@ -108,25 +99,45 @@ namespace libRSF
               ErrorShadowBest = ErrorShadow;
             }
           }
-
           ErrorMap = ErrorShadowBest;
         }
         else
         {
-          /** write something to the second component, if the error model is disabled */
-          Error[Dimension] = T(0.0);
+          /** pass raw error trough */
+          VectorRef<T, Dim> ErrorMap(Error);
+          ErrorMap = RawError;
+
+          /** set unused dimension to 0 */
+          Error[Dim] = T(0);
         }
 
         return true;
-      };
+      }
 
     private:
+
+      void addMixture(const MixtureType &Mixture)
+      {
+        _Mixture = Mixture;
+
+        _Normalization = _Mixture.getMaximumOfComponent(0);
+
+        size_t NumberOfComponents = _Mixture.getNumberOfComponents();
+        for(int nComponent = 1; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
+        {
+          _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
+        }
+      }
+
       MixtureType _Mixture;
       double _Normalization;
 
   };
 
   typedef MaxMixture<1, GaussianMixture<1>> MaxMix1;
+  typedef MaxMixture<2, GaussianMixture<2>> MaxMix2;
+  typedef MaxMixture<3, GaussianMixture<3>> MaxMix3;
+  typedef MaxMixture<6, GaussianMixture<6>> MaxMix6;
 }
 
 #endif // MAXMIXTURE_H

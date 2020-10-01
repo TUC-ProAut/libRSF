@@ -31,25 +31,6 @@
 
 #include "ICRA19_GNSS.h"
 
-/** @brief Generates a delta time measurement object from two timestamps
- *
- * @param TimestampOld a double timestamp
- * @param TimestampNew another double timestamp
- * @return A SensorData Object, thats represents the time difference
- *
- */
-libRSF::SensorData GenerateDeltaTime(const double TimestampOld,
-                                      const double TimestampNew)
-{
-  libRSF::SensorData DeltaTime(libRSF::SensorType::DeltaTime, TimestampNew);
-  ceres::Vector DeltaTimeVector(1);
-  DeltaTimeVector[0] = TimestampNew - TimestampOld;
-  DeltaTime.setMean(DeltaTimeVector);
-  DeltaTime.setTimestamp(TimestampNew);
-
-  return DeltaTime;
-}
-
 /** @brief Build the factor Graph with initial values and a first set of measurements
  *
  * @param Graph reference to the factor graph object
@@ -68,20 +49,20 @@ void InitGraph(libRSF::FactorGraph &Graph,
 {
   /** build simple graph */
   libRSF::FactorGraphConfig SimpleConfig = Config;
-  SimpleConfig.RangeErrorModel.Type = ROBUST_NONE;
+  SimpleConfig.GNSS.ErrorModel.Type = libRSF::ErrorModelType::Gaussian;
   libRSF::FactorGraph SimpleGraph;
 
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Pose3, TimestampFirst);
-  SimpleGraph.addState(CLOCK_ERROR_STATE, libRSF::StateType::Val1, TimestampFirst);
+  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point3, TimestampFirst);
+  SimpleGraph.addState(CLOCK_ERROR_STATE, libRSF::StateType::ClockError, TimestampFirst);
   AddPseudorangeMeasurements(SimpleGraph, Measurements, SimpleConfig, TimestampFirst);
 
   /** solve */
   SimpleGraph.solve(Options);
 
   /**add first state variables */
-  Graph.addState(POSITION_STATE, libRSF::StateType::Pose3, TimestampFirst);
-  Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::Val1, TimestampFirst);
-  Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::Val1, TimestampFirst);
+  Graph.addState(POSITION_STATE, libRSF::StateType::Point3, TimestampFirst);
+  Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::ClockError, TimestampFirst);
+  Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::ClockDrift, TimestampFirst);
   Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, TimestampFirst);
 
   /** copy values to real graph */
@@ -115,64 +96,57 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
   ListPseudorange.add(POSITION_STATE, Timestamp);
   ListPseudorange.add(CLOCK_ERROR_STATE, Timestamp);
 
-  size_t SatNumber = Measurements.countElement("Range 3D", Timestamp);
+  size_t SatNumber = Measurements.countElement(libRSF::SensorType::Pseudorange3, Timestamp);
 
   for(size_t SatCounter = 0; SatCounter < SatNumber; ++SatCounter)
   {
     /** get measurement */
-    Pseudorange = Measurements.getElement("Range 3D", Timestamp, SatCounter);
+    Pseudorange = Measurements.getElement(libRSF::SensorType::Pseudorange3, Timestamp, SatCounter);
 
     /** default error model */
-    static libRSF::GaussianMixture<1> GMM((ceres::Vector(2) << 0, 0).finished(),
-                                           (ceres::Vector(2) << 10, 100).finished(),
-                                           (ceres::Vector(2) << 0.5, 0.5).finished());
+    static libRSF::GaussianMixture<1> GMM((libRSF::Vector2() << 0, 0).finished(),
+                                           (libRSF::Vector2() << 10, 100).finished(),
+                                           (libRSF::Vector2() << 0.5, 0.5).finished());
 
     /** add factor */
-    switch(Config.RangeErrorModel.Type)
+    switch(Config.GNSS.ErrorModel.Type)
     {
-    case ROBUST_NONE:
-      NoisePseudorange.setStdDev(Pseudorange.getStdDev());
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange);
-      break;
+      case libRSF::ErrorModelType::Gaussian:
+        NoisePseudorange.setStdDevDiagonal(Pseudorange.getStdDev());
+        Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorange);
+        break;
 
-    case ROBUST_DCS:
-      NoisePseudorange.setStdDev(Pseudorange.getStdDev());
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::DCSLoss(1.0));
-      break;
+      case libRSF::ErrorModelType::DCS:
+        NoisePseudorange.setStdDevDiagonal(Pseudorange.getStdDev());
+        Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::DCSLoss(1.0));
+        break;
 
-    case ROBUST_CDCE:
-      NoisePseudorange.setStdDev(Eigen::Matrix<double, 1, 1>::Ones());
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::cDCELoss(Pseudorange.getStdDev()[0]));
-      break;
+      case libRSF::ErrorModelType::cDCE:
+        NoisePseudorange.setStdDevDiagonal(libRSF::Matrix11::Ones());
+        Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::cDCELoss(Pseudorange.getStdDev()[0]));
+        break;
 
-    case ROBUST_MM:
-      static libRSF::MaxMix1 NoisePseudorangeMaxMix(GMM);
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeMaxMix);
+      case libRSF::ErrorModelType::GMM:
+        if (Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+        {
+          static libRSF::MaxMix1 NoisePseudorangeMaxMix(GMM);
+          Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorangeMaxMix);
+        }
+        else if (Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+        {
+          static libRSF::SumMix1 NoisePseudorangeSumMix(GMM);
+          Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorangeSumMix);
+        }
+        else
+        {
+          PRINT_ERROR("Wrong error model mixture type!");
+        }
 
-      break;
+        break;
 
-    case ROBUST_SM:
-      static libRSF::SumMix1 NoisePseudorangeSumMix(GMM);
-
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeSumMix);
-
-      break;
-
-    case ROBUST_STSM:
-      static libRSF::SumMix1 NoisePseudorangeSumMixST(GMM);
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeSumMixST);
-
-      break;
-
-    case ROBUST_STMM:
-      static libRSF::MaxMix1 NoisePseudorangeMaxMixST(GMM);
-      Graph.addFactor(libRSF::FactorType::Pseudorange3, ListPseudorange, Pseudorange, NoisePseudorangeMaxMixST);
-
-      break;
-
-    default:
-      std::cerr << "Error: Wrong pseudorange error model model: " << Config.RangeErrorModel.Type << std::endl;
-      break;
+      default:
+        PRINT_ERROR("Wrong error model type: ", Config.GNSS.ErrorModel.Type);
+        break;
     }
   }
 }
@@ -188,10 +162,9 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
 */
 void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config,
-                    int NumberOfComponents,
-                    double Timestamp)
+                    int NumberOfComponents)
 {
-  if(Config.RangeErrorModel.Type == ROBUST_STSM || Config.RangeErrorModel.Type == ROBUST_STMM)
+  if(Config.GNSS.ErrorModel.TuningType == libRSF::ErrorModelTuningType::EM)
   {
     std::vector<double> ErrorData;
 
@@ -205,43 +178,86 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
       {
 
-        Component.setParamsStdDev((ceres::Vector(1) << pow(10, nComponent+1)).finished(),
-                                  (ceres::Vector(1) << 0.0).finished(),
-                                  (ceres::Vector(1) << 1.0/NumberOfComponents).finished());
+        Component.setParamsStdDev((libRSF::Vector1() << pow(10, nComponent+1)).finished(),
+                                  (libRSF::Vector1() << 0.0).finished(),
+                                  (libRSF::Vector1() << 1.0/NumberOfComponents).finished());
 
         GMM.addComponent(Component);
       }
     }
 
-    Graph.computeUnweightedError(libRSF::FactorType::Pseudorange3, ErrorData);
-
-    /** remove zeros in MM results (unused dimension!) */
-    if(Config.RangeErrorModel.Type == ROBUST_STMM)
-    {
-      for(int i = ErrorData.size() - 1; i > 0; i -= 2)
-      {
-        ErrorData.erase(ErrorData.begin() + i);
-      }
-    }
+    Graph.computeUnweightedError(libRSF::FactorType::Pseudorange3_ECEF, ErrorData);
 
     /** call the EM algorithm */
-    GMM.estimateWithEM(ErrorData);
+    libRSF::GaussianMixture<1>::EstimationConfig GMMConfig;
+    GMMConfig.EstimationAlgorithm = libRSF::ErrorModelTuningType::EM;
+    GMM.estimate(ErrorData, GMMConfig);
 
     /** remove offset of the first "LOS" component */
     GMM.removeOffset();
 
     /** apply error model */
-    if(Config.RangeErrorModel.Type == ROBUST_STSM)
+    if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
     {
       libRSF::SumMix1 NewSMModel(GMM);
-      Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewSMModel);
+      Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3_ECEF, NewSMModel);
     }
-    else if(Config.RangeErrorModel.Type == ROBUST_STMM)
+    else if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
     {
       libRSF::MaxMix1 NewMMModel(GMM);
-      Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3, NewMMModel);
+      Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3_ECEF, NewMMModel);
     }
   }
+}
+
+bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config)
+{
+  if(ErrorModel.compare("gauss") == 0)
+  {
+    Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::Gaussian;
+    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("dcs") == 0)
+  {
+    Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::DCS;
+    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("cdce") == 0)
+  {
+    Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::cDCE;
+    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("sm") == 0)
+  {
+    Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("mm") == 0)
+  {
+    Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("stsm") == 0)
+  {
+    Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+  }
+  else if(ErrorModel.compare("stmm") == 0)
+  {
+    Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+  }
+  else
+  {
+    PRINT_ERROR("Wrong Error Model: ", ErrorModel);
+    return false;
+  }
+
+  return true;
 }
 
 int main(int argc, char** argv)
@@ -249,10 +265,17 @@ int main(int argc, char** argv)
   google::InitGoogleLogging(argv[0]);
   libRSF::FactorGraphConfig Config;
 
-  /** process command line parameter */
-  if(!Config.ReadCommandLineOptions(argc, argv))
+  /** assign all arguments to string vector*/
+  std::vector<std::string> Arguments;
+  Arguments.assign(argv+1, argv + argc);
+
+  /** read filenames */
+  Config.InputFile = Arguments.at(0);
+  Config.OutputFile = Arguments.at(1);
+
+  /** parse the error model string */
+  if (ParseErrorModel(Arguments.at(3), Config) == false)
   {
-    std::cout << std::endl;
     return 1;
   }
 
@@ -263,7 +286,7 @@ int main(int argc, char** argv)
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
   SolverOptions.max_num_iterations = 1000;
-  SolverOptions.num_threads = 8;
+  SolverOptions.num_threads = std::thread::hardware_concurrency();
   SolverOptions.max_solver_time_in_seconds = 0.25;
 
   const int NumberOfComponents = 2;
@@ -277,9 +300,9 @@ int main(int argc, char** argv)
   libRSF::StateDataSet Result;
   libRSF::SensorData DeltaTime;
 
-  double Timestamp, TimestampFirst, TimestampOld, TimestampLast;
-  InputData.getFirstTimestamp("Range 3D", TimestampFirst);
-  InputData.getLastTimestamp("Range 3D", TimestampLast);
+  double Timestamp, TimestampFirst = 0.0, TimestampOld, TimestampLast;
+  InputData.getTimeFirst(libRSF::SensorType::Pseudorange3, TimestampFirst);
+  InputData.getTimeLast(libRSF::SensorType::Pseudorange3, TimestampLast);
   Timestamp = TimestampFirst;
   TimestampOld = TimestampFirst;
   int nTimestamp = 0;
@@ -289,21 +312,22 @@ int main(int argc, char** argv)
 
   /** solve multiple times with refined model to achieve good initial convergence */
   Graph.solve(SolverOptions);
-  TuneErrorModel(Graph, Config, NumberOfComponents, Timestamp);
+  TuneErrorModel(Graph, Config, NumberOfComponents);
   Graph.solve(SolverOptions);
 
   /** safe result at first timestamp */
   Result.addElement(POSITION_STATE, Graph.getStateData().getElement(POSITION_STATE, Timestamp, 0));
 
   /** get odometry noise from first measurement */
-  libRSF::SensorData Odom = InputData.getElement("Odometry 3D", Timestamp);
-  ceres::Vector StdOdom4DOF(4);
+  libRSF::SensorData Odom = InputData.getElement(libRSF::SensorType::Odom3, Timestamp);
+  libRSF::Vector4 StdOdom4DOF(4);
   StdOdom4DOF << Odom.getStdDev().head(3), Odom.getStdDev().tail(1);
-  libRSF::GaussianDiagonal<4> NoiseOdom4DOF(StdOdom4DOF);
+  libRSF::GaussianDiagonal<4> NoiseOdom4DOF;
+  NoiseOdom4DOF.setStdDevDiagonal(StdOdom4DOF);
 
   /** hard coded constant clock error drift (CCED) model noise properties */
-  ceres::Vector StdCCED(2);
-  if(strcmp(Config.InputFile, "Data_Chemnitz.txt") == 0)
+  libRSF::Vector2 StdCCED;
+  if(Config.InputFile.compare("Chemnitz_Input.txt") == 0)
   {
     StdCCED << 0.1, 0.009; /** set CCED standard deviation for Chemnitz City dataset */
   }
@@ -311,18 +335,18 @@ int main(int argc, char** argv)
   {
     StdCCED << 0.05, 0.01; /** set CCED standard deviation for smartLoc datasets */
   }
-  libRSF::GaussianDiagonal<2> NoiseCCED(StdCCED);
+  libRSF::GaussianDiagonal<2> NoiseCCED;
+  NoiseCCED.setStdDevDiagonal(StdCCED);
 
   /** iterate over timestamps */
-  while(InputData.getNextTimestamp("Range 3D", Timestamp, Timestamp))
+  while(InputData.getTimeNext(libRSF::SensorType::Pseudorange3, Timestamp, Timestamp))
   {
-    DeltaTime = GenerateDeltaTime(TimestampOld, Timestamp);
 
     /** add position, orientation and clock error */
-    Graph.addState(POSITION_STATE, libRSF::StateType::Pose3, Timestamp);
+    Graph.addState(POSITION_STATE, libRSF::StateType::Point3, Timestamp);
     Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, Timestamp);
-    Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::Val1, Timestamp);
-    Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::Val1, Timestamp);
+    Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::ClockError, Timestamp);
+    Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::ClockDrift, Timestamp);
 
     /** add odometry */
     libRSF::StateList MotionList;
@@ -330,7 +354,7 @@ int main(int argc, char** argv)
     MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, TimestampOld);
     MotionList.add(ORIENTATION_STATE, Timestamp);
-    Graph.addFactor(libRSF::FactorType::Odom4, MotionList, InputData.getElement("Odometry 3D", Timestamp), DeltaTime, NoiseOdom4DOF);
+    Graph.addFactor<libRSF::FactorType::Odom4_ECEF>(MotionList, InputData.getElement(libRSF::SensorType::Odom3, Timestamp), NoiseOdom4DOF);
 
     /** add clock drift model */
     libRSF::StateList ClockList;
@@ -338,13 +362,13 @@ int main(int argc, char** argv)
     ClockList.add(CLOCK_ERROR_STATE, Timestamp);
     ClockList.add(CLOCK_DRIFT_STATE, TimestampOld);
     ClockList.add(CLOCK_DRIFT_STATE, Timestamp);
-    Graph.addFactor(libRSF::FactorType::ConstDrift1, ClockList, DeltaTime, NoiseCCED);
+    Graph.addFactor<libRSF::FactorType::ConstDrift1>(ClockList, NoiseCCED);
 
     /** add all pseudo range measurements of with current timestamp */
     AddPseudorangeMeasurements(Graph, InputData, Config, Timestamp);
 
     /** tune self-tuning error model */
-    TuneErrorModel(Graph, Config, NumberOfComponents, Timestamp);
+    TuneErrorModel(Graph, Config, NumberOfComponents);
 
     /** solve the estimation problem */
     Graph.solve(SolverOptions);

@@ -18,29 +18,60 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-cmake_minimum_required(VERSION 2.8)
+##################################
+# configure project
+##################################
 
-project(libRSF CXX C)
+cmake_minimum_required(VERSION 3.5)
 
-# C++ 14 is required
-add_definitions(-std=c++14)
-set(CMAKE_CXX_STANDARD 14)
+project(libRSF VERSION "1.2.0" LANGUAGES CXX)
+
+# C++ 17 is required
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # We build as Release by default
-set(CMAKE_BUILD_TYPE Release)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+##################################
+# add dependencies
+##################################
+
+# path for custom find scripts
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 # Ceres to solve the NLS problem
-find_package(Ceres REQUIRED)
-include_directories(${CERES_INCLUDE_DIRS})
+find_package(Ceres 2.0 REQUIRED)
 
 # Eigen for vectorized calculations
-find_package (Eigen3 3.3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
+find_package(Eigen3 3.3.5 REQUIRED NO_MODULE)
 
-# specific applications
-# Add specific applications
-add_subdirectory(applications)
+# optional OpenMP for multi-threading in Eigen
+find_package(OpenMP QUIET)
 
-# Add sources of libRSF
+# Simple multi-threading
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+# yaml cpp to parse config files
+find_package(yaml-cpp REQUIRED)
+
+# geographic lib for coordinate conversions
+find_package(GeographicLib REQUIRED)
+
+##################################
+# add project files
+##################################
+
+# Add sources of libRSF (this includes the installation routines for the library)
 add_subdirectory(src)
 
+# Add simple examples
+add_subdirectory(examples)
+
+# Add specific applications
+add_subdirectory(applications)

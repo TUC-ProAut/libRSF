@@ -32,14 +32,14 @@
 #ifndef PREDICTCONSTANTDRIFT_H
 #define PREDICTCONSTANTDRIFT_H
 
-#include <ceres/ceres.h>
+#include "../VectorMath.h"
 
 namespace libRSF
 {
-  template <typename T, int Dimension>
-  void PredictConstantDrift(const T* const Vector1, T* const Vector2, const T* const Drift1, T* const Drift2, const double &DeltaTime)
+  template <typename T, int Dim>
+  void PredictConstantDrift(const T* const Vector1, T* const Vector2, const T* const Drift1, T* const Drift2, const double& DeltaTime)
   {
-    for(int nDim = 0; nDim < Dimension; nDim++)
+    for (int nDim = 0; nDim < Dim; nDim++)
     {
       Vector2[nDim] = Vector1[nDim] + Drift1[nDim] * DeltaTime;
       Drift2[nDim] = Drift1[nDim];

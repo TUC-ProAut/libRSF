@@ -32,21 +32,15 @@
 #ifndef ERRORMODEL_H
 #define ERRORMODEL_H
 
-
-#include <ceres/ceres.h>
-#include "../StateData.h"
-
-using ceres::CostFunctionToFunctor;
-using ceres::Vector;
+#include <utility> /**< for integer_sequence */
 
 namespace libRSF
 {
   class ErrorModelBase
   {
     public:
-      ErrorModelBase() {};
-      virtual ~ErrorModelBase() {};
-
+      ErrorModelBase() = default;
+      virtual ~ErrorModelBase() = default;
 
       void enable()
       {
@@ -67,21 +61,12 @@ namespace libRSF
   class ErrorModel: public ErrorModelBase
   {
     public:
-      ErrorModel() {};
-      virtual ~ErrorModel() {};
+      ErrorModel() = default;
+      virtual ~ErrorModel() = default;
 
-      const int getInputDim() const
-      {
-        return _InputDim;
-      };
-
-      const int getOutputDim() const
-      {
-        return _OutputDim;
-      };
-
-      static const int _OutputDim = OutputDim;
+      /** static access to dimensions*/
       static const int _InputDim = InputDim;
+      static const int _OutputDim = OutputDim;
 
       /** store the dimension of variables at compile time */
       using _StateDims = std::integer_sequence<int, StateDims...>;

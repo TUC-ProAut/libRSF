@@ -32,14 +32,12 @@
 #ifndef STATEDATASET_H
 #define STATEDATASET_H
 
-#include <ceres/ceres.h>
 #include "StateData.h"
-#include "ListInTime.h"
+#include "DataSet.h"
 
 namespace libRSF
 {
-
-  class StateDataSet : public ListInTime<std::string, StateData>
+  class StateDataSet : public DataSet<std::string, StateData>
   {
     public:
       StateDataSet() {};
@@ -48,12 +46,16 @@ namespace libRSF
       /** add an element according to its internal type and timestamp*/
       void addElement(StateData &Element);
       /** use external name */
-      void addElement(string Name, StateData &Element);
+      void addElement(std::string Name, StateData &Element);
       /** add an empty element*/
-      void addElement(string Name, StateType Type, double Timestamp);
+      void addElement(std::string Name, StateType Type, double Timestamp);
 
-      using ListInTime<std::string, StateData>::addElement;
+      using DataSet<std::string, StateData>::addElement;
   };
+
+  typedef StateDataSet::UniqueID StateID;
+
+  std::ostream& operator << (std::ostream& Os, const StateID& ID);
 }
 
 #endif // STATEDATASET_H

@@ -32,30 +32,48 @@
 #ifndef STATEDATA_H
 #define STATEDATA_H
 
-#include <ceres/ceres.h>
-
 #include "Data.h"
+#include "Types.h"
 
 namespace libRSF
 {
-  enum class StateType {Pose2, Pose3, Val1, Time, Angle};
-  enum class StateElement {Timestamp, Mean, Covariance, GMM_StdDev, GMM_Weight, TF, Other};
+  typedef DataConfig<StateType, StateElement> StateConfig;
 
-  struct StateConfig : public DataConfig<StateType, StateElement>
-  {
-    StateConfig();
-  };
-
-  /** global object that hold all sensor configs */
+  /** global object that hold all state configs */
   extern const StateConfig States;
 
-  class StateData: public Data<StateConfig>
+  class StateData: public Data<StateType, StateElement>
   {
     public:
       StateData();
-      explicit StateData(string Input);
+      explicit StateData(std::string Input);
       StateData(StateType Type, double Timestamp);
-      ~StateData() {};
+
+      virtual ~StateData() = default;
+
+      Matrix getCovarianceMatrix()
+      {
+        Vector CovVect = this->getCovariance();
+        switch (CovVect.size())
+        {
+        case 1:
+          return Matrix11(CovVect.data());
+            break;
+
+        case 4:
+          return Matrix22(CovVect.data());
+            break;
+
+        case 9:
+          return Matrix33(CovVect.data());
+            break;
+
+        default:
+          PRINT_WARNING("Covariance matrix with ", CovVect.size(), " elements is not expected! Return empty matrix!");
+          return Matrix11::Zero();
+            break;
+        }
+      }
   };
 }
 

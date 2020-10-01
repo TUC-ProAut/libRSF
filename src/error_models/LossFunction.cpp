@@ -31,7 +31,7 @@ namespace libRSF
    */
   void DCSLoss::Evaluate(double s, double rho[3]) const
   {
-    if(s <= Phi_)
+    if (s <= Phi_)
     {
       rho[0] = s;
       rho[1] = 1;
@@ -54,7 +54,7 @@ namespace libRSF
   {
     double e = sqrt(s);
 
-    if(e <= Sigma_)
+    if (e <= Sigma_)
     {
       rho[0] = s / (Sigma_ * Sigma_);
       rho[1] = 1.0 / (Sigma_ * Sigma_);

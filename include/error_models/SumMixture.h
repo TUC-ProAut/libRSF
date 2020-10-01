@@ -32,10 +32,9 @@
 #ifndef SUMMIXTURE_H
 #define SUMMIXTURE_H
 
-#include <ceres/ceres.h>
 #include "ErrorModel.h"
 #include "GaussianMixture.h"
-#include "NumericalRobust.h"
+#include "../NumericalRobust.h"
 
 namespace libRSF
 {
@@ -49,74 +48,83 @@ namespace libRSF
    * \param Mixture Underlying mixture distribution
    *
    */
-  template <int Dimension, typename MixtureType>
-  class SumMixture : public ErrorModel <Dimension, 1>
+  template <int Dim, typename MixtureType>
+  class SumMixture : public ErrorModel <Dim, Dim>
   {
   public:
+    SumMixture()
+    {
+      _Normalization = 0;
+    }
 
-      SumMixture()
+    virtual ~SumMixture() = default;
+
+    explicit SumMixture(const MixtureType &Mixture)
+    {
+      this->addMixture(Mixture);
+    }
+
+    void clear()
+    {
+      _Normalization = 0;
+      _Mixture.clear();
+    }
+
+    template <typename T>
+    bool weight(const VectorT<T, Dim> &RawError, T* Error) const
+    {
+      /** map error to eigen matrix for easier access */
+      VectorRef<T, Dim> ErrorMap(Error);
+
+      if(this->_Enable)
       {
-        _Normalization = 0;
-      };
-
-     explicit SumMixture(MixtureType &Mixture)
-     {
-       addMixture(Mixture);
-     };
-
-      void addMixture (MixtureType &Mixture)
-      {
-        _Mixture = Mixture;
-
-        _Normalization = 0;
-
         size_t NumberOfComponents = _Mixture.getNumberOfComponents();
-        for (int nComponent = 1; nComponent <= NumberOfComponents; ++nComponent)
+
+        MatrixT<T, Dynamic, 1> Scalings(NumberOfComponents);
+        MatrixT<T, Dynamic, 1> Exponents(NumberOfComponents);
+
+        /** calculate all exponents and scalings */
+        for(int nComponent = 0; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
         {
-          _Normalization += _Mixture.getMaximumOfComponent(nComponent);
+          Exponents(nComponent) = - 0.5 * (_Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm() + 1e-10);
+          Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError)/_Normalization);
         }
+
+        /** combine them numerically robust and distribute the error equally over all dimensions */
+        ErrorMap.fill(sqrt(-2.0 * ScaledLogSumExp(Exponents, Scalings)) / sqrt(Dim));
+      }
+      else
+      {
+        /** pass raw error trough */
+        VectorRef<T, Dim> ErrorMap(Error);
+        ErrorMap = RawError;
       }
 
-      void clear()
-      {
-        _Normalization = 0;
-        _Mixture.clear();
-      }
-
-      template <typename T>
-      bool Evaluate(T* Error) const
-      {
-        if (this->_Enable)
-        {
-          Eigen::Matrix<T, Eigen::Dynamic, 1> Scalings;
-          Eigen::Matrix<T, Eigen::Dynamic, 1> Exponents;
-          T SquaredError;
-
-          size_t NumberOfComponents = _Mixture.getNumberOfComponents();
-
-          Scalings.resize(NumberOfComponents,1);
-          Exponents.resize(NumberOfComponents,1);
-
-          /** calculate all exponents and scalings */
-          for(int nComponent = 1; nComponent <= NumberOfComponents; ++nComponent)
-          {
-            Exponents(nComponent-1,0) = - 0.5 * _Mixture.getExponentialPartOfComponent(nComponent, Error).squaredNorm();
-            Scalings(nComponent-1,0) = T(_Mixture.getLinearPartOfComponent(nComponent, Error)/_Normalization);
-          }
-
-          /** combine them numerically robust */
-          SquaredError = - ScaledLogSumExp(Exponents.data(), Scalings.data(), NumberOfComponents);
-          *Error = ceres::sqrt(SquaredError * T(2.0));
-        }
-        return true;
-      };
+      return true;
+    }
 
   private:
+
+    void addMixture(const MixtureType &Mixture)
+    {
+      _Mixture = Mixture;
+
+      const size_t NumberOfComponents = _Mixture.getNumberOfComponents();
+
+      _Normalization = 0;
+      for(int nComponent = 0; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
+      {
+        _Normalization += _Mixture.getMaximumOfComponent(nComponent);
+      }
+    }
+
     MixtureType _Mixture;
     double _Normalization;
   };
 
   typedef SumMixture<1, GaussianMixture<1>> SumMix1;
+  typedef SumMixture<2, GaussianMixture<2>> SumMix2;
+  typedef SumMixture<3, GaussianMixture<3>> SumMix3;
 }
 
 #endif // SUMMIXTURE_H

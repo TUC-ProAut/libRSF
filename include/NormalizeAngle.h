@@ -32,19 +32,55 @@
 #ifndef NORMALIZE_ANGLE_H_
 #define NORMALIZE_ANGLE_H_
 
+#include "VectorMath.h"
 #include <cmath>
-#include "ceres/ceres.h"
 
 namespace libRSF
 {
+  /** normalizes an Value between [-Limit Limit] */
+  template <typename T>
+  T NormalizeCustom(const T &Value, const double Limit)
+  {
+    T TwoLim(2.0 * Limit);
+    return Value - TwoLim * floor((Value + Limit) / TwoLim);
+  }
 
-/** Normalizes the angle in radians between [-pi and pi]. */
-template <typename T>
-inline T NormalizeAngle(const T& Angle)
-{
-  T TwoPi(2.0 * M_PI);
-  return Angle - TwoPi * ceres::floor((Angle + M_PI) / TwoPi);
-}
+  template <typename T, int Dim>
+  VectorT<T, Dim> NormalizeCustomVector(const VectorT<T, Dim> &Vector, const double Limit)
+  {
+    VectorT<T, Dim> VectorNormalized;
+    for (int n = 0; n < Dim; n++)
+    {
+      VectorNormalized(n) = NormalizeCustom(Vector(n), Limit);
+    }
+    return VectorNormalized;
+  }
+
+  /** Normalizes the angle in radians between [-pi and pi]. */
+  template <typename T>
+  T NormalizeAngle(const T &Angle)
+  {
+    return NormalizeCustom(Angle, M_PI);
+  }
+
+  template <typename T, int Dim>
+  VectorT<T, Dim>  NormalizeAngleVector(const VectorT<T, Dim> &Angle)
+  {
+    return NormalizeCustomVector(Angle, M_PI);
+  }
+
+  /** normalize turn rate  */
+  template <typename T>
+  T NormalizeAngleVelocity(const T &AngleVel, const double dt)
+  {
+    return NormalizeCustom(AngleVel, M_PI / dt);
+  }
+
+  template <typename T, int Dim>
+  VectorT<T, Dim> NormalizeAngleVelocityVector(const VectorT<T, Dim> &AngleVel, const double dt)
+  {
+    return NormalizeCustomVector(AngleVel, M_PI / dt);
+  }
 
 }
 

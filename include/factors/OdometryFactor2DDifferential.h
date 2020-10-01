@@ -32,87 +32,70 @@
 #ifndef ODOMETRYFACTOR2DDIFFERENTIAL_H
 #define ODOMETRYFACTOR2DDIFFERENTIAL_H
 
-#include <ceres/ceres.h>
-#include "MeasurementFactor.h"
+#include "BaseFactor.h"
 #include "../Geometry.h"
 
 namespace libRSF
 {
-  class OdometryModel2DDiffenrential : public SensorModel
+  template <typename ErrorType>
+  class OdometryFactor2DDifferential : public BaseFactor<ErrorType, true, true, 2, 2, 1, 1>
   {
     public:
-      OdometryModel2DDiffenrential()
+      /** construct factor and store measurement */
+      OdometryFactor2DDifferential(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
       {
-        _InputDim = 5;
-        _OutputDim = 3;
+        this->_Error = Error;
+        this->_MeasurementVector.resize(4);
+        this->_MeasurementVector.head(3) = OdometryMeasurement.getMean();
+        this->_MeasurementVector.tail(1) = OdometryMeasurement.getValue(SensorElement::WheelBase);
+        this->_DeltaTime = DeltaTime;
       }
 
+      /** geometric error model */
       template <typename T>
-      bool Evaluate(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2,
-                    const ceres::Vector &Odometry, const ceres::Vector &DeltaTime, const ceres::Vector &WheelBase,  T* Error) const
+      VectorT<T, 3> Evaluate(const T* const Pos1, const T* const Pos2,
+                             const T* const Yaw1, const T* const Yaw2,
+                             const Vector3 &Odometry, const double &DeltaTime, const double &WheelBase) const
       {
         /** calculate Error */
-        Eigen::Matrix<T, 3, 1> Displacement, ErrorVector;
+        VectorT<T, 3> Displacement, Error;
         Displacement = RelativeMotion2D(Pos1, Pos2, Yaw1, Yaw2);
 
         /** tranform in kinematic space */
-        Eigen::Matrix<T, 2, 3> DifferentialTransformation;
-        DifferentialTransformation << T(1.0), T(0.0), T(-WheelBase[0]),
-                                   T(1.0), T(0.0), T(WheelBase[0]);
-        Eigen::Matrix<T, 2, 1> Wheels = DifferentialTransformation * Displacement;
-
+        MatrixT<T, 2, 3> DifferentialTransformation;
+        DifferentialTransformation << T(1.0), T(0.0), T(-WheelBase),
+                                   T(1.0), T(0.0), T(WheelBase);
+        VectorT<T, 2> Wheels = DifferentialTransformation * Displacement;
 
         /** calc and weight error */
-        ErrorVector[0] = Wheels(0, 0);
-        ErrorVector[1] = Wheels(1, 0);
-        ErrorVector[2] = Displacement(1, 0);
+        Error[0] = Wheels(0, 0);
+        Error[1] = Wheels(1, 0);
+        Error[2] = Displacement(1, 0);
 
-        ErrorVector /= T(DeltaTime[0]);
-        ErrorVector -= Odometry.template cast<T>();
+        Error /= T(DeltaTime);
+        Error -= Odometry.template cast<T>();
 
-        Error[0] = ErrorVector[0]; /** Left */
-        Error[1] = ErrorVector[1]; /** Right */
-        Error[2] = ErrorVector[2]; /** y motion */
+        return Error;
+      }
 
-        return true;
+      /** combine probabilistic and geometric model */
+      template <typename T, typename... ParamsType>
+      bool operator()(const T* const Pos1, const T* const Pos2,
+                      const T* const Yaw1, const T* const Yaw2,
+                      ParamsType... Params) const
+      {
+        return this->_Error.template weight<T>(this->Evaluate(Pos1, Pos2,
+                                                              Yaw1, Yaw2,
+                                                              this->_MeasurementVector.head(3),
+                                                              this->_DeltaTime,
+                                                              this->_MeasurementVector(3)),
+                                               Params...);
       }
   };
 
-  template <typename ErrorType>
-  class OdometryFactor2DDifferential : public MeasurementFactor<OdometryModel2DDiffenrential, ErrorType, 2, 2, 1, 1>
-  {
-    public:
-      OdometryFactor2DDifferential(ErrorType &Error, MeasurementList &Measurements)
-      {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(5);
-        this->_MeasurementVector.head(3) = Measurements.get(SensorType::Odom2Diff).getMean();
-        this->_MeasurementVector.segment(3, 1) = Measurements.get(SensorType::Odom2Diff).getValue(SensorElement::WheelBase);
-        this->_MeasurementVector.tail(1) = Measurements.get(SensorType::DeltaTime).getMean();
-
-        this->CheckInput();
-      }
-
-      /** normal version for static error models */
-      template <typename T>
-      bool operator()(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2,  T* Error) const
-      {
-        this->_Model.Evaluate(Pos1, Pos2, Yaw1, Yaw2, this->_MeasurementVector.head(3), this->_MeasurementVector.tail(1), this->_MeasurementVector.segment(3, 1), Error);
-        this->_Error.Evaluate(Error);
-
-        return true;
-      }
-
-      /** special version for SC and DCE */
-      template <typename T>
-      bool operator()(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2, const T* const ErrorModelState,  T* Error) const
-      {
-        this->_Model.Evaluate(Pos1, Pos2, Yaw1, Yaw2, this->_MeasurementVector.head(3), this->_MeasurementVector.tail(1), this->_MeasurementVector.segment(3,1), Error);
-        this->_Error.Evaluate(ErrorModelState, Error);
-
-        return true;
-      }
-  };
+  /** compile time mapping from factor type enum to corresponding factor class */
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Odom2Diff, ErrorType> {using Type = OdometryFactor2DDifferential<ErrorType>;};
 }
 
 

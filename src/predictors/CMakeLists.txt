@@ -21,9 +21,10 @@
 #set source files for library
   set(SOURCEFILES
   ${SOURCEFILES}
+  predictors/PredictConstantValue.cpp
   predictors/PredictConstantDrift.cpp
-  predictors/PredictOdometry.cpp
-  predictors/PredictOdometry2DDifferential.cpp
+  predictors/PredictOdometry2.cpp
+  predictors/PredictOdometry2Diff.cpp
   PARENT_SCOPE
   )
 

@@ -23,23 +23,14 @@
 #ifndef ICRA19_RANGING_H_INCLUDED
 #define ICRA19_RANGING_H_INCLUDED
 
+#include "libRSF.h"
+
 #include <stdio.h>
 #include <string.h>
-
-#include <ceres/ceres.h>
-#include "../include/FactorGraph.h"
-#include "../include/FactorGraphConfig.h"
-#include "../include/FileAccess.h"
-#include "../include/StateDataSet.h"
-#include "../include/SensorDataSet.h"
-
 
 #define POSITION_STATE "Position"
 #define ORIENTATION_STATE "Orientation"
 
-/** Generates a delta time measurement object from two timestamps */
-libRSF::SensorData GenerateDeltaTime(const double TimestampOld,
-                                      const double TimestampNew);
 
 /** Adds a range measurement to the graph of a 2D pose estimation problem */
 void AddRangeMeasurements2D(libRSF::FactorGraph &Graph,
@@ -50,8 +41,9 @@ void AddRangeMeasurements2D(libRSF::FactorGraph &Graph,
 /** use EM algorithm to tune the gaussian mixture model */
 void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config,
-                    int NumberOfComponents,
-                    double Timestamp);
+                    int NumberOfComponents);
 
+/** parse string from command line to select error model for ranging*/
+bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config);
 
 #endif // ICRA19_RANGING_H_INCLUDED

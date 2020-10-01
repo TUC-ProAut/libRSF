@@ -24,7 +24,24 @@
 
 namespace libRSF
 {
-  void RemoveColumn(Eigen::MatrixXd& Matrix, unsigned int ColToRemove)
+  void RobustSqrtAndInvSqrt(const Matrix &Mat, Matrix &MatSqrt, Matrix & MatSqrtInv)
+  {
+    /** compute SVD */
+    Eigen::SelfAdjointEigenSolver<Matrix> SAES(Mat);
+
+    /** compute tolerance (idea from OKVIS) */
+    double Tolerance = std::numeric_limits<double>::epsilon() * Mat.cols() * SAES.eigenvalues().array().maxCoeff();
+
+    /** set small eigen values to zero */
+    Vector EigVal = Vector((SAES.eigenvalues().array() > Tolerance).select(SAES.eigenvalues().array(), 0));
+    Vector EigValInv = Vector((SAES.eigenvalues().array() > Tolerance).select(SAES.eigenvalues().array().inverse(), 0));
+
+    /** use modified eigen values to compute sqrt */
+    MatSqrt = SAES.eigenvectors() * EigVal.cwiseSqrt().asDiagonal() * SAES.eigenvectors().transpose();
+    MatSqrtInv = SAES.eigenvectors() * EigValInv.cwiseSqrt().asDiagonal() * SAES.eigenvectors().transpose();
+  }
+
+  void RemoveColumn(Matrix& Matrix, unsigned int ColToRemove)
   {
       unsigned int numRows = Matrix.rows();
       unsigned int numCols = Matrix.cols()-1;
@@ -33,5 +50,26 @@ namespace libRSF
           Matrix.block(0,ColToRemove,numRows,numCols-ColToRemove) = Matrix.rightCols(numCols-ColToRemove);
 
       Matrix.conservativeResize(numRows,numCols);
+  }
+
+  void CRSToMatrix(const ceres::CRSMatrix &CRSMat, Matrix &Mat)
+  {
+    /** construct empty matrix */
+    Mat.resize(CRSMat.num_rows, CRSMat.num_cols);
+    Mat.setZero();
+
+    /** fill with sparse matrix */
+    for (int Row = 0; Row < CRSMat.num_rows; Row++)
+    {
+      int Start = CRSMat.rows[Row];
+      int End = CRSMat.rows[Row + 1];
+
+      for (int n = Start; n < End; n++)
+      {
+        int Col = CRSMat.cols[n];
+
+        Mat(Row, Col) = CRSMat.values[n];
+      }
+    }
   }
 }

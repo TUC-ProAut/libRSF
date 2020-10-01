@@ -32,8 +32,14 @@
 #ifndef FILEACCESS_H
 #define FILEACCESS_H
 
-#include <cstdio>
+#include "StateDataSet.h"
+#include "SensorDataSet.h"
+
+#include <ceres/ceres.h>
+
 #include <math.h>
+
+#include <cstdio>
 #include <vector>
 #include <random>
 #include <iostream>
@@ -41,22 +47,19 @@
 #include <fstream>
 #include <memory>
 
-#include <ceres/ceres.h>
-#include "StateDataSet.h"
-#include "SensorDataSet.h"
-
 using std::vector;
 using std::string;
 using std::ofstream;
 
 namespace libRSF
 {
-  void ReadDataFromFile(string Filename,
-                        SensorDataSet &Data);
+  void ReadDataFromFile(const string Filename,
+                        SensorDataSet& Data);
 
-  void WriteDataToFile(string Filename,
-                       string DataName,
-                       StateDataSet &Data);
+  void WriteDataToFile(const string Filename,
+                       const string DataName,
+                       const StateDataSet& Data,
+                       const bool Append = false);
 }
 
 #endif // FILEACCESS_H

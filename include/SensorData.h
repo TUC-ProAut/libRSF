@@ -32,43 +32,38 @@
 #ifndef SENSORDATA_H
 #define SENSORDATA_H
 
-#include <ceres/ceres.h>
-
 #include "Data.h"
+#include "Types.h"
+#include "VectorMath.h"
 
 namespace libRSF
 {
-  enum class SensorType {Range2, Range3, Odom3, Odom2Diff, GT2, GT3, DeltaTime};
-  enum class SensorElement {Timestamp, Mean, StdDev, SatPos, SatID, WheelBase, SNR, SatElevation};
-
-  struct SensorConfig : public DataConfig<SensorType, SensorElement>
-  {
-    SensorConfig();
-  };
+  typedef DataConfig<SensorType, SensorElement> SensorConfig;
 
   /** global object that hold all sensor configs */
   extern const SensorConfig Sensors;
 
-  class SensorData: public Data<SensorConfig>
+  class SensorData: public Data<SensorType, SensorElement>
   {
     public:
       SensorData();
-      explicit SensorData(string Input);
+      virtual ~SensorData() = default;
+
+      explicit SensorData(std::string Input);
       SensorData(SensorType Type, double Timestamp);
-      ~SensorData() {};
 
-
-      ceres::Vector getStdDev()
+      Vector getStdDev() const
       {
-        return getValue(SensorElement::StdDev);
+        Vector StdDev = getValue(SensorElement::Covariance);
+        return StdDev.cwiseSqrt();
       }
 
-      void setStdDev(ceres::Vector Value)
+      void setStdDev(Vector Value)
       {
-        setValue(SensorElement::StdDev, Value);
+        Vector Cov = Value.array().square();
+        setValue(SensorElement::Covariance, Cov);
       }
   };
-
 }
 
 #endif // SENSORDATA_H

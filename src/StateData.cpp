@@ -22,76 +22,262 @@
 
 #include "StateData.h"
 
-using std::string;
-using std::map;
-using std::pair;
-
 namespace libRSF
 {
-  const StateConfig States;
-
-  StateConfig::StateConfig()
+  /** define states with identifier */
+  StateConfig::InitVect StateConfigInit =
   {
-    /** list of known states, add new ones at the end*/
-    DataConfigElementType Pose2Config;
-    Pose2Config._Type = StateType::Pose2;
-    Pose2Config._Elements.emplace_back(make_pair(StateElement::Timestamp, 1));
-    Pose2Config._Elements.emplace_back(make_pair(StateElement::Mean, 2));
-    Pose2Config._Elements.emplace_back(make_pair(StateElement::Covariance, 4));
-    Pose2Config._Name = "Position 2D";
-    _Config.emplace(Pose2Config._Type, Pose2Config);
-    _Identifier.emplace("pos2", Pose2Config._Type);
+    {
+      "gt1", StateType::GT1,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1}
+      }
+    },
 
-    DataConfigElementType Pose3Config;
-    Pose3Config._Type = StateType::Pose3;
-    Pose3Config._Elements.emplace_back(make_pair(StateElement::Timestamp, 1));
-    Pose3Config._Elements.emplace_back(make_pair(StateElement::Mean, 3));
-    Pose3Config._Elements.emplace_back(make_pair(StateElement::Covariance, 9));
-    Pose3Config._Name = "Position 3D";
-    _Config.emplace(Pose3Config._Type, Pose3Config);
-    _Identifier.emplace("pos3", Pose3Config._Type);
+    {
+      "gt2", StateType::GT2,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 2}
+      }
+    },
 
-    DataConfigElementType AngleConfig;
-    AngleConfig._Type = StateType::Angle;
-    AngleConfig._Elements.emplace_back(make_pair(StateElement::Timestamp, 1));
-    AngleConfig._Elements.emplace_back(make_pair(StateElement::Mean, 1));
-    AngleConfig._Elements.emplace_back(make_pair(StateElement::Covariance, 1));
-    AngleConfig._Name = "Angle";
-    _Config.emplace(AngleConfig._Type, AngleConfig);
-    _Identifier.emplace("angle", AngleConfig._Type);
+    {
+      "gt3", StateType::GT3,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 3}
+      }
+    },
 
-    DataConfigElementType Value1Config;
-    Value1Config._Type = StateType::Val1;
-    Value1Config._Elements.emplace_back(make_pair(StateElement::Timestamp, 1));
-    Value1Config._Elements.emplace_back(make_pair(StateElement::Mean, 1));
-    Value1Config._Elements.emplace_back(make_pair(StateElement::Covariance, 1));
-    Value1Config._Name = "Value 1D";
-    _Config.emplace(Value1Config._Type, Value1Config);
-    _Identifier.emplace("val1", Value1Config._Type);
+    /** position */
+    {
+      "point1", StateType::Point1,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Covariance, 1}
+      }
+    },
 
-    DataConfigElementType DeltaTimeConfig;
-    DeltaTimeConfig._Type = StateType::Time;
-    DeltaTimeConfig._Elements.emplace_back(make_pair(StateElement::Timestamp, 1));
-    DeltaTimeConfig._Elements.emplace_back(make_pair(StateElement::Mean, 1));
-    DeltaTimeConfig._Name = "Time";
-    _Config.emplace(DeltaTimeConfig._Type, DeltaTimeConfig);
-    _Identifier.emplace("time", DeltaTimeConfig._Type);
-  }
+    {
+      "point2", StateType::Point2,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 2},
+        {StateElement::Covariance, 4}
+      }
+    },
+
+    {
+      "point3", StateType::Point3,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 3},
+        {StateElement::Covariance, 9}
+      }
+    },
+
+    {
+      "point_id2", StateType::PointID2,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 2},
+        {StateElement::ID, 1},
+        {StateElement::Idx, 1},
+        {StateElement::Conf, 1},
+        {StateElement::Covariance, 4}
+      }
+    },
+
+    {
+      "point_id3", StateType::PointID3,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 3},
+        {StateElement::ID, 1},
+        {StateElement::Idx, 1},
+        {StateElement::Conf, 1},
+        {StateElement::Covariance, 9}
+      }
+    },
+
+    /** orientation */
+    {
+      "angle", StateType::Angle,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Covariance, 1}
+      }
+    },
+
+    {
+      "quaternion", StateType::Quat,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 4}, /**< [x, y, z, w] */
+        {StateElement::Covariance, 4*4}
+      }
+    },
+
+    /** combined pose */
+    {
+      "pose2", StateType::Pose2,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 3}, /**< [x, y, yaw] */
+        {StateElement::Covariance, 3*3}
+      }
+    },
+
+    {
+      "pose3", StateType::Pose3,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 7}, /**< [tx, ty, tz, qx, qy, qz, qw] */
+        {StateElement::Covariance, 7*7}
+      }
+    },
+
+    /** IMU speed and bias */
+    {
+      "imu_bias", StateType::IMUBias,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 9}, /**< Speed, Acc Bias, TR Bias */
+        {StateElement::Covariance, 9*9}
+      }
+    },
+
+    /** GNSS clock */
+    {
+      "clock", StateType::ClockError,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Covariance, 1}
+      }
+    },
+
+    {
+      "clock_drift", StateType::ClockDrift,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Covariance, 1}
+      }
+    },
+
+    /** error model variables */
+    {
+      "switch", StateType::Switch,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Covariance, 1}
+      }
+    },
+
+    {
+      "cov", StateType::Covariance,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Covariance, 1}
+      }
+    },
+
+    /** gaussian mixtures */
+    {
+      "gmm", StateType::GMM,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Covariance, 1},
+        {StateElement::Weight, 1}
+      }
+    },
+
+    /** plain factor error */
+    {
+      "error1", StateType::Error1,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1}
+      }
+    },
+
+    {
+      "error2", StateType::Error2,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 2}
+      }
+    },
+
+    {
+      "error3", StateType::Error3,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 3}
+      }
+    },
+
+    /** cost surface */
+    {
+      "cost", StateType::Cost,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Cost, 1}
+      }
+    },
+
+    {
+      "cost_gradient", StateType::CostGradient,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 1},
+        {StateElement::Cost, 1},
+        {StateElement::Gradient, 1},
+        {StateElement::Hessian, 1}
+      }
+    },
+
+    /** runtime of different steps */
+    {
+      "solver_summary", StateType::IterationSummary,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::DurationTotal, 1},
+        {StateElement::DurationSolver, 1},
+        {StateElement::DurationMarginal, 1},
+        {StateElement::DurationAdaptive, 1},
+        {StateElement::IterationSolver, 1},
+        {StateElement::IterationAdaptive, 1}
+      }
+    }
+
+  };
+
+  const StateConfig States(StateConfigInit);
 
   StateData::StateData()
   {
-    _TypeDictionary = &States;
+    this->_Config = &States;
   }
 
-  StateData::StateData(string Input)
+  StateData::StateData(std::string Input)
   {
-    _TypeDictionary = &States;
-    constructFromString(Input);
+    this->_Config = &States;
+    this->constructFromString(Input);
   }
 
   StateData::StateData(StateType Type, double Timestamp)
   {
-    _TypeDictionary = &States;
-    constructEmpty(Type, Timestamp);
+    this->_Config = &States;
+    this->constructEmpty(Type, Timestamp);
   }
 }

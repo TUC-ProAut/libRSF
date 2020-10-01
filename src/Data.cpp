@@ -22,6 +22,4 @@
 
 #include "Data.h"
 
-namespace libRSF
-{
-}
+namespace libRSF {}

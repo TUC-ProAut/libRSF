@@ -32,13 +32,15 @@
 #ifndef GAUSSIANCOMPONENT_H
 #define GAUSSIANCOMPONENT_H
 
-#include <ceres/ceres.h>
-#include <Eigen/Dense>
 #include "../VectorMath.h"
+#include "../Messages.h"
+
+#include <cmath>
 
 namespace libRSF
 {
-  template <int Dimension>
+
+  template <int Dim>
   class GaussianComponent
   {
     public:
@@ -47,9 +49,13 @@ namespace libRSF
         _Scaling = 1;
       }
 
-      ~GaussianComponent() {};
+      ~GaussianComponent() = default;
 
-      void setParamsStdDev(Vector StdDev, Vector Mean, Vector Weight)
+      typedef MatrixStatic<Dim, Dynamic> ErrorMatType;
+
+      void setParamsStdDev(const MatrixStatic<Dim, 1> &StdDev,
+                           const MatrixStatic<Dim, 1> &Mean,
+                           const MatrixStatic<1, 1> &Weight)
       {
         _Mean = Mean;
         _Weight = Weight;
@@ -60,7 +66,22 @@ namespace libRSF
         updateScaling();
       }
 
-      void setParamsInformation(ceres::Matrix Information, Vector Mean, Vector Weight)
+      void setParamsCovariance(const MatrixStatic<Dim, Dim> &Covariance,
+                               const MatrixStatic<Dim, 1> &Mean,
+                               const MatrixStatic<1, 1> &Weight)
+      {
+        _Mean = Mean;
+        _Weight = Weight;
+
+        /** use decomposition to get square root information matrix */
+        _SqrtInformation = InverseSquareRoot(Covariance);
+
+        updateScaling();
+      }
+
+      void setParamsInformation(const MatrixStatic<Dim, Dim> &Information,
+                                const MatrixStatic<Dim, 1> &Mean,
+                                const MatrixStatic<1, 1> &Weight)
       {
         _Mean = Mean;
         _Weight = Weight;
@@ -69,7 +90,9 @@ namespace libRSF
         updateScaling();
       }
 
-      void setParamsSqrtInformation(ceres::Matrix SqrtInformation, Vector Mean, Vector Weight)
+      void setParamsSqrtInformation(const MatrixStatic<Dim, Dim> &SqrtInformation,
+                                    const MatrixStatic<Dim, 1> &Mean,
+                                    const MatrixStatic<1, 1> &Weight)
       {
         _Mean = Mean;
         _Weight = Weight;
@@ -78,35 +101,46 @@ namespace libRSF
         updateScaling();
       }
 
-      Eigen::Matrix<double, Dimension, 1> getMean() const
+      void updateCovariance(const MatrixStatic<Dim, Dim> &Covariance)
+      {
+        _SqrtInformation = InverseSquareRoot(Covariance);
+
+        updateScaling();
+      }
+
+      MatrixStatic<Dim, 1> getMean() const
       {
         return _Mean;
       }
 
-      Eigen::Matrix<double, 1, 1> getWeight() const
+      MatrixStatic<1, 1> getWeight() const
       {
         return _Weight;
       }
 
-      Eigen::Matrix<double, Dimension, Dimension> getSqrtInformation() const
+      MatrixStatic<Dim, Dim> getSqrtInformation() const
       {
         return _SqrtInformation;
       }
 
-      void setMean(Eigen::Matrix<double, Dimension, 1> Mean)
+      MatrixStatic<Dim, Dim> getCovariance() const
+      {
+        return (_SqrtInformation.transpose() * _SqrtInformation).inverse();
+      }
+
+      void setMean(MatrixStatic<Dim, 1> Mean)
       {
         _Mean = Mean;
       }
 
       /** return the part inside the exp() function */
       template <typename T>
-      Eigen::Matrix < T, Dimension, 1 > getExponentialPart(T * const Error) const
+      MatrixT<T, Dim, 1 > getExponentialPart(const VectorT<T, Dim> &Error) const
       {
-        Eigen::Map <const Eigen::Matrix<T, Dimension, 1>> ErrorMap(Error);
-        Eigen::Matrix <T, Dimension, 1> WeightedError;
+        VectorT<T, Dim> WeightedError;
 
         /** shift by mean */
-        WeightedError = ErrorMap + _Mean.template cast<T>();
+        WeightedError = Error + _Mean.template cast<T>();
 
         /** scale with information matrix */
         WeightedError = _SqrtInformation.template cast<T>() * WeightedError;
@@ -116,7 +150,7 @@ namespace libRSF
 
       /** return the part before the exp() function */
       template <typename T>
-      double getLinearPart(T * const Error) const
+      double getLinearPart(const VectorT<T, Dim> &Error) const
       {
         return _Scaling;
       }
@@ -128,53 +162,173 @@ namespace libRSF
       }
 
       /** compute probability for E step of EM */
-      Eigen::VectorXd computeProbability (Eigen::Matrix<double, Eigen::Dynamic, Dimension> const &Errors) const
+      Vector computeLikelihood (const ErrorMatType &Errors) const
       {
         /** apply mean */
-        Eigen::Matrix<double, Eigen::Dynamic, Dimension> WeightedError = (Errors.array().rowwise() + _Mean.transpose().array()).matrix();
+        ErrorMatType WeightedError = (Errors.array().colwise() + _Mean.array()).matrix();
 
         /** multiply each row with square root information */
-        for (Eigen::Index n = 0; n < WeightedError.rows(); ++n)
+        for (Index n = 0; n < WeightedError.cols(); ++n)
         {
-          WeightedError.row(n) = WeightedError.row(n) * _SqrtInformation;
+          WeightedError.col(n) = (WeightedError.col(n).transpose() * _SqrtInformation).transpose();
         }
 
-        return ((WeightedError.array().square().rowwise().sum() / -2.0).exp() * _Scaling).matrix();
+        return ((WeightedError.array().square().colwise().sum() / -2.0).exp() * _Scaling).matrix();
       }
 
       /** estimate parameters for M step of EM */
-      void estimateParameters (Eigen::Matrix<double, Eigen::Dynamic, Dimension> const  &Errors,
-                               Eigen::Matrix<double, Eigen::Dynamic, 1> const  &Likelihoods,
-                               bool KeepMean)
+      void estimateParameters (const ErrorMatType &Errors,
+                               const Vector &Likelihoods,
+                               bool  EstimateMean)
       {
-        double LikelihoodSum = Likelihoods.sum();
+        const double LikelihoodSum = Likelihoods.sum();
 
+        /** estimate weight */
         _Weight(0) = LikelihoodSum / Likelihoods.rows();
 
-        if (KeepMean == false)
+        /** estimate mean */
+        if (EstimateMean == true)
         {
-          _Mean = -((Errors.array().colwise() * Likelihoods.array()).colwise().sum() / LikelihoodSum).matrix().transpose();
+           _Mean = -((Errors.array().rowwise() * Likelihoods.transpose().array()).rowwise().sum() / LikelihoodSum).matrix();
         }
 
-        Eigen::Matrix<double, Dimension, Dimension> Covariance = Eigen::Matrix<double, Dimension, Dimension>::Zero();
-        for (Eigen::Index n = 0; n < Errors.rows(); ++n)
+        /** estimate covariance */
+        MatrixStatic<Dim,Dim> Covariance = MatrixStatic<Dim,Dim>::Zero();
+        for (Index n = 0; n < Errors.cols(); ++n)
         {
-          Eigen::Matrix<double, Dimension, 1> Diff = Errors.row(n).transpose() + _Mean;
+          MatrixStatic<Dim, 1> Diff = Errors.col(n) + _Mean;
           Covariance += Diff * Diff.transpose() * Likelihoods(n);
         }
         Covariance.array() /= LikelihoodSum;
         _SqrtInformation = InverseSquareRoot(Covariance);
 
-        /** check for degenerated SqrtInfo matrix */
-        if(!(_SqrtInformation.array().isFinite().all()))
+        /** check for degenerated square root information matrix */
+        if(_SqrtInformation.array().isFinite().all() == false)
         {
           /** disable component if degenerated */
-          _Weight = Eigen::Matrix<double, 1, 1>::Zero();
-          _Mean = Eigen::Matrix<double, Dimension, 1>::Zero();
-          _SqrtInformation = Eigen::Matrix<double, Dimension, Dimension>::Identity();
+          _Weight.setZero();
+          _Mean.setZero();
+          _SqrtInformation = MatrixStatic<Dim, Dim>::Identity();
         }
 
         updateScaling();
+      }
+
+      void estimateParametersMAP (const ErrorMatType &Errors,
+                                  const Vector &Likelihoods,
+                                  double DirichletConcentration,
+                                  double DirichletConcentrationSum,
+                                  double NormalInfoScaling,
+                                  VectorStatic<Dim> NormalMean,
+                                  MatrixStatic<Dim,Dim> WishartScalingMatrix,
+                                  double WishartDOF,
+                                  bool EstimateMean)
+      {
+        /** precalculate shared values */
+        const double LikelihoodSum = Likelihoods.sum();
+
+        /** estimate weight */
+        _Weight(0) = (DirichletConcentration - 1.0 + LikelihoodSum)
+                     /
+                     (DirichletConcentrationSum + Likelihoods.rows());
+
+        /** estimate mean */
+        if (EstimateMean == true)
+        {
+          VectorStatic<Dim> WeightedError = (Errors.array().rowwise() * Likelihoods.transpose().array()).rowwise().sum();
+          _Mean = -((NormalMean*NormalInfoScaling) + WeightedError)
+                  /
+                  (NormalInfoScaling + LikelihoodSum);
+        }
+
+        /** estimate covariance */
+        MatrixStatic<Dim,Dim> Covariance = WishartScalingMatrix + NormalInfoScaling * (NormalMean - _Mean)*(NormalMean - _Mean).transpose();
+        for (Index n = 0; n < Errors.cols(); ++n)
+        {
+          MatrixStatic<Dim, 1> Diff = Errors.col(n) + _Mean;
+          Covariance += Diff * Diff.transpose() * Likelihoods(n);
+        }
+        Covariance.array() /= (WishartDOF - Dim + LikelihoodSum);
+        _SqrtInformation = InverseSquareRoot(Covariance);
+
+        /** check for degenerated square root information matrix */
+        if(_SqrtInformation.array().isFinite().all() == false)
+        {
+          /** disable component if degenerated */
+          _Weight.setZero();
+          _Mean.setZero();
+          _SqrtInformation = MatrixStatic<Dim, Dim>::Identity();
+        }
+
+        updateScaling();
+      }
+
+      /** compute negative log-likelihood of a sample vactor */
+      Vector computeNegLogLikelihood (const ErrorMatType &Errors) const
+      {
+        /** apply mean */
+        ErrorMatType WeightedError = (Errors.array().colwise() + _Mean.array()).matrix();
+
+        /** multiply each row with square root information */
+        for (int n = 0; n < WeightedError.cols(); ++n)
+        {
+          WeightedError.col(n) = (WeightedError.col(n).transpose() * _SqrtInformation).transpose();
+        }
+
+        return ((WeightedError.array().square().colwise().sum() / 2.0) - log(_Scaling)).matrix();
+      }
+
+      bool checkParameters () const
+      {
+        bool Passed = true;
+
+        /** check weight */
+        if(_Weight.allFinite() == false)
+        {
+          PRINT_WARNING("Weight is not finite!");
+          Passed = false;
+        }
+        else if(_Weight(0) <= 0)
+        {
+          PRINT_WARNING("Weight is not positive!");
+          Passed = false;
+        }
+        else if(_Weight(0) > 1)
+        {
+          PRINT_WARNING("Weight is bigger than one!");
+          Passed = false;
+        }
+
+        /** check mean */
+        if(_Mean.allFinite() == false)
+        {
+          PRINT_WARNING("Mean is not finite!");
+          Passed = false;
+        }
+
+        /** check uncertainty */
+        if(_SqrtInformation.allFinite() == false)
+        {
+          PRINT_WARNING("Square root information is not finite!");
+          Passed = false;
+        }
+        else
+        {
+          if(IsPositiveSemidefinite<Dim>(_SqrtInformation) == false)
+          {
+            PRINT_WARNING("Square root information is not positive semi-definite!");
+            Passed = false;
+          }
+        }
+
+        /** check scaling */
+        if(std::isfinite(_Scaling) == false)
+        {
+          PRINT_WARNING("Scaling is not finite!");
+          Passed = false;
+        }
+
+        return Passed;
       }
 
     private:
@@ -188,27 +342,74 @@ namespace libRSF
         return _Weight(0, 0) * _SqrtInformation.determinant();
       }
 
-
-      Eigen::Matrix<double, Dimension, 1> _Mean;
-      Eigen::Matrix<double, 1, 1> _Weight;
-      Eigen::Matrix<double, Dimension, Dimension> _SqrtInformation;
+      MatrixStatic<Dim, 1> _Mean;
+      MatrixStatic<1, 1> _Weight;
+      MatrixStatic<Dim, Dim> _SqrtInformation;
       double _Scaling;
   };
 
   /** compare functions for ordering */
-  template <int Dimension>
-  bool compareByMean(const GaussianComponent<Dimension> & a, const GaussianComponent<Dimension> & b)
+  template <int Dim>
+  bool compareByMode(const GaussianComponent<Dim> & a, const GaussianComponent<Dim> & b)
+  {
+    return (a.getWeight()(0) * a.getSqrtInformation().determinant()) > (b.getWeight()(0) * b.getSqrtInformation().determinant());
+  }
+
+  template <int Dim>
+  bool compareByMean(const GaussianComponent<Dim> & a, const GaussianComponent<Dim> & b)
   {
     return a.getMean().sum() < b.getMean().sum();
   }
 
-  template <int Dimension>
-  bool compareByWeight(const GaussianComponent<Dimension> & a, const GaussianComponent<Dimension> & b)
+  template <int Dim>
+  bool compareByAbsMean(const GaussianComponent<Dim> & a, const GaussianComponent<Dim> & b)
+  {
+    return std::abs(a.getMean().sum()) < std::abs(b.getMean().sum());
+  }
+
+  template <int Dim>
+  bool compareByWeight(const GaussianComponent<Dim> & a, const GaussianComponent<Dim> & b)
   {
     return a.getWeight()(0) > b.getWeight()(0);
   }
 
+  template <int Dim>
+  bool compareByLOSness(const GaussianComponent<Dim> & a, const GaussianComponent<Dim> & b)
+  {
+    return (a.getWeight()(0) * a.getSqrtInformation().determinant() / (std::abs(a.getMean().sum()) + 1e-6))
+           >
+           (b.getWeight()(0) * b.getSqrtInformation().determinant() / (std::abs(b.getMean().sum()) + 1e-6));
+  }
 
+  /** Bhattacharyya distance for merging */
+  template <int Dim>
+  double CalculateBhattacharyyaDistance(const GaussianComponent<Dim> & Gaussian1, const GaussianComponent<Dim> & Gaussian2)
+  {
+    MatrixStatic<Dim, Dim> Cov1 = Gaussian1.getCovariance();
+    MatrixStatic<Dim, Dim> Cov2 = Gaussian2.getCovariance();
+    MatrixStatic<Dim, Dim> CovMean = (Cov1 + Cov2).array() / 2.0;
+
+    MatrixStatic<Dim, 1> MeanDiff = Gaussian1.getMean() - Gaussian2.getMean();
+
+    MatrixStatic<1, 1> Mahala = 0.125 * MeanDiff.transpose() * CovMean.inverse() * MeanDiff;
+
+    return Mahala(0) + 0.5 * log(CovMean.determinant() / sqrt(Cov1.determinant()*Cov2.determinant()));
+  }
+
+  /** merge two gaussians */
+  template <int Dim>
+  GaussianComponent<Dim> MergeGaussians (const GaussianComponent<Dim> &Gaussian1, const GaussianComponent<Dim> &Gaussian2)
+  {
+    MatrixStatic<1, 1> Weight12 = Gaussian1.getWeight() + Gaussian2.getWeight();
+    MatrixStatic<Dim, 1> Mean12 = (Gaussian1.getMean() * Gaussian1.getWeight() + Gaussian2.getMean() * Gaussian2.getWeight()).array() / Weight12(0);
+
+    MatrixStatic<Dim, Dim> SqrtInfo12 = (Gaussian1.getSqrtInformation() * Gaussian1.getWeight()(0) + Gaussian2.getSqrtInformation() * Gaussian2.getWeight()(0)).array() / Weight12(0);
+
+    GaussianComponent<Dim> Gaussian12;
+    Gaussian12.setParamsSqrtInformation(SqrtInfo12, Mean12, Weight12);
+
+    return Gaussian12;
+  }
 
 }
 

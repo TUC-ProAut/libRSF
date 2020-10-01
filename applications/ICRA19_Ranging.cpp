@@ -31,25 +31,6 @@
 
 #include "ICRA19_Ranging.h"
 
-/** @brief Generates a delta time measurement object from two timestamps
- *
- * @param TimestampOld a double timestamp
- * @param TimestampNew another double timestamp
- * @return A SensorData Object, thats represents the time difference
- *
- */
-libRSF::SensorData GenerateDeltaTime(const double TimestampOld,
-                                      const double TimestampNew)
-{
-  libRSF::SensorData DeltaTime(libRSF::SensorType::DeltaTime, TimestampNew);
-  ceres::Vector DeltaTimeVector(1);
-  DeltaTimeVector[0] = TimestampNew - TimestampOld;
-  DeltaTime.setMean(DeltaTimeVector);
-  DeltaTime.setTimestamp(TimestampNew);
-
-  return DeltaTime;
-}
-
 /** @brief Build the factor Graph with initial values and a first set of measurements
  *
  * @param Graph reference to the factor graph object
@@ -68,7 +49,7 @@ void InitGraph(libRSF::FactorGraph &Graph,
 {
   /** build simple graph */
   libRSF::FactorGraph SimpleGraph;
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Pose2, TimestampFirst);
+  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, TimestampFirst);
 
   /** add multiple range measurements to get useful initialization */
   double Timestamp;
@@ -81,11 +62,11 @@ void InitGraph(libRSF::FactorGraph &Graph,
 
   for(int i = 0; i < 4; ++i)
   {
-    Range = Measurements.getElement(libRSF::Sensors._Config.at(libRSF::SensorType::Range2)._Name, Timestamp);
-    NoiseRange.setStdDev(Range.getStdDev());
-    SimpleGraph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRange);
+    Range = Measurements.getElement(libRSF::SensorType::Range2, Timestamp);
+    NoiseRange.setStdDevDiagonal(Range.getStdDev());
+    SimpleGraph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange);
 
-    Measurements.getNextTimestamp(libRSF::Sensors._Config.at(libRSF::SensorType::Range2)._Name, Timestamp, Timestamp);
+    Measurements.getTimeNext(libRSF::SensorType::Range2, Timestamp, Timestamp);
   }
 
   /** solve */
@@ -94,7 +75,7 @@ void InitGraph(libRSF::FactorGraph &Graph,
   SimpleGraph.solve(Options);
 
   /**add first state variables */
-  Graph.addState(POSITION_STATE, libRSF::StateType::Pose2, TimestampFirst);
+  Graph.addState(POSITION_STATE, libRSF::StateType::Point2, TimestampFirst);
   Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, TimestampFirst);
 
   /** copy values to real graph */
@@ -125,59 +106,53 @@ void AddRangeMeasurements2D(libRSF::FactorGraph &Graph,
 
   ListRange.add(POSITION_STATE, Timestamp);
 
-  /** get measurement */
-  Range = Measurements.getElement("Range 2D", Timestamp, 0);
-
   /** default error model */
-  static libRSF::GaussianMixture<1> GMM((ceres::Vector(2) << 0, 0).finished(),
-                                         (ceres::Vector(2) << 0.1, 1.0).finished(),
-                                         (ceres::Vector(2) << 0.5, 0.5).finished());
+  static libRSF::GaussianMixture<1> GMM((libRSF::Vector2() << 0, 0).finished(),
+                                         (libRSF::Vector2() << 0.1, 1.0).finished(),
+                                         (libRSF::Vector2() << 0.5, 0.5).finished());
+
+  /** get measurement */
+  Range = Measurements.getElement(libRSF::SensorType::Range2, Timestamp, 0);
 
   /** add factor */
-  switch(Config.RangeErrorModel.Type)
+  switch(Config.Ranging.ErrorModel.Type)
   {
-  case ROBUST_NONE:
-    NoiseRange.setStdDev(Range.getStdDev());
-    Graph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRange);
-    break;
+    case libRSF::ErrorModelType::Gaussian:
+      NoiseRange.setStdDevDiagonal(Range.getStdDev());
+      Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange);
+      break;
 
-  case ROBUST_DCS:
-    NoiseRange.setStdDev(Range.getStdDev());
-    Graph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRange, new libRSF::DCSLoss(1.0));
-    break;
+    case libRSF::ErrorModelType::DCS:
+      NoiseRange.setStdDevDiagonal(Range.getStdDev());
+      Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange, new libRSF::DCSLoss(1.0));
+      break;
 
-  case ROBUST_CDCE:
-    NoiseRange.setStdDev(Eigen::Matrix<double, 1, 1>::Ones());
-    Graph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRange, new libRSF::cDCELoss(Range.getStdDev()[0]));
-    break;
+    case libRSF::ErrorModelType::cDCE:
+      NoiseRange.setStdDevDiagonal(libRSF::Matrix11::Ones());
+      Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange, new libRSF::cDCELoss(Range.getStdDev()[0]));
+      break;
 
-  case ROBUST_MM:
-    static libRSF::MaxMix1 NoiseRangeMaxMix(GMM);
-    Graph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRangeMaxMix);
+    case libRSF::ErrorModelType::GMM:
+      if (Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+      {
+        static libRSF::MaxMix1 NoiseRangeMaxMix(GMM);
+        Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRangeMaxMix);
+      }
+      else if (Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+      {
+        static libRSF::SumMix1 NoiseRangeSumMix(GMM);
+        Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRangeSumMix);
+      }
+      else
+      {
+        PRINT_ERROR("Wrong error model mixture type!");
+      }
+      break;
 
-    break;
 
-  case ROBUST_SM:
-    static libRSF::SumMix1 NoiseRangeSumMix(GMM);
-    Graph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRangeSumMix);
-
-    break;
-
-  case ROBUST_STSM:
-    static libRSF::SumMix1 NoiseRangeSumMixST(GMM);
-    Graph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRangeSumMixST);
-
-    break;
-
-  case ROBUST_STMM:
-    static libRSF::MaxMix1 NoiseRangeMaxMixST(GMM);
-    Graph.addFactor(libRSF::FactorType::Range2, ListRange, Range, NoiseRangeMaxMixST);
-
-    break;
-
-  default:
-    std::cerr << "Error: Wrong range error 2D model model: " << Config.RangeErrorModel.Type << std::endl;
-    break;
+    default:
+      PRINT_ERROR("Wrong error model type: ", Config.Ranging.ErrorModel.Type);
+      break;
   }
 
 }
@@ -193,10 +168,9 @@ void AddRangeMeasurements2D(libRSF::FactorGraph &Graph,
  */
 void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config,
-                    int NumberOfComponents,
-                    double Timestamp)
+                    int NumberOfComponents)
 {
-  if(Config.RangeErrorModel.Type == ROBUST_STSM || Config.RangeErrorModel.Type == ROBUST_STMM)
+  if(Config.Ranging.ErrorModel.TuningType == libRSF::ErrorModelTuningType::EM)
   {
     std::vector<double> ErrorData;
 
@@ -210,9 +184,9 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
       {
 
-        Component.setParamsStdDev((ceres::Vector(1) << 0.1).finished()*pow(10, nComponent),
-                                  (ceres::Vector(1) << 0.0).finished(),
-                                  (ceres::Vector(1) << 1.0/NumberOfComponents).finished());
+        Component.setParamsStdDev((libRSF::Vector1() << 0.1).finished()*pow(10, nComponent),
+                                  (libRSF::Vector1() << 0.0).finished(),
+                                  (libRSF::Vector1() << 1.0/NumberOfComponents).finished());
 
         GMM.addComponent(Component);
       }
@@ -220,25 +194,18 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
 
     Graph.computeUnweightedError(libRSF::FactorType::Range2, ErrorData);
 
-    /** remove zeros in MM results (unused dimension!) */
-    if(Config.RangeErrorModel.Type == ROBUST_STMM)
-    {
-      for(int i = ErrorData.size() - 1; i > 0; i -= 2)
-      {
-        ErrorData.erase(ErrorData.begin() + i);
-      }
-    }
-
     /** call the EM algorithm */
-    GMM.estimateWithEM(ErrorData);
+    libRSF::GaussianMixture<1>::EstimationConfig GMMConfig;
+    GMMConfig.EstimationAlgorithm = libRSF::ErrorModelTuningType::EM;
+    GMM.estimate(ErrorData, GMMConfig);
 
     /** apply error model */
-    if(Config.RangeErrorModel.Type == ROBUST_STSM)
+    if(Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
     {
       libRSF::SumMix1 NewSMModel(GMM);
       Graph.setNewErrorModel(libRSF::FactorType::Range2, NewSMModel);
     }
-    else if(Config.RangeErrorModel.Type == ROBUST_STMM)
+    else if(Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
     {
       libRSF::MaxMix1 NewMMModel(GMM);
       Graph.setNewErrorModel(libRSF::FactorType::Range2, NewMMModel);
@@ -246,15 +213,72 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
   }
 }
 
+bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config)
+{
+  if(ErrorModel.compare("gauss") == 0)
+  {
+    Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::Gaussian;
+    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("dcs") == 0)
+  {
+    Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::DCS;
+    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("cdce") == 0)
+  {
+    Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::cDCE;
+    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("sm") == 0)
+  {
+    Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("mm") == 0)
+  {
+    Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+  }
+  else if(ErrorModel.compare("stsm") == 0)
+  {
+    Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+  }
+  else if(ErrorModel.compare("stmm") == 0)
+  {
+    Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
+    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+  }
+  else
+  {
+    PRINT_ERROR("Wrong Error Model: ", ErrorModel);
+    return false;
+  }
+
+  return true;
+}
+
 int main(int argc, char** argv)
 {
   google::InitGoogleLogging(argv[0]);
   libRSF::FactorGraphConfig Config;
 
-  /** process command line parameter */
-  if(!Config.ReadCommandLineOptions(argc, argv))
+  /** assign all arguments to string vector*/
+  std::vector<std::string> Arguments;
+  Arguments.assign(argv+1, argv + argc);
+
+  /** read filenames */
+  Config.InputFile = Arguments.at(0);
+  Config.OutputFile = Arguments.at(1);
+
+  /** parse the error model string */
+  if (ParseErrorModel(Arguments.at(3), Config) == false)
   {
-    std::cout << std::endl;
     return 1;
   }
 
@@ -265,7 +289,7 @@ int main(int argc, char** argv)
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
   SolverOptions.max_num_iterations = 1000;
-  SolverOptions.num_threads = 8;
+  SolverOptions.num_threads = std::thread::hardware_concurrency();
   SolverOptions.max_solver_time_in_seconds = 0.25;
 
   const int NumberOfComponents = 2;
@@ -280,8 +304,8 @@ int main(int argc, char** argv)
   libRSF::SensorData DeltaTime;
 
   double Timestamp, TimestampFirst, TimestampOld, TimestampLast;
-  InputData.getFirstTimestamp("Range 2D", TimestampFirst);
-  InputData.getLastTimestamp("Range 2D", TimestampLast);
+  InputData.getTimeFirst(libRSF::SensorType::Range2, TimestampFirst);
+  InputData.getTimeLast(libRSF::SensorType::Range2, TimestampLast);
   Timestamp = TimestampFirst;
   TimestampOld = TimestampFirst;
   int nTimestamp = 0;
@@ -296,16 +320,16 @@ int main(int argc, char** argv)
   Result.addElement(POSITION_STATE, Graph.getStateData().getElement(POSITION_STATE, Timestamp, 0));
 
   /** get odometry noise from first measurement */
-  libRSF::SensorData Odom = InputData.getElement("Differential Odometry 2D", Timestamp);
-  libRSF::GaussianDiagonal<3> NoiseOdom2Diff(Odom.getStdDev());
+  libRSF::SensorData Odom = InputData.getElement(libRSF::SensorType::Odom2Diff, Timestamp);
+  libRSF::GaussianDiagonal<3> NoiseOdom2Diff;
+  NoiseOdom2Diff.setStdDevDiagonal(Odom.getStdDev());
 
   /** iterate over timestamps */
-  while(InputData.getNextTimestamp("Range 2D", Timestamp, Timestamp))
+  while(InputData.getTimeNext(libRSF::SensorType::Range2, Timestamp, Timestamp))
   {
-    DeltaTime = GenerateDeltaTime(TimestampOld, Timestamp);
 
     /** add required states */
-    Graph.addState(POSITION_STATE, libRSF::StateType::Pose2, Timestamp);
+    Graph.addState(POSITION_STATE, libRSF::StateType::Point2, Timestamp);
     Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, Timestamp);
 
     /** add motion model or odometry */
@@ -314,13 +338,13 @@ int main(int argc, char** argv)
     MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, TimestampOld);
     MotionList.add(ORIENTATION_STATE, Timestamp);
-    Graph.addFactor(libRSF::FactorType::Odom2Diff, MotionList, InputData.getElement("Differential Odometry 2D", Timestamp), DeltaTime, NoiseOdom2Diff);
+    Graph.addFactor<libRSF::FactorType::Odom2Diff>(MotionList, InputData.getElement(libRSF::SensorType::Odom2Diff, Timestamp), NoiseOdom2Diff);
 
     /** add all range measurements of with current timestamp */
     AddRangeMeasurements2D(Graph, InputData, Config, Timestamp);
 
     /** tune self-tuning error model */
-    TuneErrorModel(Graph, Config, NumberOfComponents, Timestamp);
+    TuneErrorModel(Graph, Config, NumberOfComponents);
 
     /** solve factor graph*/
     Graph.solve(SolverOptions);

@@ -23,16 +23,4 @@
 #include "factors/RangeFactor.h"
 
 namespace libRSF
-{
-  template<>
-  SensorType RangeType<2>()
-  {
-    return SensorType::Range2;
-  };
-
-  template<>
-  SensorType RangeType<3>()
-  {
-    return SensorType::Range3;
-  };
-}
+{}

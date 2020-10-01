@@ -19,16 +19,17 @@
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
 #set source files for library
-  set(SOURCEFILES
-  ${SOURCEFILES}
+  set(SOURCEFILES ${SOURCEFILES}
   error_models/ErrorModel.cpp
   error_models/Gaussian.cpp
   error_models/GaussianComponent.cpp
   error_models/GaussianMixture.cpp
   error_models/SumMixture.cpp
   error_models/MaxMixture.cpp
-  error_models/NumericalRobust.cpp
+  error_models/MaxSumMixture.cpp
   error_models/LossFunction.cpp
+  error_models/DynamicCovarianceEstimation.cpp
+  error_models/SwitchableConstraints.cpp
   PARENT_SCOPE
   )
 

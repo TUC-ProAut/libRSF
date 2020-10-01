@@ -32,51 +32,93 @@
 #ifndef FACTORGRAPHCONFIG_H
 #define FACTORGRAPHCONFIG_H
 
-#include <ceres/ceres.h>
 #include "FactorGraph.h"
+#include "SensorData.h"
+#include "Messages.h"
+#include "Types.h"
 
-/** Range Error Model */
-#define ROBUST_NONE   0
-#define ROBUST_DCS    1
-#define ROBUST_CDCE   2
-#define ROBUST_MM     5
-#define ROBUST_SM     6
-#define ROBUST_STSM   9
-#define ROBUST_STMM   10
-#define ROBUST_STSM_VBI  16
-#define ROBUST_STMM_VBI  17
+#include <ceres/ceres.h>
+#include <yaml-cpp/yaml.h>
+
+#include <stdio.h>
+
+#include <iostream>
+#include <string>
+#include <initializer_list>
 
 namespace libRSF
 {
-  enum class ErrorModelType {None,
-                             Gaussian,
-                             DCE, cDCE,
-                             SC, DCS,
-                             MM_GMM, SM_GMM,
-                             MM_GMM_ST, SM_GMM_ST,
-                             MM_GRMM, SM_GRMM,
-                             MM_GRMM_ST, SM_GRMM_ST,
-                             MM_GMM_SNR, SM_GMM_SNR};
-
-  enum class SolutionType {None, Batch, Incremental};
-  enum class InitializationType {Zero, Random, Transition, Measurement, GroundTruth};
 
   class FactorGraphConfig
   {
   public:
 
     FactorGraphConfig();
+    virtual ~FactorGraphConfig() = default;
 
     /** parse the command line Options */
-    bool ReadCommandLineOptions(int argc, char** argv);
+    bool ReadCommandLineOptions(const int argc, char** argv, std::vector<std::string> * const Arguments = nullptr);
 
-    struct RangeErrorModel
+    /** parse the YAML config file with yaml-cpp */
+    bool ReadYAMLOptions(const string YAMLFile);
+
+    /** interface to the outer world are a set of files*/
+    string InputFile;
+    string OutputFile;
+    string ConfigFile;
+
+    /** noise model */
+    struct ErrorModelConfig
     {
-      uint32_t Type;
-    } RangeErrorModel;
+      ErrorModelConfig():MixtureType(ErrorModelMixtureType::None), TuningType(ErrorModelTuningType::None) {};
 
-    char* InputFile;
-    char* OutputFile;
+      ErrorModelType Type;
+      Vector Paramter;
+
+      ErrorModelMixtureType MixtureType; /**< only if a GMM is used */
+      ErrorModelTuningType TuningType; /**< only if a GMM is used */
+      bool IncrementalTuning = false;
+    };
+
+    /** factor configuration */
+    struct FactorConfig
+    {
+      FactorConfig():IsActive(false){};
+
+      FactorType Type;
+      Vector Parameter;
+      ErrorModelConfig ErrorModel;
+
+      bool IsActive;
+    }Ranging, GNSS, ClockModel, MotionModel, Odom, IMU, Laser, Radar, Vision, LoopClosure, Tracking, Prior;
+
+    /** special properties */
+    struct GraphConfig
+    {
+      SolutionType Type;
+
+      /** available time for one iteration */
+      double MaxTime;
+      int MaxIterations;
+
+      /** time handling */
+      bool IsAsync;
+      double AsyncRate;
+      SensorType SyncSensor;
+
+      /** covariance estimation */
+      bool EstimateCov;
+
+      /**only for sliding window */
+      bool Marginalize;
+      double WindowLength;
+    } Solution;
+
+    ceres::Solver::Options SolverConfig;
+
+  private:
+    bool ParseErrorModelFromYAML(YAML::Node ErrorModelNode, ErrorModelConfig &Model);
+    Vector ParseVectorFromYAML(YAML::Node VectorNode);
   };
 }
 
