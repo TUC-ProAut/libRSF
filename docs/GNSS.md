@@ -1,6 +1,3 @@
-TODO: update dataset files
-TODO: update output data description
-
 ## Legacy Applications
 These applications are mainly developed for early versions of the libRSF.
 While they are still supported, their result might differ from the original work.
@@ -16,20 +13,23 @@ To run them, the following syntax have to be used:
       libRSF/build/applications/ICRA19_Ranging  <input file> <output file> error: <error model>
 
 - **\<input file\>** is the dataset you want to process, the format is explained by readme files in the datasets folder.
+
 - **\<output file\>** is the estimated Trajectory. The output file contains several columns that represent timestamps and estimated positions:
 
       For 3D estimation:
-      Column 1    - Timestamp [s]
-      Column 2    - X coordinate in the ECEF frame [m]
-      Column 3    - Y coordinate in the ECEF frame [m]
-      Column 4    - Z coordinate in the ECEF frame [m]
-      Column 5-13 - Covariance matrix of the estimated position in row-major format (Currently not used!)
+      Column 1    - "point3" [string]
+      Column 2    - Timestamp [s]
+      Column 3    - X coordinate in the ECEF frame [m]
+      Column 4    - Y coordinate in the ECEF frame [m]
+      Column 5    - Z coordinate in the ECEF frame [m]
+      Column 6-14 - Covariance matrix of the estimated position in row-major format (Currently not used!)
 
       For 2D estimation:
-      Column 1    - Timestamp [s]
-      Column 2    - X coordinate in a local frame [m]
-      Column 3    - Y coordinate in a local frame [m]
-      Column 4-7  - Covariance matrix of the estimated position in row-major format (Currently not used!)
+      Column 1    - "point2" [string]
+      Column 2    - Timestamp [s]
+      Column 3    - X coordinate in a local frame [m]
+      Column 4    - Y coordinate in a local frame [m]
+      Column 5-8  - Covariance matrix of the estimated position in row-major format (Currently not used!)
 
 - **\<error model\>** is one of the following error models:
 
@@ -43,7 +43,7 @@ To run them, the following syntax have to be used:
 
 A full example could be:
 
-      libRSF/build/applications/ICRA19_GNSS libRSF/datasets/smartLoc/Data_Berlin_Potsdamer_Platz_Web.txt Result_Berlin_Potsdamer_Platz_Web.txt error: gauss
+      libRSF/build/applications/ICRA19_GNSS libRSF/datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt Result_Berlin_Potsdamer_Platz_Web.txt error: gauss
 
 ### IV 2019 Application
 
@@ -56,11 +56,12 @@ To run them, the following syntax have to be used:
 - **\<input file\>** is the dataset you want to process, the format is explained by readme files in the datasets folder.
 - **\<output file\>** is the estimated Trajectory. The output file contains several columns that represent timestamps and estimated positions:
 
-      Column 1    - Timestamp [s]
-      Column 2    - X coordinate in the ECEF frame [m]
-      Column 3    - Y coordinate in the ECEF frame [m]
-      Column 4    - Z coordinate in the ECEF frame [m]
-      Column 5-13 - Covariance matrix of the estimated position in row-major format (Currently not used!)
+      Column 1    - "point3" [string]
+      Column 2    - Timestamp [s]
+      Column 3    - X coordinate in the ECEF frame [m]
+      Column 4    - Y coordinate in the ECEF frame [m]
+      Column 5    - Z coordinate in the ECEF frame [m]
+      Column 6-14 - Covariance matrix of the estimated position in row-major format (Currently not used!)
 
 - **\<error model\>** is one of the following error models:
 
@@ -76,7 +77,7 @@ To run them, the following syntax have to be used:
 
 A full example could be:
 
-      libRSF/build/applications/IV19_GNSS libRSF/datasets/smartLoc/Data_Berlin_Potsdamer_Platz_Web.txt Result_Berlin_Potsdamer_Platz_Web.txt error: gauss
+      libRSF/build/applications/IV19_GNSS libRSF/datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt Result_Berlin_Potsdamer_Platz_Web.txt error: gauss
 
 ### References
 

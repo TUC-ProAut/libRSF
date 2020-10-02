@@ -74,11 +74,6 @@
 #include "factors/MarginalPrior.h"
 #include "factors/PointRegistrationFactor.h"
 
-#include "predictors/PredictConstantValue.h"
-#include "predictors/PredictConstantDrift.h"
-#include "predictors/PredictOdometry2.h"
-#include "predictors/PredictOdometry2Diff.h"
-
 #include <ceres/ceres.h>
 #include <ceres/normal_prior.h>
 
@@ -271,8 +266,6 @@ namespace libRSF
       double getMarginalDurationAndReset();
 
     private:
-      /** access predictors to initialize values */
-      void initValues(FactorType CurrentFactorType, std::vector<StateID> &StateList, const SensorData& Measurement, double DeltaTime);
 
       /** helper function to create variadic templated cost functions */
       template<int NoiseModelOutputDim, typename CurrentFactorType,  int... FactorStateDims, int... ErrorModelStateDims>
@@ -300,7 +293,7 @@ namespace libRSF
         /** create factor object */
         auto Factor = new FactorClass(NoiseModel, Params...);
 
-        /** use the factor to predict  */
+        /** use the factor to predict */
         Factor->predict(StatePointers);
 
         /** wrap it in ceres cost function */
@@ -337,9 +330,6 @@ namespace libRSF
         double TimestampFirst = States._List.front().Timestamp;
         double TimestampLast = States._List.back().Timestamp;
         double DeltaTime = TimestampLast - TimestampFirst;
-
-        /** set initial values if the factor connects states over time */
-        initValues(CurrentFactorType, States._List, Measurement, DeltaTime);
 
         /** translate the factor type enum to the class that should be added to the graph */
         typedef typename FactorTypeTranslator<CurrentFactorType,ErrorType>::Type FactorClassType;

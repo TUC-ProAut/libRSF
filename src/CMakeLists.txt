@@ -64,9 +64,6 @@ set(SOURCEFILES
 # factors of the graph
 add_subdirectory(factors)
 
-# predictors to initialize states
-add_subdirectory(predictors)
-
 # error models to represent the probabilistic properties
 add_subdirectory(error_models)
 
@@ -157,6 +154,7 @@ configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/../cmake/libRSFConfig.cm
 # install the config, configversion and custom find modules
 install(FILES
     ${CMAKE_CURRENT_LIST_DIR}/../cmake/FindGeographicLib.cmake
+#    ${CMAKE_CURRENT_LIST_DIR}/../cmake/Findortools.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/libRSFConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/libRSFConfigVersion.cmake
     DESTINATION ${INSTALL_CONFIGDIR}

@@ -69,6 +69,14 @@ namespace libRSF
 
       }
 
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        VectorRefConst<double, Dim> V1(StatePointers.at(0));
+        VectorRef<double, Dim> V2(StatePointers.at(1));
+
+        V2 = V1;
+      }
   };
 
   /** compile time mapping from factor type enum to corresponding factor class */

@@ -38,7 +38,7 @@
 namespace libRSF
 {
   template <typename ErrorType>
-  class OdometryFactor2D : public BaseFactor<ErrorType, true, true, 2, 2, 1, 1>
+  class OdometryFactor2D : public BaseFactor<ErrorType, true, true, 2, 1, 2, 1>
   {
     public:
       /** construct factor and store measurement */
@@ -52,9 +52,8 @@ namespace libRSF
 
       /** geometric error model */
       template <typename T>
-      VectorT<T, 3> Evaluate(const T* const Point1,  const T* const Point2,
-                             const T* const Yaw1,    const T* const Yaw2,
-                             const Vector3 &Odometry, const double &DeltaTime) const
+      VectorT<T, 3> Evaluate(const T* const Point1,  const T* const Yaw1,
+                             const T* const Point2,  const T* const Yaw2) const
       {
         VectorRefConst<T, 2> P1(Point1);
         VectorRefConst<T, 2> P2(Point2);
@@ -68,34 +67,49 @@ namespace libRSF
         /** translation */
         RelPose.head(2) = (R1.inverse() * (P2 - P1));
 
-        RelPose = RelativeMotion2D(Point1, Point2, Yaw1, Yaw2);
+        RelPose = RelativeMotion2D(Point1, Yaw1, Point2, Yaw2);
 
         /** rotation */
-        RelPose(2) = Yaw2[0] - Yaw1[0];//NormalizeAngle<T>((R1.inverse() * R2).angle());
+        RelPose(2) = Yaw2[0] - Yaw1[0];
 
         /** subtract odometry */
-        Error = RelPose - (DeltaTime * Odometry).template cast<T>();
+        Error = RelPose - (this->_DeltaTime * this->_MeasurementVector).template cast<T>();
 
         /** normalize angle error */
         Error(2) = NormalizeAngle<T>(Error(2));
 
-        /** transform in measurements (velocity) domain */
-        Error /= T(DeltaTime);
+        /** transform in measurement (velocity) domain */
+        Error /= T(this->_DeltaTime);
 
         return Error;
       }
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
-      bool operator()(const T* const Point1, const T* const Point2,
-                      const T* const Yaw1, const T* const Yaw2,
+      bool operator()(const T* const Point1,  const T* const Yaw1,
+                      const T* const Point2,  const T* const Yaw2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Point1, Point2,
-                                               Yaw1, Yaw2,
-                                               this->_MeasurementVector,
-                                               this->_DeltaTime),
+        return this->_Error.template weight<T>(this->Evaluate(Point1, Yaw1, Point2, Yaw2),
                                                Params...);
+      }
+
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        /** map pointer to vectors */
+        VectorRefConst<double, 2> P1(StatePointers.at(0));
+        VectorRefConst<double, 1> Yaw1(StatePointers.at(1));
+        VectorRef<double, 2>      P2(StatePointers.at(2));
+        VectorRef<double, 1>      Yaw2(StatePointers.at(3));
+
+        /** map to rotation */
+        const Rotation2DT<double> R1(Yaw1(0));
+        const Rotation2DT<double> ROdom(this->_MeasurementVector(2) * this->_DeltaTime);
+
+        P2 = P1 + R1 * this->_MeasurementVector.head(2) * this->_DeltaTime;
+
+        Yaw2(0) = (ROdom * R1).angle();
       }
   };
 

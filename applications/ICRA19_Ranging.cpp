@@ -335,8 +335,8 @@ int main(int argc, char** argv)
     /** add motion model or odometry */
     libRSF::StateList MotionList;
     MotionList.add(POSITION_STATE, TimestampOld);
-    MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, TimestampOld);
+    MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, Timestamp);
     Graph.addFactor<libRSF::FactorType::Odom2Diff>(MotionList, InputData.getElement(libRSF::SensorType::Odom2Diff, Timestamp), NoiseOdom2Diff);
 

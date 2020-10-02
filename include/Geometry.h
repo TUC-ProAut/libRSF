@@ -50,7 +50,7 @@ namespace libRSF
   }
 
   template <typename T>
-  VectorT<T, 3> RelativeMotion2D(const T* PointOld, const T* PointNew, const T* YawOld, const T* const YawNew)
+  VectorT<T, 3> RelativeMotion2D(const T* PointOld, const T* YawOld, const T* PointNew, const T* const YawNew)
   {
     const VectorT<T, 2> POld(PointOld[0], PointOld[1]);
     const VectorT<T, 2> PNew(PointNew[0], PointNew[1]);

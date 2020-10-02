@@ -50,18 +50,17 @@ namespace libRSF
 
       /** geometric error model */
       template <typename T>
-      MatrixT<T, Dim * 2, 1> Evaluate(const T* const ValueOld, const T* const ValueNew,
-                                            const T* const DriftOld, const T* const DriftNew,
-                                            const double &DeltaTime) const
+      MatrixT<T, Dim * 2, 1> Evaluate(const T* const ValueOld, const T* const DriftOld,
+                                      const T* const ValueNew, const T* const DriftNew) const
       {
-        MatrixRefConst<T, Dim, 1> V1(ValueOld);
-        MatrixRefConst<T, Dim, 1> V2(ValueNew);
-        MatrixRefConst<T, Dim, 1> D1(DriftOld);
-        MatrixRefConst<T, Dim, 1> D2(DriftNew);
+        VectorRefConst<T, Dim> V1(ValueOld);
+        VectorRefConst<T, Dim> D1(DriftOld);
+        VectorRefConst<T, Dim> V2(ValueNew);
+        VectorRefConst<T, Dim> D2(DriftNew);
 
-        MatrixT<T, Dim * 2, 1> Error;
+        VectorT<T, Dim * 2> Error;
 
-        Error.template head<Dim>() = V2 - V1 - (D1 * DeltaTime);
+        Error.template head<Dim>() = V2 - V1 - (D1 * this->_DeltaTime);
         Error.template tail<Dim>() = D2 - D1;
 
         return Error;
@@ -69,14 +68,25 @@ namespace libRSF
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
-      bool operator()(const T* const ValueOld, const T* const ValueNew,
-                      const T* const DriftOld, const T* const DriftNew,
+      bool operator()(const T* const ValueOld, const T* const DriftOld,
+                      const T* const ValueNew, const T* const DriftNew,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(ValueOld, ValueNew,
-                                               DriftOld, DriftNew,
-                                               this->_DeltaTime),
+        return this->_Error.template weight<T>(this->Evaluate(ValueOld, DriftOld,
+                                                              ValueNew, DriftNew),
                                                Params...);
+      }
+
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        VectorRefConst<double, Dim> V1(StatePointers.at(0));
+        VectorRefConst<double, Dim> D1(StatePointers.at(1));
+        VectorRef<double, Dim> V2(StatePointers.at(2));
+        VectorRef<double, Dim> D2(StatePointers.at(3));
+
+        V2 = V1 + (D1 * this->_DeltaTime);
+        D2 = D1;
       }
   };
 

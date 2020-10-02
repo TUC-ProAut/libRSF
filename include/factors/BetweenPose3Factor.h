@@ -53,11 +53,11 @@ namespace libRSF
       /** geometric error model */
       template <typename T>
       VectorT<T, 6> Evaluate(const T* const Pos1, const T* const Quat1,
-                             const T* const Pos2, const T* const Quat2,
-                             const Vector3 &Translation, const Vector4 &Rotation) const
+                             const T* const Pos2, const T* const Quat2) const
       {
-        /** store as quaternion */
-        Quaternion QuatRot = VectorToQuaternion<double>(Rotation);
+        /** store measurement seperatly */
+        const Vector3 Translation = this->_MeasurementVector.head(3);
+        const Quaternion QuatRot = VectorToQuaternion<double>(this->_MeasurementVector.tail(4));
 
         /** estimate measurements*/
         VectorT<T, 3> TransEst;
@@ -81,10 +81,19 @@ namespace libRSF
                       ParamsType... Params) const
       {
         return this->_Error.template weight<T>(this->Evaluate(Pos1, Quat1,
-                                               Pos2, Quat2,
-                                               this->_MeasurementVector.head(3),
-                                               this->_MeasurementVector.tail(4)),
+                                                              Pos2, Quat2),
                                                Params...);
+      }
+
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        RelativePose3Model<double>::applyForward(StatePointers[0],
+                                                 StatePointers[1],
+                                                 StatePointers[2],
+                                                 StatePointers[3],
+                                                 this->_MeasurementVector.head(3),
+                                                 VectorToQuaternion<double>(this->_MeasurementVector.tail(4)));
       }
   };
 

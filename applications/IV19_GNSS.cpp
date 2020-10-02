@@ -420,16 +420,16 @@ int main(int argc, char** argv)
     /** add odometry */
     libRSF::StateList MotionList;
     MotionList.add(POSITION_STATE, TimestampOld);
-    MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, TimestampOld);
+    MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, Timestamp);
     Graph.addFactor<libRSF::FactorType::Odom4_ECEF>(MotionList, InputData.getElement(libRSF::SensorType::Odom3, Timestamp), NoiseOdom4DOF);
 
     /** add clock drift model */
     libRSF::StateList ClockList;
     ClockList.add(CLOCK_ERROR_STATE, TimestampOld);
-    ClockList.add(CLOCK_ERROR_STATE, Timestamp);
     ClockList.add(CLOCK_DRIFT_STATE, TimestampOld);
+    ClockList.add(CLOCK_ERROR_STATE, Timestamp);
     ClockList.add(CLOCK_DRIFT_STATE, Timestamp);
     Graph.addFactor<libRSF::FactorType::ConstDrift1>(ClockList, NoiseCCED);
 
