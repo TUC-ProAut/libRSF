@@ -73,7 +73,7 @@ namespace libRSF
       ErrorModelConfig():MixtureType(ErrorModelMixtureType::None), TuningType(ErrorModelTuningType::None) {};
 
       ErrorModelType Type;
-      Vector Paramter;
+      Vector Parameter;
 
       ErrorModelMixtureType MixtureType; /**< only if a GMM is used */
       ErrorModelTuningType TuningType; /**< only if a GMM is used */

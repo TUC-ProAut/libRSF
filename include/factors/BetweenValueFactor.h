@@ -52,13 +52,12 @@ namespace libRSF
       /** deterministic error model */
       template <typename T>
       VectorT<T, Dim> Evaluate(const T* const Value1,
-                                      const T* const Value2,
-                                      const VectorStatic<Dim> &BetweenValue) const
+                                      const T* const Value2) const
       {
         VectorRefConst<T, Dim> V1(Value1);
         VectorRefConst<T, Dim> V2(Value2);
 
-        return V2 - V1 - BetweenValue.template cast<T>();
+        return V2 - V1 - this->_MeasurementVector;
       }
 
       /** combine probabilistic and deterministic model */
@@ -67,10 +66,18 @@ namespace libRSF
                       const T* const Value2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Value1,
-                                                              Value2,
-                                                              this->_MeasurementVector),
+        return this->_Error.template weight<T>(this->Evaluate(Value1, Value2),
                                                Params...);
+      }
+
+      /** predict the next state for initialization */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        /** map pointer to vectors */
+        VectorRefConst<double, Dim> State1(StatePointers.at(0));
+        VectorRef<double, Dim> State2(StatePointers.at(1));
+
+        State2 = State1 + this->_MeasurementVector;
       }
   };
 

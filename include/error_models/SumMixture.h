@@ -78,13 +78,13 @@ namespace libRSF
 
       if(this->_Enable)
       {
-        size_t NumberOfComponents = _Mixture.getNumberOfComponents();
+        const int NumberOfComponents = _Mixture.getNumberOfComponents();
 
         MatrixT<T, Dynamic, 1> Scalings(NumberOfComponents);
         MatrixT<T, Dynamic, 1> Exponents(NumberOfComponents);
 
         /** calculate all exponents and scalings */
-        for(int nComponent = 0; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
+        for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
         {
           Exponents(nComponent) = - 0.5 * (_Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm() + 1e-10);
           Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError)/_Normalization);
@@ -109,10 +109,10 @@ namespace libRSF
     {
       _Mixture = Mixture;
 
-      const size_t NumberOfComponents = _Mixture.getNumberOfComponents();
+      const int NumberOfComponents = _Mixture.getNumberOfComponents();
 
       _Normalization = 0;
-      for(int nComponent = 0; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
+      for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
       {
         _Normalization += _Mixture.getMaximumOfComponent(nComponent);
       }

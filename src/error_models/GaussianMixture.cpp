@@ -54,7 +54,7 @@ namespace libRSF
   template<>
   Vector1 GaussianMixture<1>::removeOffset()
   {
-    size_t NumberOfComponents = this->getNumberOfComponents();
+    int NumberOfComponents = this->getNumberOfComponents();
     Vector1 MeanLOS;
 
     this->sortComponentsByWeight();
@@ -62,7 +62,7 @@ namespace libRSF
 
     /** remove offset of the first "LOS" component */
     this->sortComponentsByMean();
-    for(size_t i = 0; i < NumberOfComponents; ++i)
+    for(int i = 0; i < NumberOfComponents; ++i)
     {
       if(_Mixture.at(i).getWeight()(0) >= MinimumWeight)
       {
@@ -71,7 +71,7 @@ namespace libRSF
       }
     }
 
-    for(size_t i = 0; i < NumberOfComponents; ++i)
+    for(int i = 0; i < NumberOfComponents; ++i)
     {
       _Mixture.at(i).setMean(_Mixture.at(i).getMean() - MeanLOS);
     }
@@ -82,10 +82,10 @@ namespace libRSF
   template<>
   void GaussianMixture<1>::removeGivenOffset(const Vector1 &Offset)
   {
-    size_t NumberOfComponents = this->getNumberOfComponents();
+    int NumberOfComponents = this->getNumberOfComponents();
 
     /** remove offset of the given component */
-    for(size_t i = 0; i < NumberOfComponents; ++i)
+    for(int i = 0; i < NumberOfComponents; ++i)
     {
       _Mixture.at(i).setMean(_Mixture.at(i).getMean() - Offset);
     }
@@ -94,13 +94,13 @@ namespace libRSF
   template <>
   StateData GaussianMixture<1>::exportToStateData(double Timestamp)
   {
-    size_t NumberOfComponents = this->getNumberOfComponents();
+    int NumberOfComponents = this->getNumberOfComponents();
 
     /** save to vectors */
     Vector Means(NumberOfComponents);
     Vector StdDevs(NumberOfComponents);
     Vector Weights(NumberOfComponents);
-    for(size_t i = 0; i < NumberOfComponents; ++i)
+    for(int i = 0; i < NumberOfComponents; ++i)
     {
       Means(i) = _Mixture.at(i).getMean()[0];
       StdDevs(i) = 1/_Mixture.at(i).getSqrtInformation()[0];

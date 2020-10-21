@@ -43,7 +43,7 @@ namespace libRSF
 
     /** loop over grid */
     Costs.clear();
-    for (int64_t n = 0; n < Points.size(); ++n)
+    for (int n = 0; n < static_cast<int>(Points.size()); ++n)
     {
       State = Points.at(n);
 

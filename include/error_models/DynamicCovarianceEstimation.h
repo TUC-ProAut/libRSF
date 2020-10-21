@@ -32,75 +32,54 @@
 #ifndef DYNAMICCOVARIANCEESTIMATION_H
 #define DYNAMICCOVARIANCEESTIMATION_H
 
-#include <Eigen/Dense>
-
 #include "ErrorModel.h"
-
-//TODO: adapt to sqrt information matrix (multidimensional!!!)
+#include "../VectorMath.h"
 
 namespace libRSF
 {
-  template <int Dim, typename BaseModelType>
-  class DynamicCovarianceEstimation : public ErrorModel <Dim, Dim+1, Dim>
+  template <int Dim>
+  class DynamicCovarianceEstimation : public ErrorModel < Dim, Dim + 1, Dim>
   {
-  public:
+    public:
 
       DynamicCovarianceEstimation(){}
 
-      explicit DynamicCovarianceEstimation(BaseModelType BaseModel): _BaseModel(BaseModel)
+      explicit DynamicCovarianceEstimation(const VectorStatic<Dim> &CovMinDiagonal): _CovMin(CovMinDiagonal)
       {}
 
-
       template <typename T>
-      bool Evaluate(const T* const SwitchVariable, T* Error) const
+      bool weight(const VectorT<T, Dim> &RawError, const T* const Covariance, T* Error) const
       {
-//        /** evaluate with the non robust model */
-//        _BaseModel.Evaluate(Error);
-//
-//        /** store error in matrix */
-//        Eigen::Map<MatrixT<T, Dim+1, 1>> ErrorMap(Error);
-//
-//        /** apply switch variable */
-//        ErrorMap.topLeftCorner(Dim,1).array() *=  SwitchVariable[0];
-//
-//        /** add switch prior */
-//        ErrorMap(Dim,0) = (SwitchVariable[0] - 1.0) / T(_Sigma);
+        if (this->_Enable)
+        {
+          /** map error to matrix */
+          VectorRef <T, Dim+1> ErrorMap(Error);
+
+          /** map covariance matrix diagonal to matrix */
+          VectorRefConst <T, Dim> CovMap(Covariance);
+
+          /** apply sqrt info */
+          ErrorMap.template head<Dim>() = RawError.template head<Dim>().array() / CovMap.array().sqrt();
+
+          /** add nonlinear prior prior */
+          ErrorMap(Dim) = sqrt(log(CovMap.prod() / (_CovMin.prod() - 1e-6))) * 2.0;
+        }
+        else
+        {
+          /** pass raw error trough */
+          VectorRef<T, Dim> ErrorMap(Error);
+          ErrorMap = RawError;
+
+          /** set unused dimension to 0 */
+          Error[Dim] = T(0.0);
+        }
 
         return true;
       }
 
-  private:
-    BaseModelType _BaseModel;
+    private:
+      VectorStatic<Dim> _CovMin;
   };
-
-
-
-//  template <typename T> bool DCE(double const SigmaMin, const T* const Sigma, T* Error)
-//  {
-//    Error[0] = ceres::sqrt(ceres::log( Sigma[0] / T(SigmaMin - 1e-5)) * T(2.0));
-//    return true;
-//  }
-//
-//  template <typename T> bool DCE1(double const SigmaMin, const T* const Sigma, T* Error)
-//  {
-//    Error[0] /= Sigma[0];
-//    return DCE(SigmaMin, Sigma, &Error[1]);
-//  }
-//
-//  template <typename T> bool DCE2(double const SigmaMin, const T* const Sigma, T* Error)
-//  {
-//    Error[0] /= Sigma[0];
-//    Error[1] /= Sigma[0];
-//    return DCE(SigmaMin, Sigma, &Error[2]);
-//  }
-//
-//  template <typename T> bool DCE3(double const SigmaMin, const T* const Sigma, T* Error)
-//  {
-//    Error[0] /= Sigma[0];
-//    Error[1] /= Sigma[0];
-//    Error[2] /= Sigma[0];
-//    return DCE(SigmaMin, Sigma, &Error[3]);
-//  }
 }
 
 #endif // DYNAMICCOVARIANCEESTIMATION_H

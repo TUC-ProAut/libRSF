@@ -25,7 +25,7 @@
 
 namespace libRSF
 {
-  void StateList::add(string Type, double Timestamp, size_t Number)
+  void StateList::add(string Type, double Timestamp, int Number)
   {
     this->add(StateID(Type, Timestamp, Number));
   }
@@ -40,7 +40,7 @@ namespace libRSF
     _List.clear();
   }
 
-  FactorGraph::FactorGraph() : _Graph(this->_DefaultProblemOptions), _Structure(&_Graph, &_StateData), _SolverDuration(0.0), _MarginalizationDuration(0.0), _SolverIterations(0)
+  FactorGraph::FactorGraph() : _Graph(this->_DefaultProblemOptions), _Structure(&_Graph, &_StateData), _SolverDuration(0.0), _SolverIterations(0), _MarginalizationDuration(0.0)
   {}
 
   void FactorGraph::solve()
@@ -76,10 +76,10 @@ namespace libRSF
   {
     _StateData.addElement(Name, Element);
     double Timestamp = Element.getTimestamp();
-    size_t StateNumber = _StateData.countElement(Name, Timestamp) - 1;
+    int StateNumber = _StateData.countElement(Name, Timestamp) - 1;
 
     double* StatePointer = _StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer();
-    size_t StateSize = _StateData.getElement(Name, Timestamp, StateNumber).getMean().size();
+    int StateSize = _StateData.getElement(Name, Timestamp, StateNumber).getMean().size();
 
     /** add state vector as parameter block with local parametrization if required */
     switch (_StateData.getElement(Name, Timestamp, StateNumber).getType())
@@ -187,10 +187,44 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::setSubsetConstant(string Name, double Timestamp, size_t Number, const std::vector<int> &ConstantIndex)
+  void FactorGraph::setSubsetConstant(string Name, double Timestamp, int Number, const std::vector<int> &ConstantIndex)
   {
     _Graph.SetParameterization(_StateData.getElement(Name, Timestamp, Number).getMeanPointer(),
                                new ceres::SubsetParameterization(_StateData.getElement(Name, Timestamp, Number).getMean().size(), ConstantIndex));
+  }
+
+  void FactorGraph::setUpperBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound)
+  {
+    const int Dim = _StateData.getElement(Name, Timestamp, StateNumber).getMean().size();
+
+    if (Bound.size() == Dim)
+    {
+      for (int n = 0; n < Dim; n++)
+      {
+        _Graph.SetParameterUpperBound(_StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer(), n, Bound(n));
+      }
+    }
+    else
+    {
+      PRINT_ERROR("Dimension of bounding vector is ", Bound.size(), " instead of ", Dim, "!") ;
+    }
+  }
+
+  void FactorGraph::setLowerBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound)
+  {
+    const int Dim = _StateData.getElement(Name, Timestamp, StateNumber).getMean().size();
+
+    if (Bound.size() == Dim)
+    {
+      for (int n = 0; n < Dim; n++)
+      {
+        _Graph.SetParameterLowerBound(_StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer(), n, Bound(n));
+      }
+    }
+    else
+    {
+      PRINT_ERROR("Dimension of bounding vector is ", Bound.size(), " instead of ", Dim, "!") ;
+    }
   }
 
   bool FactorGraph::marginalizeStates(std::vector<StateID> States)
@@ -267,7 +301,7 @@ namespace libRSF
 
       /** store original states */
       std::vector<Vector> OriginalStates;
-      for (size_t n = 0; n < ConnectedStates.size(); n++)
+      for (int n = 0; n < static_cast<int>(ConnectedStates.size()); n++)
       {
         VectorRef<double, Dynamic> State(ConnectedStates.at(n), GlobalSize.at(n));
         OriginalStates.push_back(State);
@@ -293,7 +327,8 @@ namespace libRSF
       PRINT_WARNING("No connected states in marginalization. Marginalized states get deleted directly!");
     }
 
-    /** remove marginalized states */
+    /** remove marginalized states in reverse order */
+    std::reverse(States.begin(), States.end());
     for (const StateID &State : States)
     {
       this->removeState(State.ID, State.Timestamp, State.Number);
@@ -302,7 +337,7 @@ namespace libRSF
     return true;
   }
 
-  bool FactorGraph::marginalizeState(const string Name, const double Timestamp, const size_t Number)
+  bool FactorGraph::marginalizeState(const string Name, const double Timestamp, const int Number)
   {
     std::vector<StateID> SingleState;
     SingleState.emplace_back(StateID(Name, Timestamp, Number));
@@ -344,8 +379,8 @@ namespace libRSF
             for (const double Time : Times)
             {
               /** iterate over number */
-              size_t Numbers = _StateData.countElement(Name, Time);
-              for (size_t n = 0; n < Numbers; n++)
+              int Numbers = _StateData.countElement(Name, Time);
+              for (int n = 0; n < Numbers; n++)
               {
                 States.emplace_back(StateID(Name, Time, n));
               }
@@ -400,7 +435,7 @@ namespace libRSF
 
   void FactorGraph::sampleCost1D(const string StateName,
                                  const double Timestamp,
-                                 const size_t Number,
+                                 const int Number,
                                  const int PointCount,
                                  const double Range,
                                  StateDataSet &Result)
@@ -410,7 +445,7 @@ namespace libRSF
 
   void FactorGraph::sampleCost2D(const string StateName,
                                  const double Timestamp,
-                                 const size_t Number,
+                                 const int Number,
                                  const int PointCount,
                                  const double Range,
                                  StateDataSet &Result)
@@ -423,7 +458,7 @@ namespace libRSF
     return _StateData;
   }
 
-  void FactorGraph::removeState(string Name, double Timestamp, size_t Number)
+  void FactorGraph::removeState(string Name, double Timestamp, int Number)
   {
     /** safety check */
     if (_StateData.checkElement(Name, Timestamp, Number))
@@ -647,7 +682,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::getFactorsOfState(const string Name, const double Timestamp, const size_t Number, std::vector<FactorID> &Factors) const
+  void FactorGraph::getFactorsOfState(const string Name, const double Timestamp, const int Number, std::vector<FactorID> &Factors) const
   {
     StateID State(Name, Timestamp, Number);
     _Structure.getFactorsOfState(State, Factors);
@@ -718,7 +753,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, const double Time, const size_t Number, Vector &Error)
+  void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, const double Time, const int Number, Vector &Error)
   {
     /** disable error model */
     disableErrorModel(CurrentFactorType);

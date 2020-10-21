@@ -84,10 +84,10 @@ namespace libRSF
 
           MatrixT<T, Dim + 1, 1> ErrorShadow, ErrorShadowBest;
 
-          size_t NumberOfComponents = _Mixture.getNumberOfComponents();
+          const int NumberOfComponents = _Mixture.getNumberOfComponents();
 
           /** calculate Log-Likelihood for each Gaussian component */
-          for(int nComponent = 0; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
+          for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
           {
             ErrorShadow << _Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError),
                            sqrt(ceres::fmax(-2.0 * T(log(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError) / _Normalization)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
@@ -108,7 +108,7 @@ namespace libRSF
           ErrorMap = RawError;
 
           /** set unused dimension to 0 */
-          Error[Dim] = T(0);
+          Error[Dim] = T(0.0);
         }
 
         return true;
@@ -122,8 +122,8 @@ namespace libRSF
 
         _Normalization = _Mixture.getMaximumOfComponent(0);
 
-        size_t NumberOfComponents = _Mixture.getNumberOfComponents();
-        for(int nComponent = 1; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
+        const int NumberOfComponents = _Mixture.getNumberOfComponents();
+        for(int nComponent = 1; nComponent < NumberOfComponents; ++nComponent)
         {
           _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
         }

@@ -64,7 +64,7 @@ namespace libRSF
   std::ostream &operator << (std::ostream& Os, const SolutionType& Type)
   {
     /** print numeric value */
-    Os <<  static_cast<unsigned int>(Type);
+    Os <<  static_cast<int>(Type);
     return Os;
   }
 }

@@ -95,9 +95,9 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
   ListPseudorange.add(POSITION_STATE, Timestamp);
   ListPseudorange.add(CLOCK_ERROR_STATE, Timestamp);
 
-  size_t SatNumber = Measurements.countElement(libRSF::SensorType::Pseudorange3, Timestamp);
+  int SatNumber = Measurements.countElement(libRSF::SensorType::Pseudorange3, Timestamp);
 
-  for(size_t SatCounter = 0; SatCounter < SatNumber; ++SatCounter)
+  for(int SatCounter = 0; SatCounter < SatNumber; ++SatCounter)
   {
     /** get measurement */
     Pseudorange = Measurements.getElement(libRSF::SensorType::Pseudorange3, Timestamp, SatCounter);

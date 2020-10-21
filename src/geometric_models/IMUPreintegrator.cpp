@@ -27,9 +27,9 @@ namespace libRSF
   IMUPreintegrator::IMUPreintegrator(const Vector3 &BiasAcc, const Vector3 &BiasTR,
                                      const double RandomWalkAcc, const double RandomWalkGyro,
                                      const double CurrentTime): _CurrentTime(CurrentTime),
-                                     _BiasAcc(BiasAcc), _BiasTR(BiasTR),
                                      _NoiseDensityAcc(0.0), _NoiseDensityGyro(0.0),
-                                     _RandomWalkAcc(RandomWalkAcc), _RandomWalkGyro(RandomWalkGyro)
+                                     _RandomWalkAcc(RandomWalkAcc), _RandomWalkGyro(RandomWalkGyro),
+                                     _BiasAcc(BiasAcc), _BiasTR(BiasTR)
   {
     initialize();
   }
@@ -38,9 +38,9 @@ namespace libRSF
                                      const double NoiseDensityAcc, const double NoiseDensityGyro,
                                      const double RandomWalkAcc, const double RandomWalkGyro,
                                      const double CurrentTime):_CurrentTime(CurrentTime),
-                                     _BiasAcc(BiasAcc), _BiasTR(BiasTR),
                                      _NoiseDensityAcc(NoiseDensityAcc), _NoiseDensityGyro(NoiseDensityGyro),
-                                     _RandomWalkAcc(RandomWalkAcc), _RandomWalkGyro(RandomWalkGyro)
+                                     _RandomWalkAcc(RandomWalkAcc), _RandomWalkGyro(RandomWalkGyro),
+                                     _BiasAcc(BiasAcc), _BiasTR(BiasTR)
   {
     initialize();
   }
@@ -143,7 +143,7 @@ namespace libRSF
   void IMUPreintegrator::integrateFull(const double Timestamp)
   {
     /** loop over measurements and integrate */
-    for(int i = 0; i < _Measurements.size(); i++)
+    for(int i = 0; i < static_cast<int>(_Measurements.size()); i++)
     {
       this->integrateSingleMeasurement(i, _Measurements.at(i).getTimestamp());
     }

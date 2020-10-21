@@ -41,7 +41,7 @@ namespace libRSF
 
   Vector FactorGraphConfig::ParseVectorFromYAML(YAML::Node VectorNode)
   {
-    size_t Length = VectorNode.size();
+    int Length = VectorNode.size();
     Vector Vec(Length);
 
     if(Length == 0)
@@ -49,7 +49,7 @@ namespace libRSF
       PRINT_ERROR("Empty element in YAML config: ", VectorNode);
     }
 
-    for(size_t n = 0; n < Length; n++)
+    for(int n = 0; n < Length; n++)
     {
       Vec(n) = VectorNode[n].as<double>();
     }
@@ -86,13 +86,13 @@ namespace libRSF
     switch(Model.Type)
     {
       case ErrorModelType::SC:
-        Model.Paramter.resize(1);
-        Model.Paramter(0) = ErrorModelNode["parameter"].as<double>();
+        Model.Parameter.resize(1);
+        Model.Parameter(0) = ErrorModelNode["parameter"].as<double>();
         break;
 
       case ErrorModelType::DCS:
-        Model.Paramter.resize(1);
-        Model.Paramter(0) = ErrorModelNode["parameter"].as<double>();
+        Model.Parameter.resize(1);
+        Model.Parameter(0) = ErrorModelNode["parameter"].as<double>();
         break;
 
       case ErrorModelType::GMM:
@@ -124,34 +124,34 @@ namespace libRSF
                 WeightVect = ParseVectorFromYAML(ErrorModelNode["weight"]);
 
                 /** write to vector */
-                Model.Paramter.resize(MeanVect.size() + StdDevVect.size() + WeightVect.size());
-                Model.Paramter << MeanVect , StdDevVect , WeightVect;
+                Model.Parameter.resize(MeanVect.size() + StdDevVect.size() + WeightVect.size());
+                Model.Parameter << MeanVect , StdDevVect , WeightVect;
                 break;
               }
 
             case ErrorModelTuningType::EM:
-              Model.Paramter.resize(2);
-              Model.Paramter(0) = ErrorModelNode["components"].as<double>();
-              Model.Paramter(1) = ErrorModelNode["std_dev"].as<double>();
+              Model.Parameter.resize(2);
+              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
+              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
 
               Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
 
               break;
 
             case ErrorModelTuningType::EM_MAP:
-              Model.Paramter.resize(2);
-              Model.Paramter(0) = ErrorModelNode["components"].as<double>();
-              Model.Paramter(1) = ErrorModelNode["std_dev"].as<double>();
+              Model.Parameter.resize(2);
+              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
+              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
 
               Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
 
               break;
 
             case ErrorModelTuningType::VBI:
-              Model.Paramter.resize(3);
-              Model.Paramter(0) = ErrorModelNode["components"].as<double>();
-              Model.Paramter(1) = ErrorModelNode["std_dev"].as<double>();
-              Model.Paramter(2) = ErrorModelNode["nu"].as<double>();
+              Model.Parameter.resize(3);
+              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
+              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
+              Model.Parameter(2) = ErrorModelNode["nu"].as<double>();
 
               Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
               break;
@@ -199,7 +199,7 @@ namespace libRSF
     switch (Solution.Type)
     {
     case SolutionType::Batch:
-        SolverConfig.minimizer_progress_to_stdout = true;
+        SolverConfig.minimizer_progress_to_stdout = false;
 
         SolverConfig.max_num_iterations = YAMLConfig["solution"]["max_iterations"].as<double>();
         SolverConfig.max_solver_time_in_seconds = YAMLConfig["solution"]["max_time"].as<double>();
@@ -272,7 +272,7 @@ namespace libRSF
     }
 
     /** parse factors */
-    for(size_t nFactor = 0; nFactor < YAMLConfig["factors"].size(); nFactor++)
+    for(int nFactor = 0; nFactor < static_cast<int>(YAMLConfig["factors"].size()); nFactor++)
     {
       /** create active factor */
       FactorConfig Factor;

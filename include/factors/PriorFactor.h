@@ -51,19 +51,28 @@ namespace libRSF
 
       /** geometric error model */
       template <typename T>
-      VectorT<T, Dim> Evaluate(const T* const StatePointer, const VectorStatic<Dim> &PriorValue) const
+      VectorT<T, Dim> Evaluate(const T* const StatePointer) const
       {
         VectorRefConst<T, Dim> State(StatePointer);
 
-        return State - PriorValue;
+        return State - this->_MeasurementVector;
       }
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
       bool operator()(const T* const State, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(State, this->_MeasurementVector),
+        return this->_Error.template weight<T>(this->Evaluate(State),
                                                Params...);
+      }
+
+      /** predict the next state for initialization */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        /** map pointer to vectors */
+        VectorRef<double, Dim> State(StatePointers.at(0));
+
+        State = this->_MeasurementVector;
       }
   };
 
@@ -82,17 +91,28 @@ namespace libRSF
 
       /** geometric error model */
       template <typename T>
-      VectorT<T, 1> Evaluate(const T* const Angle, const double PriorAngle) const
+      VectorT<T, 1> Evaluate(const T* const Angle) const
       {
-        return (VectorT<T, 1>() << NormalizeAngle(*Angle - PriorAngle)).finished();
+        VectorRefConst<T, 1> AngleVector(Angle);
+
+        return NormalizeAngleVector<T, 1>(AngleVector - this->_MeasurementVector.template cast<T>());
       }
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
       bool operator()(const T* const State, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(State, this->_MeasurementVector(0)),
+        return this->_Error.template weight<T>(this->Evaluate(State),
                                                Params...);
+      }
+
+      /** predict the next state for initialization */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        /** map pointer to vectors */
+        VectorRef<double, 1> State(StatePointers.at(0));
+
+        State = this->_MeasurementVector;
       }
   };
 
@@ -110,20 +130,28 @@ namespace libRSF
 
       /** geometric error model */
       template <typename T>
-      VectorT<T, 3> Evaluate(const T* const Quaternion, const Vector4 &PriorQuaternion) const
+      VectorT<T, 3> Evaluate(const T* const Quaternion) const
       {
         QuaternionRefConst<T> Q1(Quaternion);
-        libRSF::Quaternion Q2(PriorQuaternion(3), PriorQuaternion(0), PriorQuaternion(1), PriorQuaternion(2));
 
-        return QuaternionError<T>(Q1, Q2.template cast<T>());
+        return QuaternionError<T>(Q1, VectorToQuaternion<double>(this->_MeasurementVector).template cast<T>());
       }
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
       bool operator()(const T* const State, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(State, this->_MeasurementVector),
+        return this->_Error.template weight<T>(this->Evaluate(State),
                                                Params...);
+      }
+
+      /** predict the next state for initialization */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        /** map pointer to vectors */
+        VectorRef<double, 4> State(StatePointers.at(0));
+
+        State = this->_MeasurementVector;
       }
   };
 

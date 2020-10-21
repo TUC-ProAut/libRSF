@@ -181,7 +181,7 @@ namespace libRSF
     },
 
     {
-      "cov", StateType::Covariance,
+      "cov1", StateType::Covariance1,
       {
         {StateElement::Timestamp, 1},
         {StateElement::Mean, 1},

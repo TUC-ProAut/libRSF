@@ -116,7 +116,7 @@ namespace libRSF
     return (CholeskyOfSqrtInfo.info() != Eigen::NumericalIssue);
   }
 
-  void RemoveColumn (Matrix& Matrix, unsigned int ColToRemove);
+  void RemoveColumn (Matrix& Matrix, int ColToRemove);
 
   void CRSToMatrix(const ceres::CRSMatrix &CRSMat, Matrix &Mat);
 }

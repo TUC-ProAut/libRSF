@@ -261,7 +261,7 @@ namespace libRSF
       }
 
       /** init with increasing uncertainties */
-      void initSpread(const size_t Components, const double BaseStdDev)
+      void initSpread(const int Components, const double BaseStdDev)
       {
         libRSF::GaussianComponent<Dim> Component;
 
@@ -289,7 +289,7 @@ namespace libRSF
       /** for distribution-to-distribution models */
       void inflateWithCov(MatrixStatic<Dim, Dim> Cov)
       {
-        for (size_t i = 0; i < _Mixture.size(); ++i)
+        for (int i = 0; i < static_cast<int>(_Mixture.size()); ++i)
         {
           MatrixStatic<Dim, Dim> CovNew;
 
@@ -309,9 +309,14 @@ namespace libRSF
         _Mixture.clear();
       }
 
-      size_t getNumberOfComponents() const
+      int getNumberOfComponents() const
       {
         return _Mixture.size();
+      }
+
+      void getMixture(std::vector<GaussianComponent<Dim>>& Mixture)
+      {
+        Mixture = _Mixture;
       }
 
       void computeLikelihood(const ErrorMatType &DataVector, Matrix &Likelihood) const
@@ -376,7 +381,7 @@ namespace libRSF
         NegLogLikelihood.resize(M, N);
 
         /** loop over components*/
-        for (size_t m = 0; m < M; ++m)
+        for (int m = 0; m < M; ++m)
         {
           NegLogLikelihood.row(m) = _Mixture.at(m).computeNegLogLikelihood(DataVector);
         }
@@ -612,11 +617,11 @@ namespace libRSF
       bool reduceMixture(double BhattacharyyaLimit)
       {
         bool PerformedMerge = false;
-        size_t M = _Mixture.size();
+        int M = _Mixture.size();
 
-        for (size_t m1 = 0; m1 < M - 1; ++m1)
+        for (int m1 = 0; m1 < M - 1; ++m1)
         {
-          for (size_t m2 = m1 + 1; m2 < M; ++m2)
+          for (int m2 = m1 + 1; m2 < M; ++m2)
           {
             /** calculate metric */
             double d = CalculateBhattacharyyaDistance(_Mixture.at(m1), _Mixture.at(m2));
@@ -640,7 +645,7 @@ namespace libRSF
       void printParameter()
       {
         PRINT_LOGGING("GMM Parameter: Mean       StdDev-Diagonal       Weight");
-        for (size_t n = 0; n < _Mixture.size(); ++n)
+        for (int n = 0; n < static_cast<int>(_Mixture.size()); ++n)
         {
           PRINT_LOGGING("Component ", n + 1, ":   ",
                         _Mixture.at(n).getMean().transpose(), "       ",
@@ -651,18 +656,18 @@ namespace libRSF
 
       /** query error values for a specific component */
       template <typename T>
-      VectorT<T, Dim> getExponentialPartOfComponent(size_t NumberOfComponent, const VectorT<T, Dim> &Error) const
+      VectorT<T, Dim> getExponentialPartOfComponent(int NumberOfComponent, const VectorT<T, Dim> &Error) const
       {
         return _Mixture.at(NumberOfComponent).getExponentialPart(Error);
       }
 
       template <typename T>
-      double getLinearPartOfComponent(size_t NumberOfComponent, const VectorT<T, Dim> &Error) const
+      double getLinearPartOfComponent(int NumberOfComponent, const VectorT<T, Dim> &Error) const
       {
         return _Mixture.at(NumberOfComponent).getLinearPart(Error);
       }
 
-      double getMaximumOfComponent(size_t NumberOfComponent) const
+      double getMaximumOfComponent(int NumberOfComponent) const
       {
         return _Mixture.at(NumberOfComponent).getMaximum();
       }
@@ -673,7 +678,7 @@ namespace libRSF
 
       void removeMean()
       {
-        for (size_t i = 0; i < _Mixture.size(); ++i)
+        for (int i = 0; i < static_cast<int>(_Mixture.size()); ++i)
         {
           _Mixture.at(i).setMean(MatrixStatic<Dim, 1>::Zero());
         }

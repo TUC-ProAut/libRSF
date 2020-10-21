@@ -41,10 +41,10 @@ namespace libRSF
     MatSqrtInv = SAES.eigenvectors() * EigValInv.cwiseSqrt().asDiagonal() * SAES.eigenvectors().transpose();
   }
 
-  void RemoveColumn(Matrix& Matrix, unsigned int ColToRemove)
+  void RemoveColumn(Matrix& Matrix, int ColToRemove)
   {
-      unsigned int numRows = Matrix.rows();
-      unsigned int numCols = Matrix.cols()-1;
+      int numRows = Matrix.rows();
+      int numCols = Matrix.cols()-1;
 
       if( ColToRemove < numCols )
           Matrix.block(0,ColToRemove,numRows,numCols-ColToRemove) = Matrix.rightCols(numCols-ColToRemove);

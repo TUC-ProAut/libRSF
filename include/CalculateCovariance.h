@@ -200,9 +200,9 @@ namespace libRSF
       }
 
       /** convert indexes to points */
-      for (int nPoint = 0; nPoint < Indices.size(); nPoint++)
+      for (const VectorStatic<Dim> &Index : Indices)
       {
-        VectorStatic<Dim> Offset = (Indices.at(nPoint) - VectorStatic<Dim>::Ones()).array() * Delta.array();
+        VectorStatic<Dim> Offset = (Index - VectorStatic<Dim>::Ones()).array() * Delta.array();
         Points.emplace_back(Mean + Offset);
       }
 
@@ -212,7 +212,7 @@ namespace libRSF
 
       /** parse them into a tensor */
       Tensor<Dim, 3> CostTensor;
-      for (int nPoint = 0; nPoint < Points.size(); nPoint++)
+      for (int nPoint = 0; nPoint < static_cast<int>(Points.size()); nPoint++)
       {
         CostTensor.set(Cost.at(nPoint), Indices.at(nPoint));
       }

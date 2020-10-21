@@ -67,8 +67,8 @@ namespace libRSF
 
     do
     {
-      size_t NumberOfStates = Data.countElement(DataName,Timestamp);
-      for (size_t nState = 0; nState < NumberOfStates; ++nState)
+      int NumberOfStates = Data.countElement(DataName,Timestamp);
+      for (int nState = 0; nState < NumberOfStates; ++nState)
       {
         StateData State;
         Data.getElement(DataName, Timestamp, nState, State);

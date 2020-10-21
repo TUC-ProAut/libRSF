@@ -53,6 +53,7 @@
 #include "error_models/MaxSumMixture.h"
 #include "error_models/LossFunction.h"
 #include "error_models/SwitchableConstraints.h"
+#include "error_models/DynamicCovarianceEstimation.h"
 
 #include "factors/BaseFactor.h"
 #include "factors/ConstantValueFactor.h"
@@ -83,7 +84,7 @@ namespace libRSF
 {
   struct StateList
   {
-    void add(string Type, double Timestamp, size_t Number = 0);
+    void add(string Type, double Timestamp, int Number = 0);
     void add(StateID);
     void clear();
 
@@ -212,28 +213,28 @@ namespace libRSF
       bool computeCovariance(const string Name);
 
       /** marginalize factors */
-      bool marginalizeState(const string Name, const double Timestamp, const size_t Number = 0);
+      bool marginalizeState(const string Name, const double Timestamp, const int Number = 0);
       bool marginalizeStates(std::vector<StateID> States);
       bool marginalizeAllStatesOutsideWindow(double TimeWindow, double CurrentTime);
 
       /** sample output state */
       void sampleCost1D(const string StateName,
                         const double Timestamp,
-                        const size_t Number,
+                        const int Number,
                         const int PointCount,
                         const double Range,
                         StateDataSet &Result);
 
       void sampleCost2D(const string StateName,
                         const double Timestamp,
-                        const size_t Number,
+                        const int Number,
                         const int PointCount,
                         const double Range,
                         StateDataSet &Result);
 
       /** remove old states*/
       void removeState(string Name, double Timestamp);
-      void removeState(string Name, double Timestamp, size_t Number);
+      void removeState(string Name, double Timestamp, int Number);
       void removeStatesOutsideWindow(string Name, double TimeWindow, double CurrentTime);
       void removeAllStatesOutsideWindow(double TimeWindow, double CurrentTime);
 
@@ -241,18 +242,22 @@ namespace libRSF
       void setConstant(string Name, double Timestamp);
       void setVariable(string Name, double Timestamp);
 
-      void setSubsetConstant(string Name, double Timestamp, size_t Number, const std::vector<int> &ConstantIndex);
+      void setSubsetConstant(string Name, double Timestamp, int Number, const std::vector<int> &ConstantIndex);
 
       void setConstantOutsideWindow(string Name, double TimeWindow, double CurrentTime);
       void setAllConstantOutsideWindow(double TimeWindow, double CurrentTime);
 
+      /** handle bound */
+      void setUpperBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound);
+      void setLowerBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound);
+
       /** get information about the structure */
-      void getFactorsOfState(const string Name, const double Timestamp, const size_t Number, std::vector<FactorID> &Factors) const;
+      void getFactorsOfState(const string Name, const double Timestamp, const int Number, std::vector<FactorID> &Factors) const;
       int countFactorsOfType(const FactorType CurrentFactorType) const;
 
       /** compute raw errors without error models */
       void computeUnweightedError(const FactorType CurrentFactorType, std::vector<double> &ErrorData);
-      void computeUnweightedError(const FactorType CurrentFactorType, const double Time, const size_t Number, Vector &Error);
+      void computeUnweightedError(const FactorType CurrentFactorType, const double Time, const int Number, Vector &Error);
 
       /** access solver options */
       void setSolverOptions(ceres::Solver::Options Options);
@@ -291,7 +296,7 @@ namespace libRSF
         }
 
         /** create factor object */
-        auto Factor = new FactorClass(NoiseModel, Params...);
+        FactorClass* Factor = new FactorClass(NoiseModel, Params...);
 
         /** use the factor to predict */
         Factor->predict(StatePointers);
@@ -387,12 +392,13 @@ namespace libRSF
       ceres::Solver::Summary _Report;
       ceres::Solver::Options _SolverOptions;
 
+      StateDataSet _StateData;                      /**< holds all state variables */
+      FactorGraphStructure _Structure;              /**< represents the structure of variables and factors */
+
+      /** store information about the past computational load */
       double _SolverDuration;
       int _SolverIterations;
       double _MarginalizationDuration;
-
-      StateDataSet _StateData;                      /**< holds all state variables */
-      FactorGraphStructure _Structure;              /**< represents the structure of variables and factors */
   };
 }
 

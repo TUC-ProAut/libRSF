@@ -49,7 +49,7 @@ namespace libRSF
   template<int Dim>
   void EvaluateCostSurface(ceres::Problem &Graph,
                            double * const StatePointer,
-                           const size_t Points,
+                           const int Points,
                            const double Range,
                            StateDataSet &Result)
   {
@@ -76,7 +76,7 @@ namespace libRSF
     }
 
     /** create multi dimensional index */
-    std::vector<unsigned int> Index;
+    std::vector<int> Index;
     for (int nDim = 0; nDim < Dim; ++nDim)
     {
       Index.push_back(0);
@@ -128,7 +128,7 @@ namespace libRSF
 
       /**increment indexes */
       Index.at(0)++;
-      for (unsigned int i = 0; i < Dim; ++i)
+      for (int i = 0; i < Dim; ++i)
       {
         /** if one index is maxed */
         if (Index.at(i) >= Points && i < (Dim-1))

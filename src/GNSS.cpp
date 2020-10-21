@@ -246,8 +246,8 @@ namespace libRSF
     /** iterate over all measurements and convert them */
     do
     {
-      size_t N = Measurements.countElement(SensorType::Pseudorange3, Timestamp);
-      for (size_t n = 0; n < N; n++)
+      int N = Measurements.countElement(SensorType::Pseudorange3, Timestamp);
+      for (int n = 0; n < N; n++)
       {
         convertMeasurementToLocal(Measurements.getElement(SensorType::Pseudorange3, Timestamp, n));
       }
@@ -269,8 +269,8 @@ namespace libRSF
     /** iterate over all States and convert them */
     do
     {
-      size_t N = States.countElement(ID, Timestamp);
-      for (size_t n = 0; n < N; n++)
+      int N = States.countElement(ID, Timestamp);
+      for (int n = 0; n < N; n++)
       {
         convertStateToLocal(States.getElement(ID, Timestamp, n));
       }
@@ -292,8 +292,8 @@ namespace libRSF
     /** iterate over all States and convert them */
     do
     {
-      size_t N = States.countElement(ID, Timestamp);
-      for (size_t n = 0; n < N; n++)
+      int N = States.countElement(ID, Timestamp);
+      for (int n = 0; n < N; n++)
       {
         convertStateToGlobal(States.getElement(ID, Timestamp, n));
       }

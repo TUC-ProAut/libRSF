@@ -75,16 +75,19 @@ namespace libRSF
           VectorRef<T, Dim+1> ErrorMap(Error);
 
           /** apply switch variable */
-          ErrorMap.topLeftCorner(Dim,1).array() *= SwitchVariable[0];
+          ErrorMap.template head<Dim>().array() *= SwitchVariable[0];
 
           /** add switch prior */
-          ErrorMap(Dim,0) = (SwitchVariable[0] - 1.0) / _Sigma;
+          ErrorMap(Dim) = (SwitchVariable[0] - 1.0) / _Sigma;
         }
         else
         {
           /** pass raw error trough */
           VectorRef<T, Dim> ErrorMap(Error);
           ErrorMap = RawError;
+
+          /** set unused dimension to 0 */
+          Error[Dim] = T(0.0);
         }
 
         return true;

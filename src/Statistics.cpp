@@ -26,7 +26,7 @@ namespace libRSF
 {
   double Median(std::vector<double> &V)
   {
-    size_t n = V.size() / 2;
+    int n = V.size() / 2;
     std::nth_element(V.begin(), V.begin() + n, V.end());
     return V[n];
   }

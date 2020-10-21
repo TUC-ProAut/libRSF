@@ -46,7 +46,7 @@ namespace libRSF
     public:
 
       /** define types that store the configuration */
-      typedef std::vector<std::pair<ElementEnum, size_t>> ConfigType;
+      typedef std::vector<std::pair<ElementEnum, int>> ConfigType;
       typedef struct
       {
         std::string _Name;
@@ -204,7 +204,7 @@ namespace libRSF
       }
 
       /** change element size */
-      void resizeElement(const ElementEnum Element, const size_t Size)
+      void resizeElement(const ElementEnum Element, const int Size)
       {
         _Data.at(Element).resize(Size);
       }

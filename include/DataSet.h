@@ -56,7 +56,7 @@ namespace libRSF
       {
         UniqueID() = default;
 
-        UniqueID(const KeyType &IDNew, const double TimestampNew, const size_t NumberNew = 0): ID(IDNew), Timestamp(TimestampNew), Number(NumberNew)
+        UniqueID(const KeyType &IDNew, const double TimestampNew, const int NumberNew = 0): ID(IDNew), Timestamp(TimestampNew), Number(NumberNew)
         {}
 
         /** is required to compare keys */
@@ -67,7 +67,7 @@ namespace libRSF
 
         KeyType ID;
         double Timestamp;
-        size_t Number;
+        int Number;
       };
       typedef UniqueID ID;
 
@@ -83,7 +83,7 @@ namespace libRSF
         _DataStreams.at(ID).emplace(Timestamp, Object);
       }
 
-      void removeElement(const KeyType &ID, const double Timestamp, const size_t Number)
+      void removeElement(const KeyType &ID, const double Timestamp, const int Number)
       {
         if (this->checkElement(ID, Timestamp, Number))
         {
@@ -127,7 +127,7 @@ namespace libRSF
       }
 
       /** check if an element exists */
-      size_t countElement(const KeyType &ID, const double Timestamp) const
+      int countElement(const KeyType &ID, const double Timestamp) const
       {
         if (!this->checkID(ID))
         {
@@ -139,7 +139,7 @@ namespace libRSF
         }
       }
 
-      size_t countElements(const KeyType &ID) const
+      int countElements(const KeyType &ID) const
       {
         if (!this->checkID(ID))
         {
@@ -151,7 +151,7 @@ namespace libRSF
         }
       }
 
-      bool checkElement(const KeyType &ID, const double Timestamp, const size_t Number = 0) const
+      bool checkElement(const KeyType &ID, const double Timestamp, const int Number = 0) const
       {
         return (countElement(ID, Timestamp) > Number);
       }
@@ -168,7 +168,7 @@ namespace libRSF
       }
 
       /** access elements */
-      ObjectType &getElement(const KeyType &ID, const double Timestamp, const size_t Number = 0)
+      ObjectType &getElement(const KeyType &ID, const double Timestamp, const int Number = 0)
       {
         if (checkElement(ID, Timestamp, Number))
         {
@@ -183,7 +183,7 @@ namespace libRSF
         }
       }
 
-      bool getElement(const KeyType &ID, const double Timestamp, const size_t Number, ObjectType& Element) const
+      bool getElement(const KeyType &ID, const double Timestamp, const int Number, ObjectType& Element) const
       {
         if (checkElement(ID, Timestamp, Number))
         {
@@ -198,7 +198,7 @@ namespace libRSF
         }
       }
 
-      bool setElement(const KeyType &ID, const double Timestamp, const size_t Number, ObjectType& Element)
+      bool setElement(const KeyType &ID, const double Timestamp, const int Number, ObjectType& Element)
       {
         if (checkElement(ID, Timestamp, Number))
         {
@@ -237,8 +237,8 @@ namespace libRSF
 
         double TimeFirst = Timestamp;
         Timestamp = NAN_DOUBLE;
-        std::vector<std::string> IDs = this->getKeysAll();
-        for(const std::string &ID: IDs)
+        std::vector<KeyType> IDs = this->getKeysAll();
+        for(const KeyType &ID: IDs)
         {
           this->getTimeFirst(ID, TimeFirst);
           if(std::isnan(Timestamp) == true || TimeFirst < Timestamp)
@@ -289,7 +289,7 @@ namespace libRSF
       bool getTimePrev(const KeyType &ID, const double Timestamp, double& PrevTimeStamp) const
       {
 
-        size_t NextElements = countElement(ID, Timestamp);
+        int NextElements = countElement(ID, Timestamp);
 
         if(NextElements > 0)
         {
@@ -477,7 +477,7 @@ namespace libRSF
         return false;
       }
 
-      size_t countTimes(const KeyType &ID) const
+      int countTimes(const KeyType &ID) const
       {
         if(!this->checkID(ID))
         {
@@ -506,7 +506,7 @@ namespace libRSF
       std::vector<KeyType> getKeysAtTime(const double Timestamp) const
       {
         std::vector<KeyType> KeysAll, KeysAtT;
-        this->getKeysAll(KeysAll);
+        KeysAll = this->getKeysAll();
         for(const KeyType& Key : KeysAll)
         {
           if (this->checkElement(Key, Timestamp) == true)
@@ -626,7 +626,7 @@ namespace libRSF
           for(auto it = StreamRef.begin(); it != StreamRef.end(); it = StreamRef.upper_bound(it->first))
           {
             /** loop over elements at one timestamp */
-            for(size_t n = 0; n < this->countElement(ID, it->first); ++n)
+            for(int n = 0; n < static_cast<int>(this->countElement(ID, it->first)); ++n)
             {
               IDs.push_back(UniqueID(ID, it->first, n));
             }

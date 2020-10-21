@@ -74,7 +74,7 @@ namespace libRSF
         if(this->_Enable)
         {
           /** calculate linear errors and scalings */
-          const size_t NumberOfComponents = _Mixture.getNumberOfComponents();
+          const int NumberOfComponents = _Mixture.getNumberOfComponents();
           MatrixT<T, Dynamic, 1> Scalings(NumberOfComponents);
           MatrixT<T, Dynamic, Dim> LinearExponents(NumberOfComponents, Dim);
 
@@ -102,7 +102,7 @@ namespace libRSF
           ErrorMap = RawError;
 
           /** set unused dimension to 0 */
-          Error[Dim] = T(0);
+          Error[Dim] = T(0.0);
         }
 
         return true;
@@ -118,7 +118,7 @@ namespace libRSF
       void addMixture(const MixtureType &Mixture)
       {
         _Mixture = Mixture;
-        const size_t NumberOfComponents = _Mixture.getNumberOfComponents();
+        const int NumberOfComponents = _Mixture.getNumberOfComponents();
 
         _Normalization = _Mixture.getMaximumOfComponent(0);
         for(int nComponent = 1; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)

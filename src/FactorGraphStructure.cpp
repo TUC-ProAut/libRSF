@@ -161,7 +161,7 @@ namespace libRSF
     _Factors.erase(Factor);
 
     /** decrement index in factor info to correct the number of the elements above the deleted one*/
-    for (size_t n = Info.Number; n < _FactorList.countElement(Info.Type, Info.Timestamp); n++)
+    for (int n = Info.Number; n < _FactorList.countElement(Info.Type, Info.Timestamp); n++)
     {
       _Factors.at(_FactorList.getElement(Info.Type, Info.Timestamp, n)).Number--;
     }
@@ -252,12 +252,12 @@ namespace libRSF
     Factors = _FactorList.getKeysAll();
   }
 
-  size_t FactorGraphStructure::countFactor(const FactorType Type, const double Timestamp) const
+  int FactorGraphStructure::countFactor(const FactorType Type, const double Timestamp) const
   {
     return _FactorList.countElement(Type, Timestamp);
   }
 
-  size_t FactorGraphStructure::countFactorType(const FactorType Type) const
+  int FactorGraphStructure::countFactorType(const FactorType Type) const
   {
     return _FactorList.countElements(Type);
   }

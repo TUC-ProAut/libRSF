@@ -54,7 +54,7 @@ namespace libRSF
       {
         std::string Name;
         double Timestamp;
-        size_t Number;
+        int Number;
         StateType Type;
       };
 
@@ -62,7 +62,7 @@ namespace libRSF
       {
         FactorType Type;
         double Timestamp;
-        size_t Number;
+        int Number;
         int ErrorInputSize;
         int ErrorOutputSize;
         ErrorModelBase* ErrorModel = nullptr;
@@ -104,7 +104,7 @@ namespace libRSF
         _Factors.emplace(CeresID, Info);
 
         /** collect state information */
-        for(size_t n = 0; n < States.size(); n++)
+        for(int n = 0; n < static_cast<int>(States.size()); n++)
         {
           if(_States.count(StatePointers.at(n)) == 0) /**< check if already existing */
           {
@@ -147,8 +147,8 @@ namespace libRSF
       void getFactorTypes(std::vector<FactorType> &Factors) const;
 
       /** count stuff */
-      size_t countFactor(const FactorType Type, const double Timestamp) const;
-      size_t countFactorType(const FactorType Type) const;
+      int countFactor(const FactorType Type, const double Timestamp) const;
+      int countFactorType(const FactorType Type) const;
 
       /** check stuff */
       bool checkFactor(const FactorType Type, const double Timestamp, const double Number = 0) const;
