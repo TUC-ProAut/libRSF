@@ -79,7 +79,7 @@ namespace libRSF
           MatrixT<T, Dynamic, Dim> LinearExponents(NumberOfComponents, Dim);
 
           /** calculate component-wise */
-          for(int nComponent = 0; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
+          for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
           {
             LinearExponents.row(nComponent) = _Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError);
             Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError));

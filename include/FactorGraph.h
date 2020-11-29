@@ -257,6 +257,7 @@ namespace libRSF
 
       /** compute raw errors without error models */
       void computeUnweightedError(const FactorType CurrentFactorType, std::vector<double> &ErrorData);
+      void computeUnweightedError(const FactorType CurrentFactorType, const string &Name, StateDataSet &ErrorData);
       void computeUnweightedError(const FactorType CurrentFactorType, const double Time, const int Number, Vector &Error);
 
       /** access solver options */

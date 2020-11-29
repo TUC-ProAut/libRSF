@@ -45,11 +45,13 @@ int main(int argc, char** argv)
   std::vector<std::string> Arguments;
   libRSF::FactorGraphConfig Config;
   Config.ReadCommandLineOptions(argc, argv, &Arguments);
+
   /** parse testing parameter */
-  int NumberPoints = std::stoi(Arguments.at(3));
-  double Range = std::stod(Arguments.at(4));
-  string ErrorModel = Arguments.at(5);
-  /** GMM parameter */
+  const int NumberPoints = std::stoi(Arguments.at(3));
+  const double Range = std::stod(Arguments.at(4));
+  const string ErrorModel = Arguments.at(5);
+
+  /** parse GMM parameter */
   libRSF::Vector2 Mean1, Mean2;
   Mean1 << std::stod(Arguments.at(6)), std::stod(Arguments.at(7));
   Mean2 << std::stod(Arguments.at(8)), std::stod(Arguments.at(9));
@@ -64,8 +66,10 @@ int main(int argc, char** argv)
   Weight1 << std::stod(Arguments.at(18));
   Weight2 << std::stod(Arguments.at(19));
 
+  /** estimate DCS parameter */
+  const double ScalingDCS = std::pow(10, Mean2(0));
 
-/** create our own graph object */
+  /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
 
   /** datasets that store results*/
@@ -102,11 +106,6 @@ int main(int argc, char** argv)
   Gaussian.setParamsCovariance(StdDev2.transpose()*StdDev2, Mean2, Weight2);
   GMM.addComponent(Gaussian);
 
-  /** create robust error models */
-  libRSF::SumMix2 MixtureNoiseSM(GMM);
-  libRSF::MaxMix2 MixtureNoiseMM(GMM);
-  libRSF::MaxSumMix2 MixtureNoiseMSM(GMM);
-
   /** create zero-measurement */
   libRSF::SensorData AbsoluteMeasurement(libRSF::SensorType::Point2, 0.0);
   AbsoluteMeasurement.setMean(libRSF::Vector2::Zero());
@@ -118,25 +117,33 @@ int main(int argc, char** argv)
   SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 0.0);
 
   /** add factor to graph */
-  if (ErrorModel.compare("Gauss") == 0)
+  if (ErrorModel.compare("Gaussian") == 0)
   {
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise);
   }
   else if (ErrorModel.compare("MaxMix") == 0)
   {
+    libRSF::MaxMix2 MixtureNoiseMM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseMM);
   }
   else if (ErrorModel.compare("SumMix") == 0)
   {
+    libRSF::SumMix2 MixtureNoiseSM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseSM);
+  }
+  else if (ErrorModel.compare("SumMixSpecial") == 0)
+  {
+    libRSF::SumMix2Special MixtureNoiseSMSpecial(GMM);
+    SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseSMSpecial);
   }
   else if (ErrorModel.compare("MaxSumMix") == 0)
   {
+    libRSF::MaxSumMix2 MixtureNoiseMSM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseMSM);
   }
   else if (ErrorModel.compare("DCS") == 0)
   {
-    SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(1.0));
+    SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(ScalingDCS));
   }
   else if (ErrorModel.compare("cDCE") == 0)
   {

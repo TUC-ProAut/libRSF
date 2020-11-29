@@ -52,15 +52,7 @@ namespace libRSF
     const T MaxExp = Exponents.maxCoeff();
     const T Sum = ((Exponents.array() - MaxExp).exp() * Scaling.array()).sum();
 
-    /** catch cases where only one component dominates (Sum goes to 0 --> log(0) = -inf) */
-    if (isinf(log(Sum)))
-    {
-      return MaxExp;
-    }
-    else
-    {
-      return (log(Sum) + MaxExp);
-    }
+    return (log(Sum) + MaxExp);
   }
 
   template <typename T, int Dim>
@@ -71,18 +63,18 @@ namespace libRSF
     MatrixT<T, Dim+1, 1> LSE;
 
     /** compute squared errors */
-    const MatrixT<T, Dynamic, 1> Exponents = LinearExponents.rowwise().squaredNorm();
-    const MatrixT<T, Dynamic, 1> SquaredError = 0.5*Exponents - Scaling.array().log().matrix();
+    const MatrixT<T, Dynamic, 1> Exponents = -0.5 * LinearExponents.rowwise().squaredNorm();
+    const MatrixT<T, Dynamic, 1> SquaredError = Exponents + Scaling.array().log().matrix();
 
-    /** find max */
+    /** find maximum probability (minimum of squared error) */
     Index MaxIndex;
-    SquaredError.minCoeff(&MaxIndex);
+    SquaredError.maxCoeff(&MaxIndex);
 
     /** pass max directly */
     LSE.template head<Dim>() = LinearExponents.row(MaxIndex);
 
     /** apply log sum exp for the other components */
-    LSE(Dim) = ScaledLogSumExp<T>(-0.5 * (Exponents.array() - Exponents(MaxIndex) + T(1e-10)), Scaling.array());
+    LSE(Dim) = ScaledLogSumExp<T>(Exponents.array() - Exponents(MaxIndex), Scaling.array());
 
     return LSE;
   }

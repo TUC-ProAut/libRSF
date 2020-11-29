@@ -45,11 +45,13 @@ int main(int argc, char** argv)
   std::vector<std::string> Arguments;
   libRSF::FactorGraphConfig Config;
   Config.ReadCommandLineOptions(argc, argv, &Arguments);
+
   /** parse testing parameter */
   const int NumberPoints = std::stoi(Arguments.at(3));
   const double Range = std::stod(Arguments.at(4));
-  string ErrorModel = Arguments.at(5);
-  /** GMM parameter */
+  const string ErrorModel = Arguments.at(5);
+
+  /** parse GMM parameter */
   libRSF::Vector1 Mean1, Mean2, StdDev1, StdDev2, Weight1, Weight2;
   Mean1 << std::stod(Arguments.at(6));
   Mean2 << std::stod(Arguments.at(7));
@@ -57,6 +59,9 @@ int main(int argc, char** argv)
   StdDev2 << std::stod(Arguments.at(9));
   Weight1 << std::stod(Arguments.at(10));
   Weight2 << std::stod(Arguments.at(11));
+
+  /** estimate DCS parameter */
+  const double ScalingDCS = std::pow(10, Mean2(0));
 
   /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
@@ -79,7 +84,7 @@ int main(int argc, char** argv)
 
   /** decrease tolerances for an accurate result */
   SolverOptions.function_tolerance = 1e-8;
-  SolverOptions.gradient_tolerance = SolverOptions.function_tolerance *1e-4;
+  SolverOptions.gradient_tolerance = SolverOptions.function_tolerance * 1e-4;
 
   /** additional debugging */
 //  std::vector<int> Iterations(100);
@@ -106,11 +111,6 @@ int main(int argc, char** argv)
   Gaussian.setParamsStdDev(StdDev2, Mean2, Weight2);
   GMM.addComponent(Gaussian);
 
-  /** create robust error models */
-  libRSF::SumMix1 MixtureNoiseSM(GMM);
-  libRSF::MaxMix1 MixtureNoiseMM(GMM);
-  libRSF::MaxSumMix1 MixtureNoiseMSM(GMM);
-
   /** create zero-measurement */
   libRSF::SensorData AbsoluteMeasurement(libRSF::SensorType::Point1, 0.0);
   AbsoluteMeasurement.setMean(libRSF::Vector1::Zero());
@@ -122,25 +122,33 @@ int main(int argc, char** argv)
   SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point1, 0.0);
 
   /** add factor to graph */
-  if (ErrorModel.compare("Gauss") == 0)
+  if (ErrorModel.compare("Gaussian") == 0)
   {
     SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise);
   }
   else if (ErrorModel.compare("MaxMix") == 0)
   {
+    libRSF::MaxMix1 MixtureNoiseMM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseMM);
   }
   else if (ErrorModel.compare("SumMix") == 0)
   {
+    libRSF::SumMix1 MixtureNoiseSM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseSM);
+  }
+  else if (ErrorModel.compare("SumMixSpecial") == 0)
+  {
+    libRSF::SumMix1Special MixtureNoiseSMSpecial(GMM);
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseSMSpecial);
   }
   else if (ErrorModel.compare("MaxSumMix") == 0)
   {
+    libRSF::MaxSumMix1 MixtureNoiseMSM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseMSM);
   }
   else if (ErrorModel.compare("DCS") == 0)
   {
-    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(1.0));
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(ScalingDCS));
   }
   else if (ErrorModel.compare("cDCE") == 0)
   {
@@ -186,9 +194,9 @@ int main(int argc, char** argv)
   }
 
   /** write everything to file */
+  libRSF::WriteDataToFile(Config.OutputFile, "cost_gradient", CostSurfaceData, false);
   libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, PreOptimizationData, true);
   libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, PostOptimizationData, true);
-  libRSF::WriteDataToFile(Config.OutputFile, "cost_gradient", CostSurfaceData, false);
   libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, SolverData, true);
 
   return 0;

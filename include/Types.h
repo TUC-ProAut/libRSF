@@ -40,7 +40,7 @@ namespace libRSF
   /** config types */
   enum class ErrorModelType {Gaussian, DCE, cDCE, SC, DCS, GMM};
 
-  enum class ErrorModelMixtureType {None, MaxMix, SumMix, MaxSumMix};
+  enum class ErrorModelMixtureType {None, MaxMix, SumMix, SumMixSpecial, MaxSumMix};
   enum class ErrorModelTuningType {None, EM, EM_MAP, VBI};
 
   enum class SolutionType {None, Batch, Smoother, Window, Filter};
@@ -205,6 +205,7 @@ namespace libRSF
   {
     {"mm",ErrorModelMixtureType::MaxMix},
     {"sm",ErrorModelMixtureType::SumMix},
+    {"sm_special",ErrorModelMixtureType::SumMixSpecial},
     {"msm",ErrorModelMixtureType::MaxSumMix}
   };
 

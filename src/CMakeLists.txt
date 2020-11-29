@@ -103,7 +103,7 @@ target_include_directories(libRSF
 )
 
 # set target (libRSF) dependencies
-target_link_libraries(libRSF PUBLIC Threads::Threads Eigen3::Eigen ceres yaml-cpp ${GeographicLib_LIBRARIES})
+target_link_libraries(libRSF PUBLIC Threads::Threads Eigen3::Eigen Ceres::ceres yaml-cpp ${GeographicLib_LIBRARIES})
 
 if(OpenMP_CXX_FOUND)
   target_link_libraries(libRSF PUBLIC OpenMP::OpenMP_CXX)

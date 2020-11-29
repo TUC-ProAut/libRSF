@@ -753,6 +753,64 @@ namespace libRSF
     }
   }
 
+  void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, const string &Name, StateDataSet &ErrorData)
+  {
+    /** get the data */
+    std::vector<double> ErrorVector;
+    this->computeUnweightedError(CurrentFactorType, ErrorVector);
+
+    /** get the fector IDs */
+    std::vector<FactorID> FactorVector;
+    _Structure.getFactorIDs(CurrentFactorType, FactorVector);
+
+    /** get the dimensions */
+    const int Dim = ErrorVector.size() / FactorVector.size();
+
+    /** convert to StateData */
+    switch (Dim)
+    {
+      case 1:
+        {
+          StateData ErrorState(StateType::Error1, 0.0);
+          for (int i = 0; i < ErrorVector.size(); i += Dim)
+          {
+            ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
+            ErrorState.setMean((Vector1() << ErrorVector.at(i)).finished());
+            ErrorData.addElement(Name, ErrorState);
+          }
+        }
+        break;
+
+      case 2:
+        {
+          StateData ErrorState(StateType::Error2, 0.0);
+          for (int i = 0; i < ErrorVector.size(); i += Dim)
+          {
+            ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
+            ErrorState.setMean((Vector2() << ErrorVector.at(i), ErrorVector.at(i+1)).finished());
+            ErrorData.addElement(Name, ErrorState);
+          }
+        }
+        break;
+
+      case 3:
+        {
+          StateData ErrorState(StateType::Error3, 0.0);
+          for (int i = 0; i < ErrorVector.size(); i += Dim)
+          {
+            ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
+            ErrorState.setMean((Vector3() << ErrorVector.at(i), ErrorVector.at(i+1), ErrorVector.at(i+2)).finished());
+            ErrorData.addElement(Name, ErrorState);
+          }
+        }
+        break;
+
+      default:
+        PRINT_ERROR("There is no StateData type for errors with dimension of: ", Dim);
+        break;
+    }
+  }
+
   void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, const double Time, const int Number, Vector &Error)
   {
     /** disable error model */

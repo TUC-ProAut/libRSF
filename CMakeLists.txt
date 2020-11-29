@@ -60,7 +60,7 @@ find_package(Threads REQUIRED)
 # yaml cpp to parse config files
 find_package(yaml-cpp REQUIRED)
 
-# geographic lib for coordinate conversions
+# geographic lib for coordinate frame conversions
 find_package(GeographicLib REQUIRED)
 
 ##################################

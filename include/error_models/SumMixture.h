@@ -48,7 +48,7 @@ namespace libRSF
    * \param Mixture Underlying mixture distribution
    *
    */
-  template <int Dim, typename MixtureType>
+  template <int Dim, typename MixtureType, bool SpecialNormalization>
   class SumMixture : public ErrorModel <Dim, Dim>
   {
   public:
@@ -86,12 +86,12 @@ namespace libRSF
         /** calculate all exponents and scalings */
         for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
         {
-          Exponents(nComponent) = - 0.5 * (_Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm() + 1e-10);
-          Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError)/_Normalization);
+          Exponents(nComponent) = - 0.5 * _Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm();
+          Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError));
         }
 
         /** combine them numerically robust and distribute the error equally over all dimensions */
-        ErrorMap.fill(sqrt(-2.0 * ScaledLogSumExp(Exponents, Scalings)) / sqrt(Dim));
+        ErrorMap.fill(sqrt(-2.0* (ScaledLogSumExp(Exponents, Scalings) - log(_Normalization + 1e-10))) / sqrt(Dim));
       }
       else
       {
@@ -111,10 +111,24 @@ namespace libRSF
 
       const int NumberOfComponents = _Mixture.getNumberOfComponents();
 
-      _Normalization = 0;
-      for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
+      if constexpr(SpecialNormalization == false)
       {
-        _Normalization += _Mixture.getMaximumOfComponent(nComponent);
+        /** original version */
+        _Normalization = 0;
+        for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
+        {
+          _Normalization += _Mixture.getMaximumOfComponent(nComponent);
+        }
+      }
+      else
+      {
+        /** version for Reviewer 3 */
+        _Normalization = _Mixture.getMaximumOfComponent(0);
+        for(int nComponent = 1; nComponent < NumberOfComponents; ++nComponent)
+        {
+          _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
+        }
+        _Normalization = _Normalization*NumberOfComponents + 10;
       }
     }
 
@@ -122,9 +136,13 @@ namespace libRSF
     double _Normalization;
   };
 
-  typedef SumMixture<1, GaussianMixture<1>> SumMix1;
-  typedef SumMixture<2, GaussianMixture<2>> SumMix2;
-  typedef SumMixture<3, GaussianMixture<3>> SumMix3;
+  typedef SumMixture<1, GaussianMixture<1>, false> SumMix1;
+  typedef SumMixture<2, GaussianMixture<2>, false> SumMix2;
+  typedef SumMixture<3, GaussianMixture<3>, false> SumMix3;
+
+  typedef SumMixture<1, GaussianMixture<1>, true> SumMix1Special;
+  typedef SumMixture<2, GaussianMixture<2>, true> SumMix2Special;
+  typedef SumMixture<3, GaussianMixture<3>, true> SumMix3Special;
 }
 
 #endif // SUMMIXTURE_H
