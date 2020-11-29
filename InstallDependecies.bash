@@ -95,7 +95,7 @@ then
     fi
     wget https://github.com/google/or-tools/releases/download/v7.7/or-tools_ubuntu-20.04_v7.7.7810.tar.gz
     tar -xzf or-tools_ubuntu-20.04_v7.7.7810.tar.gz
-    mv -T or-tools_ubuntu-20.04_v7.7.7810 "$ortools_directory"
+    mv -T or-tools_Ubuntu-20.04-64bit_v7.7.7810 "$ortools_directory"
     rm -rf or-tools_ubuntu-20.04_v7.7.7810.tar.gz
 elif [ "$linux_version" == "18.04" ]
 then
