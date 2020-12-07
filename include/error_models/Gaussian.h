@@ -69,6 +69,7 @@ namespace libRSF
       template <typename T>
       bool weight(const VectorT<T, Dim> &RawError, T* Error) const
       {
+        /** wrap raw pointer to vector*/
         VectorRef<T, Dim> ErrorMap(Error);
 
         if(this->_Enable)
@@ -78,6 +79,7 @@ namespace libRSF
         }
         else
         {
+          /** pass-trough if error model is disabled*/
           ErrorMap = RawError;
         }
 
@@ -85,6 +87,7 @@ namespace libRSF
       }
 
   private:
+    /** square root information is more efficient to apply than covariance */
     VectorStatic<Dim> _SqrtInformationDiagonal;
   };
 
@@ -108,15 +111,17 @@ namespace libRSF
       template <typename T>
       bool weight(const VectorT<T, Dim> &RawError, T* Error) const
       {
+        /** wrap raw pointer to vector*/
         VectorRef<T, Dim> ErrorMap(Error);
 
         if(this->_Enable)
         {
-          /** scale with diagonal information matrix */
+          /** scale with full information matrix */
           ErrorMap = _SqrtInformation.template cast<T>() * RawError;
         }
         else
         {
+          /** pass-trough if error model is disabled*/
           ErrorMap = RawError;
         }
 
@@ -124,7 +129,7 @@ namespace libRSF
       }
 
   private:
-
+      /** square root information is more efficient to apply than covariance */
       MatrixStatic<Dim, Dim> _SqrtInformation;
   };
 }

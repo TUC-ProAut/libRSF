@@ -13,7 +13,7 @@ Main features are:
 
 The libRSF is a CMake project that requires the installation of several dependencies.
 For convenience, we provide a simple bash script that installs required packages.
-It is tested **only for Ubuntu 18.04**:
+It is tested **only for Ubuntu 18.04/20.04**:
 
       git clone https://github.com/TUC-ProAut/libRSF.git
       cd libRSF
@@ -36,7 +36,7 @@ Alternatively, you can install them by your own:
       sudo apt-get install libgoogle-glog-dev
       sudo apt-get install libatlas-base-dev
       sudo apt-get install libsuitesparse-dev
-
+        
       mkdir -p externals
       cd externals
       git clone https://ceres-solver.googlesource.com/ceres-solver
