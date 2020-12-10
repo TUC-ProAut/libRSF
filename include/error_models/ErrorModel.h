@@ -57,7 +57,7 @@ namespace libRSF
   };
 
 
-  template <int InputDim, int OutputDim, int ...StateDims>
+  template <int InputDimTemp, int OutputDimTemp, int ...StateDimsTemp>
   class ErrorModel: public ErrorModelBase
   {
     public:
@@ -65,11 +65,11 @@ namespace libRSF
       virtual ~ErrorModel() = default;
 
       /** static access to dimensions*/
-      static const int _InputDim = InputDim;
-      static const int _OutputDim = OutputDim;
+      static const int InputDim = InputDimTemp;
+      static const int OutputDim = OutputDimTemp;
 
       /** store the dimension of variables at compile time */
-      using _StateDims = std::integer_sequence<int, StateDims...>;
+      using StateDims = std::integer_sequence<int, StateDimsTemp...>;
   };
 }
 

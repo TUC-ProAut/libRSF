@@ -27,7 +27,6 @@ set -e
 
 # config paths
 readonly ceres_directory='ceres-solver'
-readonly ortools_directory='or-tools'
 
 # get linux version
 readonly linux_distributor=$(lsb_release -is)
@@ -61,11 +60,6 @@ sudo apt-get install libsuitesparse-dev --assume-yes
 sudo apt-get install libgeographic-dev --assume-yes
 sudo apt-get install libyaml-cpp-dev --assume-yes
 
-# install or-tools dependencies
-sudo apt-get install build-essential zlib1g-dev --assume-yes
-sudo apt-get install wget --assume-yes
-sudo apt-get install tar --assume-yes
-
 # prepare external dependencies
 mkdir -p externals
 cd externals
@@ -85,43 +79,6 @@ mkdir -p build && cd build
 cmake -DEXPORT_BUILD_DIR=ON ..
 make all -j$(getconf _NPROCESSORS_ONLN)
 cd ../..
-
-# get or-tools binaries
-if [ "$linux_version" == "20.04" ]
-then
-    if [ -d "$ortools_directory" ]
-    then
-        rm -rf "$ortools_directory"
-    fi
-    wget https://github.com/google/or-tools/releases/download/v7.7/or-tools_ubuntu-20.04_v7.7.7810.tar.gz
-    tar -xzf or-tools_ubuntu-20.04_v7.7.7810.tar.gz
-    mv -T or-tools_Ubuntu-20.04-64bit_v7.7.7810 "$ortools_directory"
-    rm -rf or-tools_ubuntu-20.04_v7.7.7810.tar.gz
-elif [ "$linux_version" == "18.04" ]
-then
-    if [ -d "$ortools_directory" ]
-    then
-        rm -rf "$ortools_directory"
-    fi
-    wget https://github.com/google/or-tools/releases/download/v7.3/or-tools_ubuntu-18.04_v7.3.7083.tar.gz
-    tar -xzf or-tools_ubuntu-18.04_v7.3.7083.tar.gz
-    mv -T or-tools_Ubuntu-18.04-64bit_v7.3.7083 "$ortools_directory"
-    rm -rf or-tools_ubuntu-18.04_v7.3.7083.tar.gz
-elif [ "$linux_version" == "16.04" ]
-then
-    if [ -d "$ortools_directory" ]
-    then
-        rm -rf "$ortools_directory"
-    fi
-    wget https://github.com/google/or-tools/releases/download/v7.3/or-tools_ubuntu-16.04_v7.3.7083.tar.gz
-    tar -xzf or-tools_ubuntu-16.04_v7.3.7083.tar.gz
-    mv -T or-tools_Ubuntu-16.04-64bit_v7.3.7083 "$ortools_directory"
-    rm -rf or-tools_ubuntu-16.04_v7.3.7083.tar.gz
-else
-    echo "ERROR: Unsupported operation system (only Ubuntu 20.04, 18.04 and 16.04). Please download or-tools manually ..."
-    cd ..
-    exit 1 # terminate and indicate error
-fi
 
 # leave externals
 cd ..

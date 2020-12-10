@@ -98,8 +98,8 @@ namespace libRSF
         Info.Type = Type;
         Info.Timestamp = Timestamp;
         Info.Number = Factor.Number;
-        Info.ErrorInputSize = ErrorModel->_InputDim;
-        Info.ErrorOutputSize = ErrorModel->_OutputDim;
+        Info.ErrorInputSize = ErrorModel->InputDim;
+        Info.ErrorOutputSize = ErrorModel->OutputDim;
         Info.ErrorModel = static_cast<ErrorModelBase*>(ErrorModel);
         _Factors.emplace(CeresID, Info);
 

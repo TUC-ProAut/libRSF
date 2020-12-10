@@ -274,10 +274,10 @@ namespace libRSF
     private:
 
       /** helper function to create variadic templated cost functions */
-      template<int NoiseModelOutputDim, typename CurrentFactorType,  int... FactorStateDims, int... ErrorModelStateDims>
-      auto makeAutoDiffCostFunction(CurrentFactorType *Factor, std::integer_sequence<int, FactorStateDims...>, std::integer_sequence<int, ErrorModelStateDims...>)
+      template<int NoiseModelOutputDim, typename FactorClass,  int... FactorStateDims, int... ErrorModelStateDims>
+      auto makeAutoDiffCostFunction(FactorClass *Factor, std::integer_sequence<int, FactorStateDims...>, std::integer_sequence<int, ErrorModelStateDims...>)
       {
-        return new ceres::AutoDiffCostFunction<CurrentFactorType, NoiseModelOutputDim, FactorStateDims... , ErrorModelStateDims...> (Factor);
+        return new ceres::AutoDiffCostFunction<FactorClass, NoiseModelOutputDim, FactorStateDims... , ErrorModelStateDims...> (Factor);
       }
 
       /** add and remove factors */
@@ -303,9 +303,9 @@ namespace libRSF
         Factor->predict(StatePointers);
 
         /** wrap it in ceres cost function */
-        auto CostFunction = makeAutoDiffCostFunction<ErrorType::_OutputDim, FactorClass> (Factor,
-                                                                                          typename FactorClass::StateDims{},
-                                                                                          typename ErrorType::_StateDims{});
+        auto CostFunction = makeAutoDiffCostFunction<ErrorType::OutputDim, FactorClass> (Factor,
+                                                                                         typename FactorClass::StateDims{},
+                                                                                         typename ErrorType::StateDims{});
 
         /** add it to the estimation problem  */
         ceres::ResidualBlockId CurrentCeresFactorID = _Graph.AddResidualBlock(CostFunction,

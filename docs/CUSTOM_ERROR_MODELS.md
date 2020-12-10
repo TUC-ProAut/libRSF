@@ -1,7 +1,7 @@
 ## Error Models
-With the libRSF, we want to provide a broad selection of methods to solve non-linear least squares problems robustly. Robustness against non-Gaussian outlier is the main challenge there and and the required models are as diverse as the possible applications.
+With the libRSF, we want to provide a broad selection of methods to solve non-linear least squares problems robustly. Robustness against non-Gaussian outlier is the main challenge there and and the required models are as diverse as the possible applications. All oth them describe the log-likelihod of a assumed noise distributions. Therefore they cam be summarized as probabilistic models.
 
-In the following, we provide an overview over the types of available models.
+In the following, we provide an overview over the available types of models.
 
 ### Gaussian
 
@@ -11,7 +11,7 @@ Its implementation can be found here: [Gaussian.h](../include/error_models/Gauss
 
 #### Gaussian Diagonal
 
-The diagonal Gaussian is a a simplified variante with a diagonal covariance matrix. Often, this reduced version is sufficient to weight residuals without correlation and it is noticeably faster the the full version.
+The diagonal Gaussian is a a simplified variant with a diagonal covariance matrix. Often, this reduced version is sufficient to weight residuals without correlation and it is noticeably faster the the full version.
 
 #### Gaussian Full
 
@@ -19,7 +19,7 @@ The full Gaussian model without any reduction.
 
 ### Gaussian Mixtures
 
-As linear superposition (sum) of multiple Gaussians, the Gaussian mixture model (GMM) is one of the flexible models. It can represent various shapes like skewed or heavy-tailed distributions, but still its piecewise close to Gaussian.
+As linear superposition (sum) of multiple Gaussians, the Gaussian mixture model (GMM) is one of the flexible models. It can represent various shapes like skewed or heavy-tailed distributions, but still its piece-wise close to Gaussian.
 Over the years, several implementation of GMMs for least squares where proposed.
 
 #### Max-Mixture (MM)
@@ -78,18 +78,18 @@ While DCS [6] id the closed-form of SC[4], we provide also a closed-form version
 
 ### Technical Interface
 
-All error models (not the loss functions!) are derived from the ErrorModel class from [ErrorModel.h](../include/error_models/ErrorModel.h).  They accept a vector as unweighted residual or error  and write the weighted error to a ceres-compatible pointer interface.
+All error models (not the loss functions!) are derived from the ErrorModel class from [ErrorModel.h](../include/error_models/ErrorModel.h).  They accept a vector as unweighted residual or error  and write the weighted error to a ceres-compatible pointer interface. They have to be used in conjunction with factors (residual functions) that define some deterministic error. For more information about factors see [here](CUSTOM_FACTORS.md).
 
 ```
-                                   --------------
-                         -------->|              |-------->
-                   Error -------->| Error Model  |--------> Weighted Error
-                         -------->|				 |-------->
-                                   -------------- 	
+                    ------------                     -------------
+   States    ----->|            |----->       ----->|             |----->
+    and      ----->|   Factor   |-----> Error ----->| Error Model |-----> Weighted Error
+Measurements ----->|            |----->       ----->|			  |----->
+                    ------------                     ------------- 	
 ```
 
-Both, input and output can have a different dimensionality, which has to be given as template argument. Pleas note, that due to implementation reasons, the input can not have more dimensions as the output.
-Additionally, all error models have a "Enable" flag to activate or deactivate them. Disabled, they simply pass-through the error an fill unused dimension with zero.
+Both, input and output of the error model can have a different dimensionality, which has to be given as template argument. Pleas note, that due to implementation reasons, the input can not have more dimensions as the output.
+Additionally, all error models have a "Enable" flag to activate or deactivate them. Disabled, they simply pass-through the error and fill unused dimension with zero.
 
 Below you can see an example for a 2D Gaussian: 
 
