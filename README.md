@@ -31,8 +31,15 @@ Alternatively, you can install them by your own:
 
 - **Eigen** (>= 3.3.5)
 
-  ```bash
-  sudo add-apt-repository ppa:kumarrobotics/backports
+  Add PPA for **only for Ubuntu 18.04!**
+
+  ```
+  sudo add-apt-repository ppa:nschloe/eigen-nightly
+  ```
+
+  Install Eigen.
+
+  ```
   sudo apt-get update
   sudo apt-get install libeigen3-dev
   ```
