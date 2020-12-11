@@ -23,7 +23,7 @@ To run them, the following syntax have to be used:
       Column 4    - Y coordinate in the ECEF frame [m]
       Column 5    - Z coordinate in the ECEF frame [m]
       Column 6-14 - Covariance matrix of the estimated position in row-major format (Currently not used!)
-
+    
       For 2D estimation:
       Column 1    - "point2" [string]
       Column 2    - Timestamp [s]
@@ -87,18 +87,20 @@ A full example could be:
 
 BibTeX:
 
-        @InProceedings{Pfeifer2019,
-        author    = {Tim Pfeifer and Peter Protzel},
-        title     = {Expectation-Maximization for Adaptive Mixture Models in Graph Optimization},
-        booktitle = {Proc. of Intl. Conf. on Robotics and Automation (ICRA)},
-        doi       = {10.1109/ICRA.2019.8793601},
-        year      = {2019}
-        }
+```latex
+    @InProceedings{Pfeifer2019,
+    author    = {Tim Pfeifer and Peter Protzel},
+    title     = {Expectation-Maximization for Adaptive Mixture Models in Graph Optimization},
+    booktitle = {Proc. of Intl. Conf. on Robotics and Automation (ICRA)},
+    doi       = {10.1109/ICRA.2019.8793601},
+    year      = {2019}
+    }
 
-        @InProceedings{Pfeifer2019a,
-        author    = {Tim Pfeifer and Peter Protzel},
-        title     = {Incrementally learned Mixture Models for GNSS Localization},
-        booktitle = {Proc. of Intelligent Vehicles Symposium (IV)},
-        doi       = {10.1109/IVS.2019.8813847},
-        year      = {2019}
-        }
+    @InProceedings{Pfeifer2019a,
+    author    = {Tim Pfeifer and Peter Protzel},
+    title     = {Incrementally learned Mixture Models for GNSS Localization},
+    booktitle = {Proc. of Intelligent Vehicles Symposium (IV)},
+    doi       = {10.1109/IVS.2019.8813847},
+    year      = {2019}
+    }
+```

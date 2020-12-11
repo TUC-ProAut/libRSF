@@ -15,60 +15,78 @@ The libRSF is a CMake project that requires the installation of several dependen
 For convenience, we provide a simple bash script that installs required packages.
 It is tested **only for Ubuntu 18.04/20.04**:
 
-      git clone https://github.com/TUC-ProAut/libRSF.git
-      cd libRSF
-      bash InstallDependecies.bash
+```bash
+  git clone https://github.com/TUC-ProAut/libRSF.git
+  cd libRSF
+  bash InstallDependecies.bash
+```
 
 Alternatively, you can install them by your own:
 
 - **CMake** (>= 3.5)
 
-      sudo apt-get install cmake
+  ```bash
+  sudo apt-get install cmake
+  ```
 
 - **Eigen** (>= 3.3.5)
 
-      sudo add-apt-repository ppa:kumarrobotics/backports
-      sudo apt-get update
-      sudo apt-get install libeigen3-dev
+  ```bash
+  sudo add-apt-repository ppa:kumarrobotics/backports
+  sudo apt-get update
+  sudo apt-get install libeigen3-dev
+  ```
 
 - **Ceres** (>= 2.0) and its dependencies
 
-      sudo apt-get install libgoogle-glog-dev
-      sudo apt-get install libatlas-base-dev
-      sudo apt-get install libsuitesparse-dev
-        
-      mkdir -p externals
-      cd externals
-      git clone https://ceres-solver.googlesource.com/ceres-solver
-      cd ceres-solver
-      mkdir build && cd build
-      cmake -DEXPORT_BUILD_DIR=ON ..
-      make all -j8
-      cd ../..
+  ```bash
+  sudo apt-get install libgoogle-glog-dev
+  sudo apt-get install libatlas-base-dev
+  sudo apt-get install libsuitesparse-dev
+    
+  mkdir -p externals
+  cd externals
+  git clone https://ceres-solver.googlesource.com/ceres-solver
+  cd ceres-solver
+  mkdir build && cd build
+  cmake -DEXPORT_BUILD_DIR=ON ..
+  make all -j8
+  cd ../..
+  ```
 
 - **yaml-cpp**
 
-      sudo apt-get install libyaml-cpp-dev
+  ```bash
+  sudo apt-get install libyaml-cpp-dev
+  ```
 
 - **GeographicLib**
 
-      sudo apt-get install libgeographic-dev
+  ```bash
+  sudo apt-get install libgeographic-dev
+  ```
 
 The library and its applications can be build following this instructions:
 
-      git clone https://github.com/TUC-ProAut/libRSF.git
-      cd libRSF
-      mkdir build && cd build
-      cmake ..
-      make all -j8
+```bash
+  git clone https://github.com/TUC-ProAut/libRSF.git
+  cd libRSF
+  mkdir build && cd build
+  cmake ..
+  make all -j8
+```
 
 You can install the libRSF using:
 
-      make install
+```bash
+  make install
+```
 
 And remove it using:
 
-      make uninstall
+```bash
+  make uninstall
+```
 
 ## Usage
 
@@ -87,11 +105,13 @@ The following pages give an overview how to use them or how to build a custom ap
 
 If you use this library for academic work, please cite it using the following BibTeX reference:
 
-      @Misc{libRSF,
-       author       = {Tim Pfeifer and Others},
-       title        = {libRSF},
-       howpublished = {\url{https://github.com/TUC-ProAut/libRSF}}
-      }
+```latex
+  @Misc{libRSF,
+   author       = {Tim Pfeifer and Others},
+   title        = {libRSF},
+   howpublished = {\url{https://github.com/TUC-ProAut/libRSF}}
+  }
+```
 
 This library also contains the implementation of [1-3]. Further references will be added with additional content.
 

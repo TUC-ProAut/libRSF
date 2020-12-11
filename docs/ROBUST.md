@@ -131,12 +131,14 @@ If you are interested in this work, feel free to have a look at our recent paper
 
 BibTeX:
 
-        @Article{Pfeifer2020,
-          author       = {Tim Pfeifer, Sven Lange and Peter Protzel},
-          journal      = {Robotics and Automation Letters (RA-L)},
-          title        = {Advancing Mixture Models for Least Squares Optimization},
-          year         = {2020},
-        }
+```latex
+    @Article{Pfeifer2020,
+      author       = {Tim Pfeifer, Sven Lange and Peter Protzel},
+      journal      = {Robotics and Automation Letters (RA-L)},
+      title        = {Advancing Mixture Models for Least Squares Optimization},
+      year         = {2020},
+    }
+```
 
 #### The Work of Others
 
