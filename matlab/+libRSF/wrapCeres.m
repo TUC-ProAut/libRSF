@@ -64,9 +64,7 @@ if RewriteData
 end
 
 %% save reference Data
-if RewriteYAML
-    libRSF.writeYamlReference(Data, [PathToBinary RefFile]);
-end
+libRSF.writeYamlReference(Data, [PathToBinary RefFile]);
 
 %% call ceres
 % check for application
