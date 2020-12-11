@@ -45,7 +45,8 @@ fi
 # install ceres dependencies
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ] # Eigen < 3.3.5 is to old for libRSF & Ceres
 then
-  sudo add-apt-repository --yes ppa:kumarrobotics/backports
+  echo "WARNING: Your Eigen version is below 3.3.5, we have to activate a PPA! Please decide carefully if you want that!" 
+  sudo add-apt-repository ppa:nschloe/eigen-nightly
   sudo apt-get update
 fi
 sudo apt-get install libeigen3-dev --assume-yes
