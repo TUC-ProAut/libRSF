@@ -11,13 +11,15 @@ Config.DoIndividualPlot = false;
 
 % select error model
 Config.ErrorModels = {};
-% Config.ErrorModels{end+1} = 'Gaussian';
-Config.ErrorModels{end+1} = 'MaxMix';
-Config.ErrorModels{end+1} = 'SumMix';
-Config.ErrorModels{end+1} = 'SumMixSpecial';
-Config.ErrorModels{end+1} = 'MaxSumMix';
-Config.ErrorModels{end+1} = 'DCS';
-% Config.ErrorModels{end+1} = 'cDCE';
+% Config.ErrorModels{end+1} = 'Gaussian'; % a simple Gaussian model
+% Config.ErrorModels{end+1} = 'DCS';      % Dynamic Covariance Scaling
+% Config.ErrorModels{end+1} = 'cDCE';     % closed-form Dynamic Covariance Estimation
+
+Config.ErrorModels{end+1} = 'MaxMix';   % approximated GMM
+Config.ErrorModels{end+1} = 'SumMix';   % exact, but badly converging GMM
+Config.ErrorModels{end+1} = 'MaxSumMix'; % proposed model
+
+% Config.ErrorModels{end+1} = 'SumMixSpecial'; % Sepcial version of Sum-Mixture with the normalization of Max-Sum Mixture
 
 % configure GMM generaion
 Config.NumModel = 1000;

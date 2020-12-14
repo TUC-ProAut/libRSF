@@ -14,10 +14,11 @@ if(SavePlot)
 end
 
 %% plot estimation error histogram
+BinWidth = max([Metric.Error], [], 'all')/100;
 hError = figure;
 hold on
 for n = 1:numel(Metric)
-    hHist = histogram(abs(Metric(n).Error), 'BinWidth', 0.1);
+    hHist = histogram(abs(Metric(n).Error), 'BinWidth', BinWidth);
     hHist.DisplayName = Metric(n).Lable;
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
@@ -25,31 +26,28 @@ for n = 1:numel(Metric)
     hHist.FaceColor = Config.Line.Color(n,:);
 end
 hold off
-% Format
+
+% custom format
+box on
 set(gca, 'YScale', 'log')
-% axis tight
-% xlim([-0.1 inf])
-xlabel('Estimation Error');
-ylabel('Probability');
 legend('show', 'Location','best');
-plot.formatPlot(hError, Config);
-if(SavePlot)
-    plot.exportPlot(hError, PlotPath, [PlotPrefix 'ErrorHistComb']);
-end
+title('Distribution of Estimation Error');
+xlabel('Estimation Error [m]');
+ylabel('Probability');
 
 %% plot estimation error boxplot
 hErrorBox = plot.createBoxPlot([Metric(:).Error], {Metric(:).Lable}, Config);
-ylabel('Estimation Error');
-plot.formatPlot(hErrorBox, Config);
-if(SavePlot)
-    plot.exportPlot(hErrorBox, PlotPath, [PlotPrefix 'ErrorBoxComb']);
-end
 
-%% plot runtime
+% custom format
+ylabel('Estimation Error [m]');
+title('Estimation Error Boxplot');
+
+%% plot runtime histogram
+BinWidth = max([Metric.Duration], [], 'all')/100;
 hRuntime = figure;
 hold on
 for n = 1:numel(Metric)
-    hHist = histogram(Metric(n).Duration*1e3, 'BinWidth', 0.01);
+    hHist = histogram(Metric(n).Duration*1e3, 'BinWidth', BinWidth*1e3);
     hHist.DisplayName = Metric(n).Lable;
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
@@ -57,12 +55,24 @@ for n = 1:numel(Metric)
     hHist.FaceColor = Config.Line.Color(n,:);
 end
 hold off
-% Format
-xlabel('Runtime [µs]');
-ylabel('Probability');
+
+% custom format
+box on
+set(gca, 'YScale', 'log')
 legend('show', 'Location','best');
+xlabel('Runtime [ms]');
+ylabel('Probability');
+title('Distribution of Computation Time');
+
+%% format all plots
+plot.formatPlot(hError, Config);
+plot.formatPlot(hErrorBox, Config);
 plot.formatPlot(hRuntime, Config);
+
+%% save all plots
 if(SavePlot)
+    plot.exportPlot(hError, PlotPath, [PlotPrefix 'ErrorHistComb']);
+    plot.exportPlot(hErrorBox, PlotPath, [PlotPrefix 'ErrorBoxComb']);
     plot.exportPlot(hRuntime, PlotPath, [PlotPrefix 'RuntimeComb']);
 end
 

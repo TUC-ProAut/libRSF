@@ -1,7 +1,7 @@
 ## RA-L 2020 Applications
 
-In 2020 we introduced a new representation of Gaussian mixtures for factor graphs that rely on a least squares back-end.
-Previous models are either approximations like Max-Mixture [2] or ill-posed like the Sum-Mixture which is based on [3].
+In 2020 we introduced a new representation of Gaussian mixtures for factor graphs that reliy on a least squares back-end.
+Previous models are either approximations like Max-Mixture [2] or ill-posed like Sum-Mixture which is based on [3].
 We proposed the Max-Sum-Mixture model [1] which combines the advantages of both approaches without their drawbacks.
 Our model is an almost linear and exact representation of a GMM for least squares.
 
@@ -11,8 +11,38 @@ Beside the raw error models, the simple example application from [1] is also inc
 ### Robust Gaussian Mixtures
 ![GNSS Trajectory](./img/Error2D.png)
 
-The included one- or two-dimensional example demonstrate the convergence speed and accuracy of the three available models. A single cost function describes a Gaussian mixture as shown in the figure above (2D case). Starting from a set of linearly spaced initial points, several optimizations are performed individually to capture the dependence between initialization and convergence. Since this examples use just a small subset of functionalities from the libRSF, it is important to mention that some input/ouptput/config parameters are not used.
-To run both examples, the same following syntax have to be applied:
+The included one- or two-dimensional example demonstrate the convergence speed and accuracy of the three available models. A single cost function describes a Gaussian mixture as shown in the figure above (2D case). Starting from a set of linearly spaced initial points, several optimizations are performed individually to capture the dependence between initialization and convergence. 
+
+#### Using Matlab Scripts
+
+For convenience, we provide a number of Matlab scripts, that generate the data, write it to text files, call the compiled binary and parse the generated output. You simply have to start Matlab in the corresponding folder:
+
+```bash
+cd libRSF/matlab
+matlab
+```
+
+Then call the main script to start the full Monte Carlo Evaluation:
+
+```matlab
+run Estimation/Robust_Models/MonteCarloComparison.m
+```
+
+Alternatively, you can run the evaluation of a single GMM separately with:
+
+```matlab
+run Estimation/Robust_Models/CompareRobustModels1D.m
+% or
+run Estimation/Robust_Models/CompareRobustModels2D.m
+```
+
+All scripts print their results to console and generate a `Results` folder that contains different plots for visualization, like the one shown on top of this page.
+Feel free to try them out and to play with the configuration parameter at the beginning of each script.
+
+#### Using the Binaries
+
+If you do not want to use Matlab, you can also execute the compiled binaries directly. 
+Since this examples use just a small subset of functionalities from the libRSF, it is important to mention that some input/output/config parameters are not used. To run both examples, the same following syntax have to be applied:
 
       libRSF/build/examples/Example_Robust_Models_1D  # #  <output file> <number points> <range points> <error model> <model parameters>
       libRSF/build/examples/Example_Robust_Models_2D  # #  <output file> <number points> <range points> <error model> <model parameters>
@@ -82,9 +112,11 @@ To run both examples, the same following syntax have to be applied:
 
 - **\<error model\>** is a string that represents one of the following error models:
 
+      Gaussian    -     A simple Gaussian model
       MaxMix      -     Max-Mixture (an approximation of a Gaussian mixture)
       SumMix      -     Sum-Mixture (an exact Gaussian mixture with a ill-posed jacobian)
       MaxSumMix   -     Max-Sum-Mixture (our proposed model)
+      DCS         -     Dynamic Covariance Scaling (an M-estimator)
 
 - **\<model parameters\>** are the parameter that describe the Gaussian mixture model. Each entry (separated by a space) describes one parameter of a model with two Gaussian components.
 

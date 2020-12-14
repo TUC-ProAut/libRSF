@@ -31,13 +31,13 @@ Alternatively, you can install them by your own:
 
 - **Eigen** (>= 3.3.5)
 
-  Add PPA for **only for Ubuntu 18.04!**
+  **Only for Ubuntu 18.04**, you have to add a PPA for a more recent version of Eigen.
 
   ```
   sudo add-apt-repository ppa:nschloe/eigen-nightly
   ```
 
-  Install Eigen.
+  For all versions of Ubuntu, you have to install Eigen.
 
   ```
   sudo apt-get update
@@ -57,7 +57,7 @@ Alternatively, you can install them by your own:
   cd ceres-solver
   mkdir build && cd build
   cmake -DEXPORT_BUILD_DIR=ON ..
-  make all -j8
+  make all -j$(getconf _NPROCESSORS_ONLN)
   cd ../..
   ```
 
@@ -80,7 +80,7 @@ The library and its applications can be build following this instructions:
   cd libRSF
   mkdir build && cd build
   cmake ..
-  make all -j8
+  make all -j$(getconf _NPROCESSORS_ONLN)
 ```
 
 You can install the libRSF using:
@@ -98,7 +98,7 @@ And remove it using:
 ## Usage
 
 After building the library, some applications are provided which correspond directly to a publication.
-The following pages give an overview how to use them or how to build a custom application using the libRSF:
+The following pages give you an overview, how to use them or how to build a custom application using the libRSF:
 
 1. [How to use the robust GNSS localization from our ICRA 2019 or IV 2019 paper?](docs/GNSS.md)
 

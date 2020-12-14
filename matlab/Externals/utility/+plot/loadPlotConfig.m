@@ -23,7 +23,7 @@ if exist('brewermap','file') > 0
 else
     % older default colors
     warning('ColorBrewer not available, use old default colors!');
-    Config.Line.Color = [[0.8 0 0]; [0 0.7 0]; [0 0 0.6]; [0.9 0.4 0]];
+    Config.Line.Color = [[0.8 0 0]; [0 0.7 0]; [0 0 0.6]; [0.9 0.4 0]; [0.4 0 0.9]];
     Config.Colormap = parula(1024);
     Config.ColormapDiff = turbo(1024);
 end
