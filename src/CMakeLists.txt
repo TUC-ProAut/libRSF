@@ -87,11 +87,12 @@ ENDWHILE( LIST_NUMBER  LESS LIST_NUMBER_MAX )
 
 add_library(libRSF STATIC ${SOURCEFILES} ${HEADERFILES})
 
+# require at least C++ 17
+target_compile_features(libRSF PUBLIC cxx_std_17)
+
 # to allow shared libraries to link against static libRSF
 set_target_properties(libRSF PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                        CMAKE_CXX_STANDARD_REQUIRED ON
-                                        CMAKE_CXX_EXTENSIONS OFF
-                                        CXX_STANDARD 17)
+                                        CMAKE_CXX_EXTENSIONS OFF)
 
 # set include dir of library depending on current tree (build/install)
 target_include_directories(libRSF

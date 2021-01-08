@@ -86,7 +86,7 @@ namespace libRSF
         /** calculate all exponents and scalings */
         for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
         {
-          Exponents(nComponent) = - 0.5 * _Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm();
+          Exponents(nComponent) = - 0.5 * (_Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm() + 1e-10);
           Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError));
         }
 

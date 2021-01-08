@@ -83,7 +83,7 @@ namespace libRSF
         /** remove components if the number of assigned samples is too low */
         bool RemoveSmallComponents = false;
         /** the minimal number of samples that have to support a component*/
-        double MinSamplePerComponent = Dim * 2;
+        double MinSamplePerComponent = Dim + 1;
 
         /** check the Bhattacharyya distance between all components to merge similar ones */
         bool MergeSimiliarComponents = false;

@@ -97,6 +97,13 @@ ResultCell = readcell([PathToBinary OutputFile], 'FileType','text','NumHeaderLin
 Result = libRSF.parseFromCell(ResultCell);
 Result.Runtime = Runtime;
 
+%% save time difference
+if isfield(Data, 'StartTime')
+    Result.StartTime = Data.StartTime;
+else
+    Result.StartTime = 0;
+end
+
 %% load ceres dump if available
 Result.Dump = libRSF.parseCeresDump(PathToBinary);
 end

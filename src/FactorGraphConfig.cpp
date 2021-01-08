@@ -69,6 +69,11 @@ namespace libRSF
     SolverConfig.max_num_iterations = 100;
     SolverConfig.max_solver_time_in_seconds = 10.0;
     SolverConfig.minimizer_progress_to_stdout = true;
+
+    /** debugging is simpler with one thread */
+    #ifndef NDEBUG
+    SolverConfig.num_threads = 1;
+    #endif // NDEBUG
   }
 
   bool FactorGraphConfig::ParseErrorModelFromYAML(YAML::Node ErrorModelNode, ErrorModelConfig &Model)

@@ -701,6 +701,13 @@ namespace libRSF
     std::vector<ceres::ResidualBlockId> IDs;
     _Structure.getResidualIDs(CurrentFactorType, IDs);
 
+    /** terminate here, if factors are missing */
+    if (IDs.empty() == true)
+    {
+      PRINT_WARNING("Factors of type ", CurrentFactorType, " are missing!");
+      return;
+    }
+
     /** check IDs */
     std::vector<ceres::ResidualBlockId> IDsCeres;
     std::vector<bool> Existence;

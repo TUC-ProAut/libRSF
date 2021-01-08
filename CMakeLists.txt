@@ -22,19 +22,16 @@
 # configure project
 ##################################
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 
 project(libRSF VERSION "1.2.0" LANGUAGES CXX)
-
-# C++ 17 is required
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # We build as Release by default
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
+option(LIBRSF_BUILD_TRACKING "If enabled, the tracking application is included." OFF)
 
 ##################################
 # add dependencies

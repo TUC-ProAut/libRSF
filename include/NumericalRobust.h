@@ -49,8 +49,11 @@ namespace libRSF
   T ScaledLogSumExp(const MatrixT<T, Dynamic, 1> &Exponents,
                     const MatrixT<T, Dynamic, 1> &Scaling)
   {
-    const T MaxExp = Exponents.maxCoeff();
-    const T Sum = ((Exponents.array() - MaxExp).exp() * Scaling.array()).sum();
+    /** find biggest (relevant) exponent */
+    const T MaxExp = (Scaling.array() != T(0.0)).select(Exponents, Exponents.minCoeff()).maxCoeff();
+
+    /** sum only terms with non-zero scaling (to prevent NaNs) */
+    const T Sum = (Scaling.array() != T(0.0)).select((Exponents.array() - MaxExp).exp() * Scaling.array(), T(0.0)).sum();
 
     return (log(Sum) + MaxExp);
   }
