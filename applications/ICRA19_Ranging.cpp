@@ -303,7 +303,7 @@ int main(int argc, char** argv)
   libRSF::StateDataSet Result;
   libRSF::SensorData DeltaTime;
 
-  double Timestamp, TimestampFirst, TimestampOld, TimestampLast;
+  double Timestamp = 0.0, TimestampFirst = 0.0, TimestampOld = 0.0, TimestampLast = 0.0;
   InputData.getTimeFirst(libRSF::SensorType::Range2, TimestampFirst);
   InputData.getTimeLast(libRSF::SensorType::Range2, TimestampLast);
   Timestamp = TimestampFirst;

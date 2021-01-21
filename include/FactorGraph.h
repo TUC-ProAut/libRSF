@@ -332,10 +332,8 @@ namespace libRSF
       template <FactorType CurrentFactorType, typename ErrorType>
       void addFactorBase(StateList &States, ErrorType &NoiseModel, const SensorData &Measurement, ceres::LossFunction* RobustLoss)
       {
-        /** calculate delta time */
-        double TimestampFirst = States._List.front().Timestamp;
-        double TimestampLast = States._List.back().Timestamp;
-        double DeltaTime = TimestampLast - TimestampFirst;
+        /** get index timestamp */
+        const double TimestampFirst = States._List.front().Timestamp;
 
         /** translate the factor type enum to the class that should be added to the graph */
         typedef typename FactorTypeTranslator<CurrentFactorType,ErrorType>::Type FactorClassType;
@@ -343,6 +341,9 @@ namespace libRSF
         /** decide at compile time which parameters are required */
         if constexpr (FactorClassType::HasDeltaTime == true && FactorClassType::HasMeasurement == true)
         {
+          /** calculate delta time */
+          const double DeltaTime = States._List.back().Timestamp - TimestampFirst;
+
           addFactorGeneric<ErrorType, FactorClassType> (NoiseModel,
                                                         States._List,
                                                         CurrentFactorType,
@@ -362,6 +363,9 @@ namespace libRSF
         }
         else if constexpr (FactorClassType::HasDeltaTime == true && FactorClassType::HasMeasurement == false)
         {
+          /** calculate delta time */
+          const double DeltaTime = States._List.back().Timestamp - TimestampFirst;
+
           addFactorGeneric<ErrorType, FactorClassType> (NoiseModel,
                                                         States._List,
                                                         CurrentFactorType,

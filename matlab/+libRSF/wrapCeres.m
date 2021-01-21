@@ -45,9 +45,8 @@ RefFile = [DataSetName '_Reference.yaml'];
 
 %% write config
 if RewriteYAML
-    if isfield(Config, 'Default')
-        DefaultConfig = [RelativePath '/../../config/' Config.Default '.yaml'];
-        libRSF.writeYamlConfig(Config, DefaultConfig, [PathToBinary ConfigFile]);
+    if isfield(Config, 'config')
+        yaml.WriteYaml([PathToBinary ConfigFile], Config, 0);
     end
 end
 
@@ -86,11 +85,15 @@ end
 
 % change path and call binary
 OldPath = cd(PathToBinary);
-    disp('Calling the libRSF binary...')
-    tic
-        system(CeresCall);
+    disp('Calling the libRSF binary...');
+    tic;
+        BinaryResult = system(CeresCall);
     Runtime = toc;
 cd(OldPath);
+
+if BinaryResult ~= 0
+    warning('Ceres binary failure!');
+end
 
 %% parse results
 ResultCell = readcell([PathToBinary OutputFile], 'FileType','text','NumHeaderLines', 0,  'Delimiter', ' ');

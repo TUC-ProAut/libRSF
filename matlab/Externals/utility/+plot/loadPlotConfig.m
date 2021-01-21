@@ -29,6 +29,7 @@ else
 end
 
 Config.Line.Color = [Config.Line.Color; brighten(Config.Line.Color, 0.7)];
+Config.Line.ColorGrey = [0.35 0.35 0.35];
 Config.Line.Marker.Type = {'x', '+', 'o', '*','v', 's', 'd','p'};
 Config.Line.Marker.Size = 15;
 

@@ -101,6 +101,13 @@ namespace libRSF
         updateScaling();
       }
 
+      void setSqrtInformation(const MatrixStatic<Dim, Dim> &SqrtInformation)
+      {
+        _SqrtInformation = SqrtInformation;
+
+        updateScaling();
+      }
+
       void updateCovariance(const MatrixStatic<Dim, Dim> &Covariance)
       {
         _SqrtInformation = InverseSquareRoot(Covariance);
@@ -209,6 +216,16 @@ namespace libRSF
           _Weight.setZero();
           _Mean.setZero();
           _SqrtInformation = MatrixStatic<Dim, Dim>::Identity();
+        }
+
+        /** check for extreme numerical values */
+        if((_SqrtInformation.array() > 1e10).any() == true)
+        {
+          #ifndef NDEBUG
+          PRINT_WARNING("Square root information is too high: ", _SqrtInformation.maxCoeff());
+          PRINT_WARNING("Limit Square root information to 1e10 for numerical reasons!");
+          #endif
+          _SqrtInformation = (_SqrtInformation.array() < 1e10).select(_SqrtInformation, 1e10);
         }
 
         updateScaling();

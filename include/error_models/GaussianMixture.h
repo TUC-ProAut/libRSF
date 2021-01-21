@@ -105,12 +105,12 @@ namespace libRSF
 
       bool estimate(const std::vector<double> &Data, const EstimationConfig &Config)
       {
-        int N = Data.size() / Dim;
+        const int N = Data.size() / Dim;
 
         /** check size */
-        if (Data.size() < Config.MinimalSamples)
+        if (N < Config.MinimalSamples)
         {
-          PRINT_WARNING("Sample Size to low: ", Data.size());
+          PRINT_WARNING("Sample Size to low: ", N);
           return false;
         }
 
@@ -255,6 +255,7 @@ namespace libRSF
 
         PRINT_LOGGING("GMM estimation started with ", Data.size(), " samples.");
         PRINT_LOGGING("GMM estimation ended with ", _Mixture.size(), " components, after ", k - 1, " iterations.");
+        this->printParameter();
 #endif
 
         return GMMConsistency;
@@ -597,7 +598,8 @@ namespace libRSF
         }
       }
 
-      bool prunMixture(double MinWeight)
+      /** remove components, that are to small */
+      bool prunMixture(const double MinWeight)
       {
         bool Prunned = false;
 
@@ -614,7 +616,7 @@ namespace libRSF
       }
 
       /** merge components that are identical */
-      bool reduceMixture(double BhattacharyyaLimit)
+      bool reduceMixture(const double BhattacharyyaLimit)
       {
         bool PerformedMerge = false;
         int M = _Mixture.size();

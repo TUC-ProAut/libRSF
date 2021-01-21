@@ -363,7 +363,7 @@ namespace libRSF
     std::vector<StateID> States;
 
     /** iterate over state names */
-    std::vector<string> StateNames = _StateData.getKeysAll();
+    const std::vector<string> StateNames = _StateData.getKeysAll();
     for (const string &Name : StateNames)
     {
       /** check if there is an element below cut time */
@@ -505,7 +505,7 @@ namespace libRSF
 
   void FactorGraph::removeStatesOutsideWindow(string Name, double TimeWindow, double CurrentTime)
   {
-    double CutTime = CurrentTime - TimeWindow;
+    const double CutTime = CurrentTime - TimeWindow;
     double Timestamp;
     bool TimestampExists;
 
@@ -588,7 +588,7 @@ namespace libRSF
 
   void FactorGraph::setConstantOutsideWindow(string Name, double TimeWindow, double CurrentTime)
   {
-    double CutTime = CurrentTime - TimeWindow;
+    const double CutTime = CurrentTime - TimeWindow;
     double Timestamp;
     bool TimestampExists;
 
@@ -766,6 +766,13 @@ namespace libRSF
     std::vector<double> ErrorVector;
     this->computeUnweightedError(CurrentFactorType, ErrorVector);
 
+    /** check for empty vector */
+    if (ErrorVector.size() == 0)
+    {
+      PRINT_WARNING("Factors of type ", CurrentFactorType, " are missing!");
+      return;
+    }
+
     /** get the fector IDs */
     std::vector<FactorID> FactorVector;
     _Structure.getFactorIDs(CurrentFactorType, FactorVector);
@@ -779,7 +786,7 @@ namespace libRSF
       case 1:
         {
           StateData ErrorState(StateType::Error1, 0.0);
-          for (int i = 0; i < ErrorVector.size(); i += Dim)
+          for (int i = 0; i < static_cast<int>(ErrorVector.size()); i += Dim)
           {
             ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
             ErrorState.setMean((Vector1() << ErrorVector.at(i)).finished());
@@ -791,7 +798,7 @@ namespace libRSF
       case 2:
         {
           StateData ErrorState(StateType::Error2, 0.0);
-          for (int i = 0; i < ErrorVector.size(); i += Dim)
+          for (int i = 0; i < static_cast<int>(ErrorVector.size()); i += Dim)
           {
             ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
             ErrorState.setMean((Vector2() << ErrorVector.at(i), ErrorVector.at(i+1)).finished());
@@ -803,7 +810,7 @@ namespace libRSF
       case 3:
         {
           StateData ErrorState(StateType::Error3, 0.0);
-          for (int i = 0; i < ErrorVector.size(); i += Dim)
+          for (int i = 0; i < static_cast<int>(ErrorVector.size()); i += Dim)
           {
             ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
             ErrorState.setMean((Vector3() << ErrorVector.at(i), ErrorVector.at(i+1), ErrorVector.at(i+2)).finished());

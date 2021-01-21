@@ -191,7 +191,10 @@ namespace libRSF
     }
 
     /** read all files */
-    YAML::Node YAMLConfig = YAML::LoadFile(YAMLFile);
+    const YAML::Node YAMLComplete = YAML::LoadFile(YAMLFile);
+
+    /** config node holds the relevant configuration */
+    const YAML::Node YAMLConfig  = YAMLComplete["config"];
 
     /** solution */
     string SolTypeString = YAMLConfig["solution"]["solver_mode"].as<std::string>();

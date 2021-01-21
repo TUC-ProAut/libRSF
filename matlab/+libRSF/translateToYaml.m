@@ -1,66 +1,29 @@
-function [YAMLs, Lables] = translateToYaml(Config)
+function [YamlOut, Lables] = translateToYaml(Config)
 %TRANSLATETOYAML Summary of this function goes here
 %   Detailed explanation goes here
 
 Lables = {};
-YAMLs = {};
+YamlOut = {};
 
-for m = 1:numel(Config.ErrorModel)
-    for n = 1:numel(Config.SensorConfig)
-        for k =1:numel(Config.Solution)
-            YAML = [];
+for nError = 1:numel(Config.ErrorModel)
+    for nSensorConfig = 1:numel(Config.SensorConfig)
+        for nSolution = 1:numel(Config.Solution)
             
-            if isfield(Config, 'YAMLFile')
-                YAML.Default = Config.YAMLFile;
-            else
-                % choose default yaml options
-                switch Config.DatasetName
-                    case 'Chemnitz'
-                        YAML.Default = 'Default_Chemnitz';
-                        Config.IsSync = true;
-                        
-                    case {'Berlin_Potsdamer_Platz', 'Berlin_Gendarmenmarkt',  'Frankfurt_Main_Tower', 'Frankfurt_Westend_Tower'}
-                        YAML.Default = 'Default_smartLoc';
-                        Config.IsSync = true;
-                        
-                    case {'Hongkong_Loop_Small', 'Hongkong_Loop_Large'}
-                        YAML.Default = 'Default_HK';
-                        Config.IsSync = true;
-                        
-                    case {'Radar_Synth', 'Radar_Synth_Cluster', 'Radar_Synth_Cluster_Far', 'Radar_Synth_Outlier', 'Radar_Synth_Cluster_Outlier', 'Radar_Synth_Outrange_Outlier', 'Radar_Turmbau_1', 'Radar_Synth_RAL', 'Radar_Synth_RAL_100'}
-                        YAML.Default = 'Default_Radar';
-                        
-                    otherwise
-                        YAML.Default = 'Default';
-                end
-            end
-
-            % solution setup
-            YAML.Solution.Type = Config.Solution{k};
-
-            % cov est
-            YAML.Solution.EstimateCov = Config.EstimateCov;
-
-            % set graph architecture
-            if Config.IsSync
-                if (strcmp(Config.DatasetName,'Turmbau_2') || strcmp(Config.DatasetName,'Turmbau_1'))
-                    YAML.Graph.Type = 'sync_uwb';    
-                else
-                    YAML.Graph.Type = 'sync';                    
-                end
-            else
-                YAML.Graph.Type = 'async';
-            end
-
-            % sensor setup
-            YAML.Sensors.List = Config.SensorConfig{n};
+            %% select the current setup
+            ErrorModel = Config.ErrorModel{nError};
+            SensorConfig = Config.SensorConfig{nSensorConfig};
+            Solution = Config.Solution{nSolution};
+            
+            %% create lable
             Lables{end+1} = '';
-            for i = 1:numel(Config.SensorConfig{n})
-                if i > 1
+            for nSensor = 1:numel(SensorConfig)
+                Sensor = SensorConfig{nSensor};
+                
+                if nSensor > 1
                     Lables{end} = [Lables{end} ' + '];
                 end
                 
-                switch Config.SensorConfig{n}{i}
+                switch Sensor
                     case 'odom'
                         Lables{end} = [Lables{end} 'Odom'];
                     case 'odom2'
@@ -82,9 +45,9 @@ for m = 1:numel(Config.ErrorModel)
                     case 'gnss'
                         Lables{end} = [Lables{end} 'GNSS'];
                     case 'cced'
-                        %do nothing
+                        do nothing
                     case 'cce'
-                        %do nothing
+                        do nothing
                     case 'loop'
                         Lables{end} = [Lables{end} 'Loop Closure 2D'];
                     case 'radar'
@@ -92,16 +55,109 @@ for m = 1:numel(Config.ErrorModel)
                     case 'ground'
                         Lables{end} = [Lables{end} 'Ground Prior'];
                     otherwise
-                    error(['Wrong sensor config: ' Config.SensorConfig{n}{i}]);
+                        Lables{end} = [Lables{end} Sensor];
+                        warning(['No Lable for sensor: ' Sensor]);
                 end
             end
+            Lables{end} = [Lables{end} ' + ' ErrorModel ' + ' Config.Solution{nSolution}];
+            
+            
+            %% select default yaml file
+            if isfield(Config, 'YAMLFile')
+                DefaultFile = Config.YAMLFile;
+            else
+                switch Config.DatasetName
+                    case 'Chemnitz'
+                        DefaultFile = 'Default_Chemnitz';
+                        
+                    case {'Berlin_Potsdamer_Platz', 'Berlin_Gendarmenmarkt',  'Frankfurt_Main_Tower', 'Frankfurt_Westend_Tower'}
+                        DefaultFile = 'Default_smartLoc';
+                        
+                    case {'Hongkong_Loop_Small', 'Hongkong_Loop_Large'}
+                        DefaultFile = 'Default_HK';
+                        
+                    case {'Radar_Synth', 'Radar_Synth_Cluster', 'Radar_Synth_Cluster_Far', 'Radar_Synth_Outlier', 'Radar_Synth_Cluster_Outlier', 'Radar_Synth_Outrange_Outlier', 'Radar_Turmbau_1', 'Radar_Synth_RAL', 'Radar_Synth_RAL_100'}
+                        DefaultFile = 'Default_Radar';
+                        
+                    otherwise
+                        DefaultFile = 'Default';
+                end
+            end
+            
+            %% overwrite default options
+            if strcmp(Config.DatasetName, 'Chemnitz') || ...
+                    strcmp(Config.DatasetName, 'Berlin_Potsdamer_Platz') || ...
+                    strcmp(Config.DatasetName, 'Berlin_Gendarmenmarkt') || ...
+                    strcmp(Config.DatasetName, 'Frankfurt_Main_Tower') || ...
+                    strcmp(Config.DatasetName, 'Frankfurt_Westend_Tower') || ...
+                    strcmp(Config.DatasetName, 'Hongkong_Loop_Small') || ...
+                    strcmp(Config.DatasetName, 'Hongkong_Loop_Large')
+                
+                Config.IsSync = true;
+            end
+            
+            %% translate the config using the actual YAML file
+            % create path
+            RelativePath = fileparts(mfilename('fullpath'));
+            DefaultPath = [RelativePath '/../../config/' DefaultFile '.yaml'];
+            
+            % read default file
+            YamlDefault = yaml.ReadYaml(DefaultPath,1,1);
+            
+            YamlOut{end+1} = struct;
+            
+            % solution
+            try
+                YamlOut{end}.config.solution =  YamlDefault.solutions.(Solution);
+            catch
+                error(['Solution type ' Solution ' does not exist in ' DefaultFile '!']);
+            end
+            YamlOut{end}.config.solution.estimate_cov = Config.EstimateCov;
+            
+            
+            % factor graph
+            if Config.IsSync
+                if (strcmp(Config.DatasetName,'Turmbau_2') || strcmp(Config.DatasetName,'Turmbau_1'))
+                    GraphType = 'sync_uwb';
+                else
+                    GraphType = 'sync';
+                end
+            else
+                GraphType = 'async';
+            end
+            
+            try
+                YamlOut{end}.config.graph =  YamlDefault.architecture.(GraphType);
+            catch
+                error(['Graph type ' GraphType ' does not exist in ' DefaultFile '!']);
+            end
+            
+            % sensors + error model
+            YamlOut{end}.config.factors = {};
+            for nSensor = 1:numel(SensorConfig)
 
-            % error setup
-            YAML.ErrorModel = Config.ErrorModel{m};
-            Lables{end} = [Lables{end} ' + ' Config.ErrorModel{m} ' + ' Config.Solution{k}];
-
-            % store config
-            YAMLs{end+1} = YAML;
+                % select sensor
+                Sensor = SensorConfig{nSensor};
+                try
+                    YamlOut{end}.config.factors{end+1} = YamlDefault.factors.(Sensor);
+                catch
+                    error(['Factor type ' Sensor ' does not exist in ' DefaultFile '!']);
+                end
+                
+                % overwrite with selected error model
+                if strcmp(Sensor, 'gnss') ||...
+                        strcmp(Sensor, 'uwb') ||...
+                        strcmp(Sensor, 'loop') ||...
+                        strcmp(Sensor, 'range') ||...
+                        strcmp(Sensor, 'radar')
+                    try
+                        YamlOut{end}.config.factors{end}.error = YamlDefault.errors.(ErrorModel);
+                    catch
+                        error(['Error model ' ErrorModel ' does not exist in ' DefaultFile '!']);
+                    end
+                end
+                
+            end
         end
     end
 end
