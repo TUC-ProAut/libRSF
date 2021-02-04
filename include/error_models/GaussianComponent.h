@@ -280,7 +280,7 @@ namespace libRSF
         updateScaling();
       }
 
-      /** compute negative log-likelihood of a sample vactor */
+      /** compute negative log-likelihood of a sample vector */
       Vector computeNegLogLikelihood (const ErrorMatType &Errors) const
       {
         /** apply mean */

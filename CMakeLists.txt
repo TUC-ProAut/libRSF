@@ -31,8 +31,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-option(LIBRSF_BUILD_TRACKING "If enabled, the tracking application is included." OFF)
-
 ##################################
 # add dependencies
 ##################################

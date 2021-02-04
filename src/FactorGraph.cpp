@@ -88,6 +88,17 @@ namespace libRSF
         _Graph.AddParameterBlock(StatePointer, StateSize, AngleLocalParameterization::Create());
         break;
 
+      case StateType::UnitCircle:
+        {
+          /** initialize with 0 degree rotation */
+          Vector2 Circle;
+          Circle << 1, 0;
+          _StateData.getElement(Name, Timestamp, StateNumber).setMean(Circle);
+
+          _Graph.AddParameterBlock(StatePointer, StateSize, UnitCircleLocalParameterization::Create());
+          break;
+        }
+
       case StateType::Quat:
         {
           /** initialize with valid quaternion */
@@ -120,7 +131,7 @@ namespace libRSF
 
       case StateType::Switch:
         {
-          /** init with one */
+          /** initialize with one */
           _StateData.getElement(Name, Timestamp, StateNumber).setMean(Vector1::Identity());
 
           _Graph.AddParameterBlock(StatePointer, StateSize);

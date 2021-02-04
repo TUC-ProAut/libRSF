@@ -96,7 +96,7 @@ if BinaryResult ~= 0
 end
 
 %% parse results
-ResultCell = readcell([PathToBinary OutputFile], 'FileType','text','NumHeaderLines', 0,  'Delimiter', ' ');
+ResultCell = readcell([PathToBinary OutputFile], 'FileType', 'text', 'NumHeaderLines', 0, 'Delimiter', ' ');
 Result = libRSF.parseFromCell(ResultCell);
 Result.Runtime = Runtime;
 

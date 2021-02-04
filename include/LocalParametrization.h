@@ -58,6 +58,29 @@ namespace libRSF
       }
   };
 
+  /** unit circle to represent angular value */
+  class UnitCircleLocalParameterization
+  {
+    public:
+
+      template <typename T>
+      bool operator()(const T* Circle, const T* DeltaCircle, T* CirclePlusDelta) const
+      {
+        /** real part --> cos() */
+        CirclePlusDelta[0] = Circle[0] * cos(DeltaCircle[0]) - Circle[1] * sin(DeltaCircle[0]);
+
+        /** complex part --> sin() */
+        CirclePlusDelta[1] = Circle[1] * cos(DeltaCircle[0]) + Circle[0] * sin(DeltaCircle[0]);
+
+        return true;
+      }
+
+      static ceres::LocalParameterization* Create()
+      {
+        return (new ceres::AutoDiffLocalParameterization<UnitCircleLocalParameterization, 2, 1>);
+      }
+  };
+
   /** modified autodiff version of original ceres one */
   class QuaternionLocalParameterization
   {

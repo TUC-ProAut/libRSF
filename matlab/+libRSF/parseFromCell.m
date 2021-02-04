@@ -127,6 +127,19 @@ for n = 1:size(ResultCell,1)
             ResultStruct.Angle.Mean(end+1,1) = cell2mat(ResultCell(n,3));
             ResultStruct.Angle.Cov(end+1,1) = cell2mat(ResultCell(n,4));
             
+        case 'unit_circle'
+            if ~isfield(ResultStruct,'UnitCircle')
+                ResultStruct.UnitCircle = [];
+                ResultStruct.UnitCircle.Time = [];
+                ResultStruct.UnitCircle.Real = [];
+                ResultStruct.UnitCircle.Complex = [];
+                ResultStruct.UnitCircle.Cov = [];
+            end
+            ResultStruct.UnitCircle.Time(end+1,1) = cell2mat(ResultCell(n,2));
+            ResultStruct.UnitCircle.Real(end+1,1) = cell2mat(ResultCell(n,3));
+            ResultStruct.UnitCircle.Complex(end+1,1) = cell2mat(ResultCell(n,4));
+            ResultStruct.UnitCircle.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,5:8)),[],2,2);
+            
         case 'imu_bias'
             if ~isfield(ResultStruct,'IMU')
                 ResultStruct.IMU = [];

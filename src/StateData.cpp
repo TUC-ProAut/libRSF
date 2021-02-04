@@ -80,6 +80,15 @@ namespace libRSF
     },
 
     {
+      "unit_circle", StateType::UnitCircle,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 2},
+        {StateElement::Covariance, 4}
+      }
+    },
+
+    {
       "point_id2", StateType::PointID2,
       {
         {StateElement::Timestamp, 1},

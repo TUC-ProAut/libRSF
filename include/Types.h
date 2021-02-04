@@ -75,7 +75,7 @@ namespace libRSF
                         PointID2, PointID3,
                         Pose2, Pose3,
                         GT1, GT2, GT3,
-                        Quat, Angle,
+                        Quat, Angle, UnitCircle,
                         GMM, Switch,
                         Covariance1,
                         Error1, Error2, Error3,
