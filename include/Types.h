@@ -61,6 +61,9 @@ namespace libRSF
     IMUSimple, IMUPretintegration,
     Repelling,
     TrackingDetection,
+    TrackingDetectionDim, TrackingDetectionRot, TrackingDetectionVel,
+    TrackingDetectionDimRot, TrackingDetectionVelDim, TrackingDetectionVelRot,
+    TrackingDetectionVelDimRot,
     Marginal
   };
 
@@ -89,7 +92,7 @@ namespace libRSF
                            Weight,
                            TF,
                            Other,
-                           ID, Conf, Idx,
+                           ID, Conf, Idx, WLH, R, R_Quat, Class, Key, Velocity,
                            DurationSolver, DurationMarginal, DurationAdaptive, DurationTotal,
                            IterationSolver, IterationAdaptive};
 
@@ -108,7 +111,11 @@ namespace libRSF
                          IMU,
                          Val1,
                          Other};
-  enum class SensorElement {Timestamp, TimestampRef, Mean, StdDev, Covariance, SatPos, SatElevation, SNR, SatID, WheelBase, TF, ID, Conf, Idx, Velocity};
+  enum class SensorElement {Timestamp, TimestampRef,
+                            Mean, StdDev, Covariance,
+                            SatPos, SatElevation, SNR, SatID,
+                            WheelBase, TF,
+                            ID, Conf, Idx, Velocity, WLH, R, R_Quat, Class, Key};
 
   /** cout enums */
   std::ostream& operator << (std::ostream& Os, const SensorType& Type);

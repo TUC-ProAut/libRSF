@@ -120,12 +120,15 @@ namespace libRSF
       {
         _Mixture = Mixture;
 
-        _Normalization = _Mixture.getMaximumOfComponent(0);
-
         const int NumberOfComponents = _Mixture.getNumberOfComponents();
-        for(int nComponent = 1; nComponent < NumberOfComponents; ++nComponent)
+
+        if (NumberOfComponents > 0)
         {
-          _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
+          _Normalization = _Mixture.getMaximumOfComponent(0);
+          for(int nComponent = 1; nComponent < NumberOfComponents; ++nComponent)
+          {
+            _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
+          }
         }
       }
 
@@ -137,7 +140,11 @@ namespace libRSF
   typedef MaxMixture<1, GaussianMixture<1>> MaxMix1;
   typedef MaxMixture<2, GaussianMixture<2>> MaxMix2;
   typedef MaxMixture<3, GaussianMixture<3>> MaxMix3;
+  typedef MaxMixture<5, GaussianMixture<5>> MaxMix5;
   typedef MaxMixture<6, GaussianMixture<6>> MaxMix6;
+  typedef MaxMixture<8, GaussianMixture<8>> MaxMix8;
+  typedef MaxMixture<9, GaussianMixture<9>> MaxMix9;
+  typedef MaxMixture<11, GaussianMixture<11>> MaxMix11;
 }
 
 #endif // MAXMIXTURE_H

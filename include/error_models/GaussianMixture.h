@@ -102,7 +102,6 @@ namespace libRSF
         MatrixVectorSTL<Dim, Dim> VInfo;
       };
 
-
       bool estimate(const std::vector<double> &Data, const EstimationConfig &Config)
       {
         const int N = Data.size() / Dim;
@@ -359,7 +358,7 @@ namespace libRSF
         return LikelihoodSum;
       }
 
-      int computeMostLikelyComponent(MatrixStatic<Dim, 1> &Error)
+      int computeMostLikelyComponent(MatrixStatic<Dim, 1> &Error) const
       {
         /** compute all likelihoods */
         Matrix Likelihood;
@@ -373,10 +372,10 @@ namespace libRSF
         return MaxIndexRow;
       }
 
-      double computeNegLogLikelihood(const ErrorMatType &DataVector, Matrix &NegLogLikelihood)
+      double computeNegLogLikelihood(const ErrorMatType &DataVector, Matrix &NegLogLikelihood) const
       {
-        int M = _Mixture.size(); /**< number of components */
-        int N = DataVector.cols(); /**< number of data samples */
+        const int M = _Mixture.size(); /**< number of components */
+        const int N = DataVector.cols(); /**< number of data samples */
 
         /** adapt size of output matrix */
         NegLogLikelihood.resize(M, N);
@@ -644,7 +643,7 @@ namespace libRSF
         return PerformedMerge;
       }
 
-      void printParameter()
+      void printParameter() const
       {
         PRINT_LOGGING("GMM Parameter: Mean       StdDev-Diagonal       Weight");
         for (int n = 0; n < static_cast<int>(_Mixture.size()); ++n)

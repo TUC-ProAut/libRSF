@@ -185,7 +185,12 @@ namespace libRSF
         {SensorElement::ID, 1},
         {SensorElement::Idx, 1},
         {SensorElement::Conf, 1},
-        {SensorElement::Covariance, 9}
+        {SensorElement::Covariance, 9},
+        {SensorElement::WLH, 3},
+        {SensorElement::R, 1},
+        {SensorElement::R_Quat, 4},
+        {SensorElement::Class, 1},
+        {SensorElement::Key, 1}
       }
     },
 
