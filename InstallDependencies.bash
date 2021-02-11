@@ -47,15 +47,30 @@ then
     echo "WARNING: C++17 is required! Please set it up manually!" 
 fi
 
+# function to check dependencies
+install_if_not_exist ()
+{
+  PKG_EXIST=$(dpkg -s $1 | grep "install ok installed")
+  if [ -z "$PKG_EXIST" ]
+  then
+    sudo apt-get install $1 --assume-yes
+  fi
+}
+
 # install libRSF dependencies
-sudo apt-get install cmake --assume-yes
-sudo apt-get install libgeographic-dev --assume-yes
-sudo apt-get install libyaml-cpp-dev --assume-yes
+install_if_not_exist cmake
+install_if_not_exist libgeographic-dev
+install_if_not_exist libyaml-cpp-dev
+
+# install ceres dependencies
+install_if_not_exist libgoogle-glog-dev
+install_if_not_exist libatlas-base-dev
+install_if_not_exist libsuitesparse-dev
 
 # prepare external dependencies
 mkdir -p externals/install
 
-# install eigen
+# install eigen locally
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ] # Eigen < 3.3.5 is to old for libRSF & Ceres
 then
   echo "WARNING: Your Eigen version is below 3.3.5, we install it locally!"
@@ -74,15 +89,10 @@ then
   make install
   cd ../../..
 else
-    sudo apt-get install libeigen3-dev --assume-yes
+    install_if_not_exist libeigen3-dev
 fi
 
-# install ceres dependencies
-sudo apt-get install libgoogle-glog-dev --assume-yes
-sudo apt-get install libatlas-base-dev --assume-yes
-sudo apt-get install libsuitesparse-dev --assume-yes
-
-# install ceres 
+# install ceres locally
 cd externals
 if [ -d "$ceres_directory" ]
 then
@@ -95,9 +105,9 @@ fi
 mkdir -p build && cd build
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]
 then
-    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DEigen3_DIR=../install/share/eigen3/cmake ..
+    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF -DEigen3_DIR=../install/share/eigen3/cmake ..
 else
-    cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
+    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF  ..
 fi
 make all -j$(getconf _NPROCESSORS_ONLN)
 make install
