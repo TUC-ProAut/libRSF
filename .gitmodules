@@ -1,0 +1,6 @@
+[submodule "externals/eigen"]
+	path = externals/eigen
+	url = https://gitlab.com/libeigen/eigen.git
+[submodule "externals/ceres-solver"]
+	path = externals/ceres-solver
+	url = https://ceres-solver.googlesource.com/ceres-solver
