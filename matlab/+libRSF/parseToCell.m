@@ -49,6 +49,11 @@ if isfield(Data,'PositionID3')
     PosID3Cell(:,10)                         = num2cell(Data.PositionID3.Idx);
     PosID3Cell(:,11)                         = num2cell(Data.PositionID3.Conf);
     PosID3Cell(:,12:20)                      = num2cell(Data.PositionID3.Cov);
+    PosID3Cell(:,21:23)                      = num2cell(Data.PositionID3.WLH);
+    PosID3Cell(:,24)                         = num2cell(Data.PositionID3.R);
+    PosID3Cell(:,25:28)                      = num2cell(Data.PositionID3.R_Quat);
+    PosID3Cell(:,29)                         = num2cell(Data.PositionID3.ClassNum);
+    PosID3Cell(:,30)                         = num2cell(Data.PositionID3.KeyNum);
 end
 
 QuatCell = cell(0,MaxCellWidth);

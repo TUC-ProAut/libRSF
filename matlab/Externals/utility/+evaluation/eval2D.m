@@ -91,7 +91,7 @@ if HasCov
     Metric.NEES = evaluation.calculateNEES(RawError, Cov);
     
     % average NEES
-    Metric.ANEES = sum(Metric.NEES) / (NumericalDOF*N);
+    Metric.ANEES = sum(Metric.NEES, 'omitnan') / (NumericalDOF*N);
 
     % test for chi2 boundaries    
     Metric.ANEES_UpperBound = chi2inv(0.95, N*NumericalDOF)/(N*NumericalDOF);
@@ -117,7 +117,8 @@ if HasSolver
     Metric.DurationSolver = SolverSummary.DurationSolver;
     Metric.IterationSolver = SolverSummary.IterationSolver;
     
-    Metric.Duration_Mean = mean(Metric.DurationSolver);
+    Metric.Duration_Mean = mean(Metric.DurationTotal);
+    Metric.Duration_Mean_ms = Metric.Duration_Mean*1000;
 end
 
 end

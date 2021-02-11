@@ -64,11 +64,16 @@ namespace libRSF
   typedef VectorStatic<2> Vector2;
   typedef VectorStatic<3> Vector3;
   typedef VectorStatic<4> Vector4;
+  typedef VectorStatic<5> Vector5;
   typedef VectorStatic<6> Vector6;
   typedef VectorStatic<7> Vector7;
   typedef VectorStatic<8> Vector8;
   typedef VectorStatic<9> Vector9;
+  typedef VectorStatic<10> Vector10;
+  typedef VectorStatic<11> Vector11;
   typedef VectorStatic<12> Vector12;
+  typedef VectorStatic<13> Vector13;
+  typedef VectorStatic<14> Vector14;
   typedef VectorStatic<15> Vector15;
 
   typedef MatrixStatic<1, 1> Matrix11;

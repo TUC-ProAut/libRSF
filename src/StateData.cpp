@@ -108,7 +108,13 @@ namespace libRSF
         {StateElement::ID, 1},
         {StateElement::Idx, 1},
         {StateElement::Conf, 1},
-        {StateElement::Covariance, 9}
+        {StateElement::Covariance, 9},
+        {StateElement::WLH, 3},
+        {StateElement::R, 1},
+        {StateElement::R_Quat, 4},
+        {StateElement::Class, 1},
+        {StateElement::Key, 1},
+        {StateElement::Velocity, 3}
       }
     },
 
