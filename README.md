@@ -13,7 +13,7 @@ Main features are:
 
 | Platform     | Build Status  |
 |:------------:|:-------------:|
-| Ubuntu 20.04 | ![CI Ubuntu 20.04](https://github.com/lemauee/libRSF/workflows/buildAndRunExamples2004/badge.svg) |
+| Ubuntu 20.04 | ![Focal CI](https://github.com/lemauee/libRSF/workflows/Focal%20CI/badge.svg) |
 
 ## Installation
 

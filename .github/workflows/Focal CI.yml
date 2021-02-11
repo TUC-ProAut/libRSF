@@ -1,14 +1,22 @@
-name: buildAndRunExamples2004
+name: Focal CI
 on: [push]
 jobs:
-  buildAndRunExamples2004:
+  Focal CI:
     runs-on: ubuntu-20.04
     steps:
+      # checkout repo & get externals from cache
       - name: checkout
         uses: actions/checkout@v2
+      - name: cache externals
+        uses: actions/cache@v2
+        with:
+          path: externals
+          key: ${{ runner.os }}-externals
+      # install dependencies
       - name: install dependencies
         run: ./InstallDependecies.bash
         shell: bash
+      # build & install libRSF
       - name: create build directory
         run: mkdir build
       - name: run cmake
@@ -20,6 +28,7 @@ jobs:
       - name: run make install
         working-directory: build
         run: sudo make install
+      # run some examples
       - name: make exampleResults directory for examples output
         run: mkdir exampleResults
       - name: run ICRA 2019 Application
@@ -29,6 +38,7 @@ jobs:
         with: 
           name: exampleResults
           path: exampleResults/
+      # uninstall libRSF
       - name: run make uninstall
         working-directory: build
         run: sudo make uninstall
