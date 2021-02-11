@@ -22,7 +22,7 @@ jobs:
       - name: make exampleResults directory for examples output
         run: mkdir exampleResults
       - name: run ICRA 2019 Application
-        run: build/applications/ICRA19_GNSS datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt exampleResults/Result_Berlin_Potsdamer_Platz_Web.txt error: gauss
+        run: 'build/applications/ICRA19_GNSS datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt exampleResults/Result_Berlin_Potsdamer_Platz_Web.txt error: gauss'
       - name: upload exampleResults as artifact
         uses: actions/upload-artifact@v2
         with: 
