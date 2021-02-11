@@ -18,7 +18,7 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-project(libRSF_library VERSION "1.2.0" LANGUAGES CXX)
+project(libRSF_library VERSION "1.3.0" LANGUAGES CXX)
 
 ##################################
 # add library files
@@ -155,7 +155,6 @@ configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/../cmake/libRSFConfig.cm
 # install the config, configversion and custom find modules
 install(FILES
     ${CMAKE_CURRENT_LIST_DIR}/../cmake/FindGeographicLib.cmake
-#    ${CMAKE_CURRENT_LIST_DIR}/../cmake/Findortools.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/libRSFConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/libRSFConfigVersion.cmake
     DESTINATION ${INSTALL_CONFIGDIR}

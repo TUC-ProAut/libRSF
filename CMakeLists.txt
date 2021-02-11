@@ -24,7 +24,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-project(libRSF VERSION "1.2.0" LANGUAGES CXX)
+project(libRSF VERSION "1.3.0" LANGUAGES CXX)
 
 # We build as Release by default
 if(NOT CMAKE_BUILD_TYPE)
@@ -37,6 +37,9 @@ endif()
 
 # path for custom find scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+
+# path for locally installed dependencies
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SOURCE_DIR}/externals/install)
 
 # Ceres to solve the NLS problem
 find_package(Ceres 2.0 REQUIRED)

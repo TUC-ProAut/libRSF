@@ -23,9 +23,8 @@ include(CMakeFindDependencyMacro)
 
 list(APPEND CMAKE_MODULE_PATH ${libRSF_CMAKE_DIR})
 
-#find_package(ortools REQUIRED)
 find_package(Ceres 2.0 REQUIRED)
-find_package(Eigen3 3.3 REQUIRED)
+find_package(Eigen3 3.3.5 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(GeographicLib REQUIRED)
 
