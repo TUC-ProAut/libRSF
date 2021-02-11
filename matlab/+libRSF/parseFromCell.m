@@ -64,25 +64,37 @@ for n = 1:size(ResultCell,1)
             ResultStruct.PositionID2.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,8:11)),[],2,2);
             
         case 'point_id3'
-            if ~isfield(ResultStruct,'PositionID3')
-                ResultStruct.PositionID3 = [];
-                ResultStruct.PositionID3.Time = [];
-                ResultStruct.PositionID3.X = [];
-                ResultStruct.PositionID3.Y = [];
-                ResultStruct.PositionID3.Z = [];
-                ResultStruct.PositionID3.ID = [];
-                ResultStruct.PositionID3.Idx = [];
-                ResultStruct.PositionID3.Conf = [];
-                ResultStruct.PositionID3.Cov = [];
-            end
-            ResultStruct.PositionID3.Time(end+1,1) = cell2mat(ResultCell(n,2));
-            ResultStruct.PositionID3.X(end+1,1) = cell2mat(ResultCell(n,3));
-            ResultStruct.PositionID3.Y(end+1,1) = cell2mat(ResultCell(n,4));
-            ResultStruct.PositionID3.Z(end+1,1) = cell2mat(ResultCell(n,5));
-            ResultStruct.PositionID3.ID(end+1,1) = cell2mat(ResultCell(n,6));
-            ResultStruct.PositionID3.Idx(end+1,1) = cell2mat(ResultCell(n,7));
-            ResultStruct.PositionID3.Conf(end+1,1) = cell2mat(ResultCell(n,8));
-            ResultStruct.PositionID3.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,9:17)),[],3,3);
+                if ~isfield(ResultStruct,'PositionID3')
+                    ResultStruct.PositionID3 = [];
+                    ResultStruct.PositionID3.Time = [];
+                    ResultStruct.PositionID3.X = [];
+                    ResultStruct.PositionID3.Y = [];
+                    ResultStruct.PositionID3.Z = [];
+                    ResultStruct.PositionID3.ID = [];
+                    ResultStruct.PositionID3.Idx = [];
+                    ResultStruct.PositionID3.Conf = [];
+                    ResultStruct.PositionID3.Cov = [];
+                    ResultStruct.PositionID3.WLH = [];
+                    ResultStruct.PositionID3.R = [];
+                    ResultStruct.PositionID3.R_Quat = [];
+                    ResultStruct.PositionID3.ClassNum = [];
+                    ResultStruct.PositionID3.KeyNum = [];
+                    ResultStruct.PositionID3.Velocity = [];
+                end
+                ResultStruct.PositionID3.Time(end+1,1) = cell2mat(ResultCell(n,2));
+                ResultStruct.PositionID3.X(end+1,1) = cell2mat(ResultCell(n,3));
+                ResultStruct.PositionID3.Y(end+1,1) = cell2mat(ResultCell(n,4));
+                ResultStruct.PositionID3.Z(end+1,1) = cell2mat(ResultCell(n,5));
+                ResultStruct.PositionID3.ID(end+1,1) = cell2mat(ResultCell(n,6));
+                ResultStruct.PositionID3.Idx(end+1,1) = cell2mat(ResultCell(n,7));
+                ResultStruct.PositionID3.Conf(end+1,1) = cell2mat(ResultCell(n,8));
+                ResultStruct.PositionID3.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,9:17)),[],3,3);
+                ResultStruct.PositionID3.WLH(end+1,:)   = cell2mat(ResultCell(n,18:20));
+                ResultStruct.PositionID3.R(end+1,:)   = cell2mat(ResultCell(n,21));
+                ResultStruct.PositionID3.R_Quat(end+1,:)   = cell2mat(ResultCell(n,22:25));
+                ResultStruct.PositionID3.ClassNum(end+1,:)   = cell2mat(ResultCell(n,26));
+                ResultStruct.PositionID3.KeyNum(end+1,:)   = cell2mat(ResultCell(n,27));
+                ResultStruct.PositionID3.Velocity(end+1,:)   = cell2mat(ResultCell(n,28:30));
             
         case 'point3'
             if ~isfield(ResultStruct,'Position3')

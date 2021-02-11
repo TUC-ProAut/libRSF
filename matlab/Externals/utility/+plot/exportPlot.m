@@ -7,7 +7,12 @@ function [] = exportPlot(Handle, Path, Name)
     FullFile = [Path Name];
     FullFilePDF = [FullFile '.pdf'];
     FullFilePNG = [FullFile '.png'];
+    FullFileFig = [FullFile '.fig'];
     
+    % save as figure file
+    savefig(Handle,FullFileFig,'compact');
+    
+    % save as graphics file
     if exist('exportgraphics', 'file')
         % new matlab 2020a function
         exportgraphics(Handle, FullFilePDF, 'BackgroundColor', 'none', 'ContentType', 'vector');
