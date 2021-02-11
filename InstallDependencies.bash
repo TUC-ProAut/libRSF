@@ -27,12 +27,17 @@ set -e
 
 # config paths
 readonly ceres_directory='ceres-solver'
+readonly eigen_directory='eigen'
+
+# config versions
+readonly ceres_version='2.0.0'
+readonly eigen_version='3.3.9'
 
 # get linux version
 readonly linux_distributor=$(lsb_release -is)
 readonly linux_version=$(lsb_release -rs)
 
-# check version
+# check linux version
 if [ "$linux_distributor" != "Ubuntu" ]
 then
     echo "ERROR: Unsupported operation system, this script covers only Ubuntu systems!"
@@ -42,43 +47,60 @@ then
     echo "WARNING: C++17 is required! Please set it up manually!" 
 fi
 
-# install ceres dependencies
-if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ] # Eigen < 3.3.5 is to old for libRSF & Ceres
-then
-  echo "WARNING: Your Eigen version is below 3.3.5, we have to activate a PPA! Please decide carefully if you want that!" 
-  sudo add-apt-repository ppa:nschloe/eigen-nightly
-  sudo apt-get update
-fi
-sudo apt-get install libeigen3-dev --assume-yes
-
+# install libRSF dependencies
 sudo apt-get install cmake --assume-yes
-
-sudo apt-get install libgoogle-glog-dev --assume-yes
-sudo apt-get install libatlas-base-dev --assume-yes
-sudo apt-get install libsuitesparse-dev --assume-yes
-
-# install other libRSF dependencies
 sudo apt-get install libgeographic-dev --assume-yes
 sudo apt-get install libyaml-cpp-dev --assume-yes
 
 # prepare external dependencies
-mkdir -p externals
-cd externals
+mkdir -p externals/install
 
-# install latest ceres version
+# install eigen
+if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ] # Eigen < 3.3.5 is to old for libRSF & Ceres
+then
+  echo "WARNING: Your Eigen version is below 3.3.5, we install it locally!"
+  cd externals
+  if [ -d "$eigen_directory" ]
+  then
+    cd "$eigen_directory"
+    git checkout tags/"$eigen_version"
+  else
+    git clone --depth=1 --branch "$eigen_version" https://gitlab.com/libeigen/eigen.git "$eigen_directory"
+    cd "$eigen_directory"
+  fi
+  
+  mkdir -p build && cd build
+  cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
+  make install
+  cd ../../..
+else
+    sudo apt-get install libeigen3-dev --assume-yes
+fi
+
+# install ceres dependencies
+sudo apt-get install libgoogle-glog-dev --assume-yes
+sudo apt-get install libatlas-base-dev --assume-yes
+sudo apt-get install libsuitesparse-dev --assume-yes
+
+# install ceres 
+cd externals
 if [ -d "$ceres_directory" ]
 then
     cd "$ceres_directory"
-    git fetch --all
-    git reset --hard origin/master
-    git pull origin master
+    git checkout tags/"$ceres_version"
 else
-    git clone https://ceres-solver.googlesource.com/ceres-solver "$ceres_directory"
+    git clone --depth=1 --branch "$ceres_version" https://ceres-solver.googlesource.com/ceres-solver "$ceres_directory"
     cd "$ceres_directory"
 fi
 mkdir -p build && cd build
-cmake -DEXPORT_BUILD_DIR=ON ..
+if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]
+then
+    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DEigen3_DIR=../install/share/eigen3/cmake ..
+else
+    cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
+fi
 make all -j$(getconf _NPROCESSORS_ONLN)
+make install
 cd ../..
 
 # leave externals
