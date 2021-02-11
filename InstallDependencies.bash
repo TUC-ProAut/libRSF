@@ -105,9 +105,9 @@ fi
 mkdir -p build && cd build
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]
 then
-    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DEigen3_DIR=../install/share/eigen3/cmake ..
+    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF -DEigen3_DIR=../install/share/eigen3/cmake ..
 else
-    cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
+    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF  ..
 fi
 make all -j$(getconf _NPROCESSORS_ONLN)
 make install
