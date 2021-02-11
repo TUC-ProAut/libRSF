@@ -9,6 +9,12 @@ Main features are:
 - A set of predefined cost functions for various localization problems.
 - Several robust error models for non-Gaussian problems, including self-tuning Gaussian mixtures.
 
+## Build Status
+
+| Platform     | Build Status  |
+|:------------:|:-------------:|
+| Ubuntu 20.04 | ![CI Ubuntu 20.04](https://github.com/lemauee/libRSF/workflows/buildAndRunExamples2004/badge.svg) |
+
 ## Installation
 
 The libRSF is a CMake project that requires the installation of several dependencies.
