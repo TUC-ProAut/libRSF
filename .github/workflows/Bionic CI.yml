@@ -1,8 +1,8 @@
-name: Focal CI
+name: Bionic CI
 on: [push]
 jobs:
-  Focal-CI:
-    runs-on: ubuntu-20.04
+  Bionic-CI:
+    runs-on: ubuntu-18.04
     steps:
       # checkout repo & get externals from cache
       - name: checkout
