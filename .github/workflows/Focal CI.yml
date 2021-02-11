@@ -1,7 +1,7 @@
 name: Focal CI
 on: [push]
 jobs:
-  Focal CI:
+  Focal-CI:
     runs-on: ubuntu-20.04
     steps:
       # checkout repo & get externals from cache
