@@ -7,11 +7,6 @@ jobs:
       # checkout repo & get externals from cache
       - name: checkout
         uses: actions/checkout@v2
-      - name: cache externals
-        uses: actions/cache@v2
-        with:
-          path: externals
-          key: ${{ runner.os }}-externals
       # install dependencies
       - name: install dependencies
         run: ./InstallDependencies.bash
