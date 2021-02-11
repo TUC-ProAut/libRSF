@@ -74,15 +74,8 @@ mkdir -p externals/install
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ] # Eigen < 3.3.5 is to old for libRSF & Ceres
 then
   echo "WARNING: Your Eigen version is below 3.3.5, we install it locally!"
-  cd externals
-  if [ -d "$eigen_directory" ]
-  then
-    cd "$eigen_directory"
-    git checkout tags/"$eigen_version"
-  else
-    git clone --depth=1 --branch "$eigen_version" https://gitlab.com/libeigen/eigen.git "$eigen_directory"
-    cd "$eigen_directory"
-  fi
+  git submodule update --init externals/eigen
+  cd "externals/$eigen_directory"
   
   mkdir -p build && cd build
   cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
@@ -93,15 +86,9 @@ else
 fi
 
 # install ceres locally
-cd externals
-if [ -d "$ceres_directory" ]
-then
-    cd "$ceres_directory"
-    git checkout tags/"$ceres_version"
-else
-    git clone --depth=1 --branch "$ceres_version" https://ceres-solver.googlesource.com/ceres-solver "$ceres_directory"
-    cd "$ceres_directory"
-fi
+git submodule update --init externals/ceres-solver
+cd "externals/$ceres_directory"
+
 mkdir -p build && cd build
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]
 then
