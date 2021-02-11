@@ -18,7 +18,7 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-project(libRSF_library VERSION "1.3.0" LANGUAGES CXX)
+project(libRSF_library VERSION "2.0.0" LANGUAGES CXX)
 
 ##################################
 # add library files

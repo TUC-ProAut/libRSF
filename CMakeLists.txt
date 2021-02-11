@@ -24,7 +24,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-project(libRSF VERSION "1.3.0" LANGUAGES CXX)
+project(libRSF VERSION "2.0.0" LANGUAGES CXX)
 
 # We build as Release by default
 if(NOT CMAKE_BUILD_TYPE)
