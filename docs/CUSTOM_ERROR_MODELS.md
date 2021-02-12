@@ -84,7 +84,7 @@ All error models (not the loss functions!) are derived from the ErrorModel class
                     ------------                     -------------
    States    ----->|            |----->       ----->|             |----->
     and      ----->|   Factor   |-----> Error ----->| Error Model |-----> Weighted Error
-Measurements ----->|            |----->       ----->|			  |----->
+Measurements ----->|            |----->       ----->|             |----->
                     ------------                     ------------- 	
 ```
 
