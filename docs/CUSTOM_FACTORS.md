@@ -33,7 +33,7 @@ As the schema below shows, the output of the factor is the input of the error mo
                     ------------                     -------------
    States    ----->|            |----->       ----->|             |----->
     and      ----->|   Factor   |-----> Error ----->| Error Model |-----> Weighted Error
-Measurements ----->|            |----->       ----->|			        |----->
+Measurements ----->|            |----->       ----->|             |----->
                     ------------                     ------------- 	
 ```
 
