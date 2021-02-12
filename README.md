@@ -9,6 +9,13 @@ Main features are:
 - A set of predefined cost functions for various localization problems.
 - Several robust error models for non-Gaussian problems, including self-tuning Gaussian mixtures.
 
+## Build Status
+
+| Platform     | Build Status  |
+|:------------:|:-------------:|
+| Ubuntu 20.04 | ![Focal CI](https://github.com/tipf/libRSF/workflows/Focal%20CI/badge.svg) |
+| Ubuntu 18.04 | ![Bionic CI](https://github.com/tipf/libRSF/workflows/Bionic%20CI/badge.svg) |
+
 ## Installation
 
 The libRSF is a CMake project that requires the installation of several dependencies.
