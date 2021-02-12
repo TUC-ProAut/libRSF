@@ -38,21 +38,23 @@ readonly linux_distributor=$(lsb_release -is)
 readonly linux_version=$(lsb_release -rs)
 
 # check linux version
-if [ "$linux_distributor" != "Ubuntu" ]
-then
+if [ "$linux_distributor" != "Ubuntu" ]; then
     echo "ERROR: Unsupported operation system, this script covers only Ubuntu systems!"
     exit 1 # terminate and indicate error
-elif [ "$linux_version" == "16.04" ] # Ubuntu 16.04 does not support C++17 out-of-the-box
-then
+elif [ "$linux_version" == "16.04" ]; then 
+    # Ubuntu 16.04 does not support C++17 out-of-the-box
     echo "WARNING: C++17 is required! Please set it up manually!" 
 fi
 
 # function to check dependencies
 install_if_not_exist ()
 {
-  PKG_EXIST=$(dpkg -s $1 | grep "install ok installed")
-  if [ -z "$PKG_EXIST" ]
-  then
+  if dpkg -s $1 &>/dev/null; then
+    PKG_EXIST=$(dpkg -s $1 | grep "install ok installed")
+    if [ -z "$PKG_EXIST" ]; then
+      sudo apt-get install $1 --assume-yes
+    fi
+  else
     sudo apt-get install $1 --assume-yes
   fi
 }
@@ -64,6 +66,7 @@ install_if_not_exist libyaml-cpp-dev
 
 # install ceres dependencies
 install_if_not_exist libgoogle-glog-dev
+install_if_not_exist libgflags-dev
 install_if_not_exist libatlas-base-dev
 install_if_not_exist libsuitesparse-dev
 
@@ -71,12 +74,10 @@ install_if_not_exist libsuitesparse-dev
 mkdir -p externals/install
 
 # install eigen locally
-if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ] # Eigen < 3.3.5 is to old for libRSF & Ceres
-then
+if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]; then # Eigen < 3.3.5 is to old for libRSF & Ceres
   echo "WARNING: Your Eigen version is below 3.3.5, we install it locally!"
   cd externals
-  if [ -d "$eigen_directory" ]
-  then
+  if [ -d "$eigen_directory" ]; then
     cd "$eigen_directory"
     git checkout tags/"$eigen_version"
   else
@@ -94,8 +95,7 @@ fi
 
 # install ceres locally
 cd externals
-if [ -d "$ceres_directory" ]
-then
+if [ -d "$ceres_directory" ]; then
     cd "$ceres_directory"
     git checkout tags/"$ceres_version"
 else
@@ -103,8 +103,7 @@ else
     cd "$ceres_directory"
 fi
 mkdir -p build && cd build
-if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]
-then
+if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]; then
     cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF -DEigen3_DIR=../install/share/eigen3/cmake ..
 else
     cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF  ..
