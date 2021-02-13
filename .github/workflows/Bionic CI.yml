@@ -1,5 +1,26 @@
 name: Bionic CI
-on: [push]
+on: 
+  push:
+    paths-ignore:
+      - 'datasets/**'
+      - 'docs/**'
+      - 'matlab/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README.md'
+  pull_request:
+    paths-ignore:
+      - 'datasets/**'
+      - 'docs/**'
+      - 'matlab/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README.md'
+  # enable manual trigger
+  workflow_dispatch:
+  schedule:
+    # run on first day of the month
+    - cron: '0 0 1 * *'
 jobs:
   Bionic-CI:
     runs-on: ubuntu-18.04
