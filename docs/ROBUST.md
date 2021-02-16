@@ -44,25 +44,23 @@ Feel free to try them out and to play with the configuration parameter at the be
 If you do not want to use Matlab, you can also execute the compiled binaries directly. 
 Since this examples use just a small subset of functionalities from the libRSF, it is important to mention that some input/output/config parameters are not used. To run both examples, the same following syntax have to be applied:
 
-      libRSF/build/examples/Example_Robust_Models_1D  # #  <output file> <number points> <range points> <error model> <model parameters>
-      libRSF/build/examples/Example_Robust_Models_2D  # #  <output file> <number points> <range points> <error model> <model parameters>
+      libRSF/build/examples/Example_Robust_Models_1D  empty empty  <output file> <number points> <range points> <error model> <model parameters>
+      libRSF/build/examples/Example_Robust_Models_2D  empty empty  <output file> <number points> <range points> <error model> <model parameters>
 
-- the parameters start with two placeholder characters **"#"** that are separated by a space. These are required for compatibility reasons.
+- the parameters start with two placeholder strings **"empty"** that are separated by a space. These are required for compatibility reasons.
 
 - **\<output file\>** is the filename of a text file that will contain the output of the example application. Each line starts with an identifying string, followed by a number of floating point numbers.
   The lines can be grouped into four blocks:
+  1. Point1D/Point2D &ndash; The initial points before the optimization.
+  2. Point1D/Point2D &ndash; The same points after the optimization.
+  3. Solver Summary &ndash; The duration and number of iterations of the optimization.
+  4. Cost Surface Information &ndash; Cost, gradient and Hessian for a specific point.
   
-  1. Point1D/Point2D -- initial points for the optimization
-  2. Point1D/Point2D -- points after the optimization
-  3. Solver Summary -- duration and number of iterations
-  4. Cost Surface Information -- cost, gradient and Hessian at a specific point
+  Each line corresponds to the one from the other block. So line 1 of block 2 is the point that results from an optimization with the initial value that is stored in line 1 of block 1. The meaning of a line in a block is defined by its identifying string.
   
-Each line corresponds to the one from the other block. So line 1 of block 2 is the point that results from an optimization with the initial value that is stored in line 1 of block 1. 
-  The meaning of a line in a block is defined by its identifying string.
-
-  For the 1D case:
+    For the 1D case:
   
-  ```
+    ```
   ## Point 1D ##
   1   - "point1"
   2   - this is 0 for initial values, 1 for optimized values
@@ -75,10 +73,11 @@ Each line corresponds to the one from the other block. So line 1 of block 2 is t
   3   - cost value the specific coordinate
   4   - gradient of the cost w.r.t. the optimized variable
   5   - Hessian w.r.t. the optimized variable
-  ```
-  For the 2D case:
+    ```
   
-  ```
+    For the 2D case:
+  
+    ```
   ## Point 2D ##
   1   - "point2"
   2   - this is 0 for initial values, 1 for optimized values
@@ -93,10 +92,11 @@ Each line corresponds to the one from the other block. So line 1 of block 2 is t
   4   - cost value the specific coordinate
   4-5 - gradient of the cost w.r.t. the optimized variable (as vector)
   6-9 - Hessian w.r.t. the optimized variable (as row-major matrix)
-  ```
-  For both cases:
+    ```
   
-  ```
+    For both cases:
+  
+    ```
   ## Timing information ##
   1   - "solver_summary"
   2   - not used
@@ -105,8 +105,8 @@ Each line corresponds to the one from the other block. So line 1 of block 2 is t
   5   - not used
   6   - not used
   7   - solver iterations
-8   - not used
-  ```
+  8   - not used
+    ```
   
 - **\<number points\>** is the number of points per dimension that are generated as linearly spaced grid. In the 2D case, 10 means a 10-by-10 grid.
 
@@ -140,7 +140,7 @@ Each line corresponds to the one from the other block. So line 1 of block 2 is t
   13   -   weight of the first component
   14   -   weight of the second component
   ```
-  
+
 
 A full example could be:
 
