@@ -32,7 +32,7 @@ function [] = formatPlot(hFig, Config)
         ylim(hAxis, Config.Axis.YLimit);
     end    
 
-    %% reset legend for rigth box size
+    %% reset legend for right box size
     legend toggle
     legend toggle
 
