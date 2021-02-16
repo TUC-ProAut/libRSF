@@ -25,7 +25,7 @@ It is tested **only for Ubuntu 18.04/20.04**:
 ```bash
   git clone https://github.com/TUC-ProAut/libRSF.git
   cd libRSF
-  bash InstallDependecies.bash
+  bash InstallDependencies.bash
 ```
 
 Alternatively, you can install them by your own:
