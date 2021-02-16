@@ -51,15 +51,17 @@ Since this examples use just a small subset of functionalities from the libRSF, 
 
 - **\<output file\>** is the filename of a text file that will contain the output of the example application. Each line starts with an identifying string, followed by a number of floating point numbers.
   The lines can be grouped into four blocks:
-      1) Point1D/Point2D          - initial points for the optimization
-      2) Point1D/Point2D          - points after the optimization
-      3) Solver Summary           - duration and number of iterations
-      4) Cost Surface Information - cost, gradient and Hessian at a specific point
-  Each line corresponds to the one from the other block. So line 1 of block 2 is the point that results from an optimization with the initial value that is stored in line 1 of block 1.
+  
+  1. Point1D/Point2D -- initial points for the optimization
+  2. Point1D/Point2D -- points after the optimization
+  3. Solver Summary -- duration and number of iterations
+  4. Cost Surface Information -- cost, gradient and Hessian at a specific point
+  
+Each line corresponds to the one from the other block. So line 1 of block 2 is the point that results from an optimization with the initial value that is stored in line 1 of block 1. 
   The meaning of a line in a block is defined by its identifying string.
 
   For the 1D case:
-
+  
   ```
   ## Point 1D ##
   1   - "point1"
@@ -75,7 +77,7 @@ Since this examples use just a small subset of functionalities from the libRSF, 
   5   - Hessian w.r.t. the optimized variable
   ```
   For the 2D case:
-
+  
   ```
   ## Point 2D ##
   1   - "point2"
@@ -93,7 +95,7 @@ Since this examples use just a small subset of functionalities from the libRSF, 
   6-9 - Hessian w.r.t. the optimized variable (as row-major matrix)
   ```
   For both cases:
-
+  
   ```
   ## Timing information ##
   1   - "solver_summary"
@@ -103,10 +105,10 @@ Since this examples use just a small subset of functionalities from the libRSF, 
   5   - not used
   6   - not used
   7   - solver iterations
-  8   - not used
+8   - not used
   ```
-
-- **\<number points\>** is the number of points per dimension that are generated as linearly spaced grid. In the 2D case, 10 mean a 10-by-10 grid.
+  
+- **\<number points\>** is the number of points per dimension that are generated as linearly spaced grid. In the 2D case, 10 means a 10-by-10 grid.
 
 - **\<range points\>** is the range of this linearly spaced grid. The grid is always centered around 0, so a value of 8 means it is distributed between -4 and 4.
 
@@ -120,20 +122,25 @@ Since this examples use just a small subset of functionalities from the libRSF, 
 
 - **\<model parameters\>** are the parameter that describe the Gaussian mixture model. Each entry (separated by a space) describes one parameter of a model with two Gaussian components.
 
-For the 1D case:
-      1   -   mean of the first component
-      2   -   mean of the second component
-      3   -   standard deviation of the first component
-      4   -   standard deviation of the second component
-      5   -   weight of the first component
-      6   -   weight of the second component
-For the 2D case:
-      1-2  -   mean vector of the first component
-      3-4  -   mean vector of the second component
-      3-8  -   standard deviation matrix of the first component (row-major)
-      9-12 -   standard deviation matrix of the second component (row-major)
-      13   -   weight of the first component
-      14   -   weight of the second component
+  For the 1D case:
+  ```
+  1   -   mean of the first component
+  2   -   mean of the second component
+  3   -   standard deviation of the first component
+  4   -   standard deviation of the second component
+  5   -   weight of the first component
+  6   -   weight of the second component
+  ```
+  For the 2D case:
+  ```
+  1-2  -   mean vector of the first component
+  3-4  -   mean vector of the second component
+  3-8  -   standard deviation matrix of the first component (row-major)
+  9-12 -   standard deviation matrix of the second component (row-major)
+  13   -   weight of the first component
+  14   -   weight of the second component
+  ```
+  
 
 A full example could be:
 

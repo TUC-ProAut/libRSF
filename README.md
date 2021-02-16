@@ -1,7 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 ![GNSS Trajectory](./docs/img/AnimatedTrajectory2.gif)
 
-The libRSF is an open source C++ library that provides the basic components for robust sensor fusion. It can be used to describe the estimation problem as a factor graph and solves it with least squares powered by the [Ceres Solver](http://ceres-solver.org//).
+The libRSF is an open source C++ library that provides the basic components for robust sensor fusion. It can be used to describe an estimation problem as a factor graph and solves it with least squares, powered by the [Ceres Solver](http://ceres-solver.org//).
 More information can be found under [libRSF - A Robust Sensor Fusion Library](https://www.tu-chemnitz.de/etit/proaut/libRSF).
 
 Main features are:
@@ -30,51 +30,59 @@ It is tested **only for Ubuntu 18.04/20.04**:
 
 Alternatively, you can install them by your own:
 
-- **CMake** (>= 3.5)
++ **CMake** (>= 3.5)
 
   ```bash
   sudo apt-get install cmake
   ```
 
-- **Eigen** (>= 3.3.5)
++ **Eigen** (>= 3.3.5)
 
-  **Only for Ubuntu 18.04**, you have to add a PPA for a more recent version of Eigen.
+  **Only for Ubuntu 18.04**, you have to install a current version of Eigen locally.
 
+  ```bash
+  mkdir -p externals/install
+  git submodule update --init externals/eigen
+  
+  cd externals/eigen
+  mkdir -p build && cd build
+  cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
+  make install
+  cd ../../..
   ```
-  sudo add-apt-repository ppa:nschloe/eigen-nightly
-  ```
 
-  For all versions of Ubuntu, you have to install Eigen.
+  **For  Ubuntu >= 20.04** you can install Eigen straight-forward.
 
-  ```
-  sudo apt-get update
+  ```bash
   sudo apt-get install libeigen3-dev
   ```
 
-- **Ceres** (>= 2.0) and its dependencies
++ **Ceres** (>= 2.0) and its dependencies
 
   ```bash
   sudo apt-get install libgoogle-glog-dev
+  sudo apt-get libgflags-dev
   sudo apt-get install libatlas-base-dev
   sudo apt-get install libsuitesparse-dev
-    
-  mkdir -p externals
-  cd externals
-  git clone https://ceres-solver.googlesource.com/ceres-solver
-  cd ceres-solver
+  
+  mkdir -p externals/install  
+  git submodule update --init externals/ceres-solver
+  
+  cd externals/ceres-solver
   mkdir build && cd build
-  cmake -DEXPORT_BUILD_DIR=ON ..
+  cmake -DEigen3_DIR=../install/share/eigen3/cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
   make all -j$(getconf _NPROCESSORS_ONLN)
+  make install
   cd ../..
   ```
 
-- **yaml-cpp**
++ **yaml-cpp**
 
   ```bash
   sudo apt-get install libyaml-cpp-dev
   ```
 
-- **GeographicLib**
++ **GeographicLib**
 
   ```bash
   sudo apt-get install libgeographic-dev
@@ -119,7 +127,7 @@ The following pages give you an overview, how to use them or how to build a cust
 
 If you use this library for academic work, please cite it using the following BibTeX reference:
 
-```latex
+```tex
   @Misc{libRSF,
    author       = {Tim Pfeifer and Others},
    title        = {libRSF},

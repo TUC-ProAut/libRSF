@@ -25,14 +25,6 @@
 # stop script on any error
 set -e
 
-# config paths
-readonly ceres_directory='ceres-solver'
-readonly eigen_directory='eigen'
-
-# config versions
-readonly ceres_version='2.0.0'
-readonly eigen_version='3.3.9'
-
 # get linux version
 readonly linux_distributor=$(lsb_release -is)
 readonly linux_version=$(lsb_release -rs)
@@ -77,7 +69,7 @@ mkdir -p externals/install
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]; then # Eigen < 3.3.5 is to old for libRSF & Ceres
   echo "WARNING: Your Eigen version is below 3.3.5, we install it locally!"
   git submodule update --init externals/eigen
-  cd "externals/$eigen_directory"
+  cd externals/eigen
   
   mkdir -p build && cd build
   cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
@@ -89,7 +81,7 @@ fi
 
 # install ceres locally
 git submodule update --init externals/ceres-solver
-cd "externals/$ceres_directory"
+cd externals/ceres-solver
 
 mkdir -p build && cd build
 if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]; then
