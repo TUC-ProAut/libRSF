@@ -25,32 +25,8 @@
 namespace libRSF
 {
   /** define states with identifier */
-  StateConfig::InitVect StateConfigInit =
+  const StateConfig::InitVect StateConfigInit =
   {
-    {
-      "gt1", StateType::GT1,
-      {
-        {StateElement::Timestamp, 1},
-        {StateElement::Mean, 1}
-      }
-    },
-
-    {
-      "gt2", StateType::GT2,
-      {
-        {StateElement::Timestamp, 1},
-        {StateElement::Mean, 2}
-      }
-    },
-
-    {
-      "gt3", StateType::GT3,
-      {
-        {StateElement::Timestamp, 1},
-        {StateElement::Mean, 3}
-      }
-    },
-
     /** position */
     {
       "point1", StateType::Point1,
