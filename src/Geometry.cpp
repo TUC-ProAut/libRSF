@@ -24,6 +24,16 @@
 
 namespace libRSF
 {
+  /** angular conversion */
+  double deg2rad(const double Deg)
+  {
+    return Deg / 180.0 * M_PI;
+  }
+  double rad2deg(const double Rad)
+  {
+    return Rad * 180.0 / M_PI;
+  }
+
   Vector3 QuaternionError(const Quaternion Q1,
                           const Quaternion Q2,
                           Matrix34 *Jacobian1,

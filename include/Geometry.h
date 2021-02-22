@@ -41,6 +41,10 @@
 
 namespace libRSF
 {
+  /** angular conversion */
+  double deg2rad(const double Deg);
+  double rad2deg(const double Rad);
+
   /** 2D */
   template <typename T>
   MatrixT<T, 2, 2> RotationMatrix2D(T Yaw)
