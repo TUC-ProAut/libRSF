@@ -74,7 +74,7 @@ namespace libRSF
     Matrix HessRRStar = HessRR - HessRM * HessMMInv * HessMR;
     const Vector BRStar = BR - HessRM * HessMMInv * BM;
 
-    /** add a small uncertainty for numerical stability (currently 1%)*/
+    /** add a small uncertainty to prevent accumulation of error (currently 1%)*/
     HessRRStar *= 0.99;
 
     /** convert to unsquared system system */
