@@ -1,4 +1,4 @@
-name: Bionic CI
+name: Bionic Build
 on: 
   push:
     paths-ignore:
@@ -22,10 +22,10 @@ on:
     # run on first day of the month
     - cron: '0 0 1 * *'
 jobs:
-  Bionic-CI:
+  Bionic-Build:
     runs-on: ubuntu-18.04
     steps:
-      # checkout repo & get externals from cache
+      # checkout repo
       - name: checkout
         uses: actions/checkout@v2
       # install dependencies
@@ -44,16 +44,12 @@ jobs:
       - name: run make install
         working-directory: build
         run: sudo make install
-      # run some examples
-      - name: create exampleResults directory for examples output
-        run: mkdir exampleResults
-      - name: run ICRA 2019 Application
-        run: 'build/applications/ICRA19_GNSS datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt exampleResults/Result_Berlin_Potsdamer_Platz_Web.txt error: gauss'
-      - name: upload exampleResults as artifact
+      # upload build as artifact
+      - name: upload build as artifact
         uses: actions/upload-artifact@v2
         with: 
-          name: exampleResults
-          path: exampleResults/
+          name: build
+          path: build/
       # uninstall libRSF
       - name: run make uninstall
         working-directory: build

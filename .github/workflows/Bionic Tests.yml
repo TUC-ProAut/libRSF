@@ -1,0 +1,28 @@
+name: Bionic Tests
+on:
+  workflow_run:
+    workflows: ["Bionic Build"]
+    types: 
+      - completed
+  workflow_dispatch:
+jobs:
+  Bionic-Tests:
+    runs-on: ubuntu-18.04
+    steps:
+      # checkout repo
+      - name: checkout
+        uses: actions/checkout@v2
+      # download build artifact
+      # errors if build workflow was not completed successfully
+      - name: download build aritfact
+        uses: dawidd6/action-download-artifact@v2
+          workflow: 'Bionic Build.yml'
+          workflow_conclusion: success
+          name: build
+      # install dependencies
+      - name: install dependencies
+        run: ./InstallDependencies.bash
+        shell: bash
+      # run ICRA19_GNSS test
+      - name: 'ICRA19_GNSS test'
+        run: 'build/test/Test_ICRA19_GNSS'
