@@ -27,31 +27,6 @@ namespace libRSF
   /** define states with identifier */
   const SensorConfig::InitVect SensorConfigInit =
   {
-    /** ground truth */
-    {
-      "gt1", SensorType::GT1,
-      {
-        {SensorElement::Timestamp, 1},
-        {SensorElement::Mean, 1}
-      }
-    },
-
-    {
-      "gt2", SensorType::GT2,
-      {
-        {SensorElement::Timestamp, 1},
-        {SensorElement::Mean, 2}
-      }
-    },
-
-    {
-      "gt3", SensorType::GT3,
-      {
-        {SensorElement::Timestamp, 1},
-        {SensorElement::Mean, 3}
-      }
-    },
-
     /** odometry */
     {
       "odom2", SensorType::Odom2,

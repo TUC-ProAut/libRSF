@@ -192,6 +192,16 @@ for n = 1:size(ResultCell,1)
             ResultStruct.Error3.Time(end+1,1) = cell2mat(ResultCell(n,2));
             ResultStruct.Error3.Mean(end+1,1:3) = cell2mat(ResultCell(n,3:5));
             
+            
+        case 'error6'
+            if ~isfield(ResultStruct,'Error6')
+                ResultStruct.Error6 = [];
+                ResultStruct.Error6.Time = [];
+                ResultStruct.Error6.Mean = [];
+            end
+            ResultStruct.Error6.Time(end+1,1) = cell2mat(ResultCell(n,2));
+            ResultStruct.Error6.Mean(end+1,1:6) = cell2mat(ResultCell(n,3:8));
+            
         case 'cost_gradient'
             Row = [ResultCell{n,2:end}];
             TrueSize = length(rmmissing(Row));

@@ -706,8 +706,6 @@ namespace libRSF
 
   void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, std::vector<double> &ErrorData)
   {
-    disableErrorModel(CurrentFactorType);
-
     /** get residual IDs */
     std::vector<ceres::ResidualBlockId> IDs;
     _Structure.getResidualIDs(CurrentFactorType, IDs);
@@ -745,6 +743,9 @@ namespace libRSF
     Options.num_threads = std::thread::hardware_concurrency();
     Options.residual_blocks = IDs;
     Options.apply_loss_function = false;
+
+    /** disable error model during evaluation */
+    disableErrorModel(CurrentFactorType);
 
     /** compute the errors */
     _Graph.Evaluate(Options, nullptr, &ErrorData, nullptr, nullptr);
@@ -790,6 +791,7 @@ namespace libRSF
 
     /** get the dimensions */
     const int Dim = ErrorVector.size() / FactorVector.size();
+    const int Length = FactorVector.size();
 
     /** convert to StateData */
     switch (Dim)
@@ -797,10 +799,11 @@ namespace libRSF
       case 1:
         {
           StateData ErrorState(StateType::Error1, 0.0);
-          for (int i = 0; i < static_cast<int>(ErrorVector.size()); i += Dim)
+          for (int i = 0; i < Length; i++)
           {
+            const int Index = i*Dim;
             ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
-            ErrorState.setMean((Vector1() << ErrorVector.at(i)).finished());
+            ErrorState.setMean((Vector1() << ErrorVector.at(Index)).finished());
             ErrorData.addElement(Name, ErrorState);
           }
         }
@@ -809,10 +812,11 @@ namespace libRSF
       case 2:
         {
           StateData ErrorState(StateType::Error2, 0.0);
-          for (int i = 0; i < static_cast<int>(ErrorVector.size()); i += Dim)
+          for (int i = 0; i < Length; i++)
           {
+            const int Index = i*Dim;
             ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
-            ErrorState.setMean((Vector2() << ErrorVector.at(i), ErrorVector.at(i+1)).finished());
+            ErrorState.setMean((Vector2() << ErrorVector.at(Index), ErrorVector.at(Index+1)).finished());
             ErrorData.addElement(Name, ErrorState);
           }
         }
@@ -821,10 +825,25 @@ namespace libRSF
       case 3:
         {
           StateData ErrorState(StateType::Error3, 0.0);
-          for (int i = 0; i < static_cast<int>(ErrorVector.size()); i += Dim)
+          for (int i = 0; i < Length; i++)
           {
+            const int Index = i*Dim;
             ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
-            ErrorState.setMean((Vector3() << ErrorVector.at(i), ErrorVector.at(i+1), ErrorVector.at(i+2)).finished());
+            ErrorState.setMean((Vector3() << ErrorVector.at(Index), ErrorVector.at(Index+1), ErrorVector.at(Index+2)).finished());
+            ErrorData.addElement(Name, ErrorState);
+          }
+        }
+        break;
+
+      case 6:
+        {
+          StateData ErrorState(StateType::Error6, 0.0);
+          for (int i = 0; i < Length; i++)
+          {
+            const int Index = i*Dim;
+            ErrorState.setTimestamp(FactorVector.at(i).Timestamp);
+            ErrorState.setMean((Vector6() << ErrorVector.at(Index), ErrorVector.at(Index+1), ErrorVector.at(Index+2),
+                                             ErrorVector.at(Index+3), ErrorVector.at(Index+4), ErrorVector.at(Index+5)).finished());
             ErrorData.addElement(Name, ErrorState);
           }
         }
@@ -838,8 +857,6 @@ namespace libRSF
 
   void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, const double Time, const int Number, Vector &Error)
   {
-    /** disable error model */
-    disableErrorModel(CurrentFactorType);
 
     /** check */
     if (_Structure.checkFactor(CurrentFactorType, Time, Number) == false)
@@ -861,6 +878,9 @@ namespace libRSF
     Options.num_threads = 1;
     Options.residual_blocks = CeresIDs;
     Options.apply_loss_function = false;
+
+    /** disable error model */
+    disableErrorModel(CurrentFactorType);
 
     /** compute error */
     std::vector<double> ErrorData;

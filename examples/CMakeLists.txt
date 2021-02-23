@@ -18,6 +18,18 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
+add_executable(Example_FG_Generic Example_FG_Generic.cpp)
+target_link_libraries(Example_FG_Generic libRSF)
+
+add_executable(Example_FG_Range Example_FG_Range.cpp)
+target_link_libraries(Example_FG_Range libRSF)
+
+add_executable(Example_FG_Pseudorange Example_FG_Pseudorange.cpp)
+target_link_libraries(Example_FG_Pseudorange libRSF)
+
+add_executable(Example_Marginalization Example_Marginalization.cpp)
+target_link_libraries(Example_Marginalization libRSF)
+
 add_executable(Example_Robust_Models_1D Example_Robust_Models_1D.cpp)
 target_link_libraries(Example_Robust_Models_1D libRSF)
 
