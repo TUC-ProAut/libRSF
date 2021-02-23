@@ -33,6 +33,13 @@
 #define CLOCK_ERROR_STATE "ClockError"
 #define CLOCK_DRIFT_STATE "ClockDrift"
 
+/** Build the factor Graph with initial values and a first set of measurements */
+void InitGraph(libRSF::FactorGraph &Graph,
+               libRSF::SensorDataSet &Measurements,
+               libRSF::FactorGraphConfig const &Config,
+               ceres::Solver::Options Options,
+               double TimestampFirst);
+
 /** Adds a pseudorange measurement to the graph */
 void AddPseudorangeMeasurements(libRSF::FactorGraph& Graph,
                                 libRSF::SensorDataSet & Measurements,
@@ -47,4 +54,10 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
 /** parse string from command line to select error model for GNSS*/
 bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config);
 
+/** run the example itself */
+int CreateGraphAndSolve(std::vector<std::string> &Arguments,
+                        libRSF::StateDataSet &Result,
+                        std::string &OutputFile);
+
 #endif // ICRA19_GNSS_H_INCLUDED
+

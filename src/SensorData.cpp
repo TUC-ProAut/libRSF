@@ -301,6 +301,25 @@ namespace libRSF
       }
     },
 
+    /** barometric pressure */
+    {
+      "pressure", SensorType::AirPressure,
+      {
+        {SensorElement::Timestamp, 1},
+        {SensorElement::Mean, 1},
+        {SensorElement::Covariance , 1}
+      }
+    },
+
+    {
+      "pressure_diff", SensorType::AirPressureDiff,
+      {
+        {SensorElement::Timestamp, 1},
+        {SensorElement::Mean, 1},
+        {SensorElement::Covariance , 1}
+      }
+    },
+
     /** loop closures */
     {
       "loop", SensorType::LoopClosure,

@@ -33,6 +33,10 @@
 #define STATISTICS_H
 
 #include "VectorMath.h"
+#include "StateDataSet.h"
+#include "SensorDataSet.h"
+
+#include <limits>
 
 namespace libRSF
 {
@@ -62,6 +66,14 @@ namespace libRSF
   /** median absolute deviation (robust variance estimator) */
   double MAD(Vector V);
 
+  /** RMSE of a vector */
+  double RSME(Vector V);
+
+  /** absolute trajectory error (RMSE) */
+  double ATE(SensorType GTType,
+             SensorDataSet GT,
+             std::string EstimateType,
+             StateDataSet Estimate);
 }
 
 #endif // STATISTICS_H

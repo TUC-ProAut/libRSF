@@ -59,6 +59,7 @@ namespace libRSF
     Odom2, Odom2Diff, Odom4, Odom4_ECEF, Odom6,
     Prior1, Prior2, Prior3, Prior4, Prior9, PriorQuat, PriorAngle,
     IMUSimple, IMUPretintegration,
+    PressureDiff2, PressureDiff3,
     Repelling,
     TrackingDetection,
     TrackingDetectionDim, TrackingDetectionRot, TrackingDetectionVel,
@@ -70,7 +71,7 @@ namespace libRSF
   /** more general classification */
   enum class AbstractFactorType
   {
-    Ranging, GNSS, ClockModel, Odometry, IMU, Radar, Laser, Vision, MotionModel, LoopClosure, Prior
+    Ranging, GNSS, ClockModel, Odometry, IMU, Radar, Laser, Vision, MotionModel, LoopClosure, Prior, Pressure
   };
 
   /** types of state data */
@@ -108,6 +109,7 @@ namespace libRSF
                          Angle, Quaternion,
                          Pose2, Pose3,
                          LoopClosure,
+                         AirPressure, AirPressureDiff,
                          IMU,
                          Val1,
                          Other};
@@ -180,7 +182,9 @@ namespace libRSF
     {"repelling",FactorType::Repelling},
     {"tracking_detection",FactorType::TrackingDetection},
     {"marginal",FactorType::Marginal},
-    {"point2_reg",FactorType::Point2Reg}
+    {"point2_reg",FactorType::Point2Reg},
+    {"pressure_diff2",FactorType::PressureDiff2},
+    {"pressure_diff3",FactorType::PressureDiff3}
   };
 
   const std::map<std::string, AbstractFactorType> AbstractFactorTypeDict =
@@ -195,7 +199,8 @@ namespace libRSF
     {"vision",AbstractFactorType::Vision},
     {"motion",AbstractFactorType::MotionModel},
     {"loop",AbstractFactorType::LoopClosure},
-    {"prior",AbstractFactorType::Prior}
+    {"prior",AbstractFactorType::Prior},
+    {"pressure",AbstractFactorType::Pressure}
   };
 
   const std::map<std::string, ErrorModelType> ErrorModelTypeDict =

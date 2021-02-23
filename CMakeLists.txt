@@ -32,6 +32,12 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 ##################################
+# set build options
+##################################
+
+option(LIBRSF_BUILD_TEST "If enabled, the tests get build." OFF)
+
+##################################
 # add dependencies
 ##################################
 
@@ -61,6 +67,11 @@ find_package(yaml-cpp REQUIRED)
 # geographic lib for coordinate frame conversions
 find_package(GeographicLib REQUIRED)
 
+# google test
+if(LIBRSF_BUILD_TEST)
+  include(cmake/InstallGoogleTest.cmake.in)
+endif()
+
 ##################################
 # add project files
 ##################################
@@ -73,3 +84,8 @@ add_subdirectory(examples)
 
 # Add specific applications
 add_subdirectory(applications)
+
+# Add tests
+if(LIBRSF_BUILD_TEST)
+  add_subdirectory(test)
+endif()
