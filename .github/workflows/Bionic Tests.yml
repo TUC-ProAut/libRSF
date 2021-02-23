@@ -26,5 +26,6 @@ jobs:
         run: ./InstallDependencies.bash
         shell: bash
       # run ICRA19_GNSS test
+      # sudo required because it was downloaded as artifact
       - name: 'ICRA19_GNSS test'
-        run: 'build/test/Test_ICRA19_GNSS'
+        run: 'sudo build/test/Test_ICRA19_GNSS'
