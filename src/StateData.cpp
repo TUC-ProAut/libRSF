@@ -216,6 +216,14 @@ namespace libRSF
       }
     },
 
+    {
+      "error6", StateType::Error6,
+      {
+        {StateElement::Timestamp, 1},
+        {StateElement::Mean, 6}
+      }
+    },
+
     /** cost surface */
     {
       "cost", StateType::Cost,
