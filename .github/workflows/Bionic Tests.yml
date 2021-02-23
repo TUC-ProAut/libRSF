@@ -20,6 +20,7 @@ jobs:
           workflow: 'Bionic Build.yml'
           workflow_conclusion: success
           name: build
+          path: build/
       # install dependencies
       - name: install dependencies
         run: ./InstallDependencies.bash
