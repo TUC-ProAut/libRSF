@@ -56,7 +56,7 @@ TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
 
     std::cout << "ATE: " << ate << std::endl;
 
-    EXPECT_LT(ate,10.0);
+    EXPECT_LT(ate,100.0);
 }
 
 // main provided by linking to gtest_main
