@@ -25,7 +25,18 @@ jobs:
       - name: install dependencies
         run: ./InstallDependencies.bash
         shell: bash
+      # ls
+      - name: 'ls'
+        run: 'ls'
+      # upload workspace as artifact
+      - name: upload workspace as artifact
+        uses: actions/upload-artifact@v2
+        with: 
+          name: workspace
+          path: .
       # run ICRA19_GNSS test
       # sudo required because it was downloaded as artifact
+      - name: 'make ICRA19_GNSS test executable'
+        run: 'chmod 755 build/test/Test_ICRA19_GNSS'
       - name: 'ICRA19_GNSS test'
-        run: 'sudo /home/runner/work/libRSF/libRSF/build/test/Test_ICRA19_GNSS'
+        run: 'build/test/Test_ICRA19_GNSS'
