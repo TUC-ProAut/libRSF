@@ -21,13 +21,13 @@ jobs:
           workflow_conclusion: success
           name: build
           path: build/
-      # install dependencies
-      # - name: install dependencies
-      #   run: ./InstallDependencies.bash
-      #   shell: bash
-      # run ICRA19_GNSS test
-      # sudo required because it was downloaded as artifact
+      # make tests executable
       - name: 'make ICRA19_GNSS test executable'
-        run: 'chmod 755 build/test/Test_ICRA19_GNSS'
+        run: 'chmod -R 755 build/test' 
+      # install dependencies
+      - name: install dependencies
+        run: ./InstallDependencies.bash
+        shell: bash
+      # run ICRA19_GNSS test
       - name: 'ICRA19_GNSS test'
         run: 'build/test/Test_ICRA19_GNSS'
