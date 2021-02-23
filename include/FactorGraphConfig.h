@@ -90,7 +90,7 @@ namespace libRSF
       ErrorModelConfig ErrorModel;
 
       bool IsActive;
-    }Ranging, GNSS, ClockModel, MotionModel, Odom, IMU, Laser, Radar, Vision, LoopClosure, Tracking, Prior;
+    }Ranging, GNSS, ClockModel, MotionModel, Odom, IMU, Laser, Radar, Vision, LoopClosure, Tracking, Prior, Pressure;
 
     /** special properties */
     struct GraphConfig

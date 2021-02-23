@@ -54,6 +54,8 @@ for nError = 1:numel(Config.ErrorModel)
                         Lables{end} = [Lables{end} 'Radar Registration 2D'];
                     case 'ground'
                         Lables{end} = [Lables{end} 'Ground Prior'];
+                    case 'pressure'
+                        Lables{end} = [Lables{end} 'Pressure'];
                     otherwise
                         Lables{end} = [Lables{end} Sensor];
                         warning(['No Lable for sensor: ' Sensor]);

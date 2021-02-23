@@ -10,7 +10,7 @@ hFig = figure;
 hold on
 
 for nLable =1:length(Lables)
-    p = plot(XData(nLable,:),YData(nLable,:),'LineWidth',Config.Line.Width,'Color',Config.Line.Color(nLable,:));
+    p = plot(XData(nLable,:), YData(nLable,:),'LineWidth',Config.Line.Width,'Color',Config.Line.Color(nLable,:));
     p.DisplayName = Lables{nLable};
 end
 

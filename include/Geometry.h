@@ -257,6 +257,11 @@ namespace libRSF
     return RPY.reverse();
   }
 
+  template <typename T>
+  T HeightToPressure(const T Height)
+  {
+    return 101325.0 * pow(1.0 - 0.0065 * Height / 288.15, 5.255);
+  }
 }
 
 #endif // GEOMETRY_H

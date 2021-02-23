@@ -35,6 +35,7 @@
   factors/OdometryFactor3D.cpp
   factors/IMUFactor.cpp
   factors/IMUPreintegrationFactor.cpp
+  factors/PressureDifferenceFactor.cpp
   factors/TrackingFactor.cpp
   factors/TrackingDetectionFactor.cpp
   factors/MarginalPrior.cpp

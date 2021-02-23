@@ -66,29 +66,29 @@ Metric.SolverSummary = SolverSummary;
 
 %% error metrics
 
-% ATE
-RawError = Estimate(:,1:2) - GT(:,1:2);
-Metric.ATE = vecnorm(RawError(:,1:2),2,2);
-Metric.ATE_RMSE = evaluation.calculateRMSE(Metric.ATE);
-Metric.ATE_Mean = mean(Metric.ATE);
-Metric.ATE_Max = max(Metric.ATE);
+% absolute error
+[Metric.ATE, Metric.TranslationalError, Metric.RotationalError]  = evaluation.calculateAbsoluteError(Estimate, GT, 2);
+Metric.TranslationalErrorMax = max(Metric.TranslationalError);
 
-% RPE
 if HasRotation
-    % rotational error
-    RawError(:,3) = wrapToPi(Estimate(:,3) - GT(:,3));
-    Metric.RotationalError = rad2deg(RawError(:,3));
-    Metric.RotationalError_RMSE = evaluation.calculateRMSE(Metric.RotationalError);
+    % rotational RMSE
+    Metric.RotationalErrorRMSE = evaluation.calculateRMSE(rad2deg(Metric.RotationalError));
     
-    % calculate RPE
-    [Metric.RPE, Metric.RelativeError] = evaluation.calculateRPE2D(Estimate, GT);
+    % relative error
+    [Metric.RPE, Metric.TranslationRel, Metric.RotationRel] = evaluation.calculateRelativeError(Estimate, GT, 1, 2);
 end
 
 %% credebility metrics
 if HasCov
-    
+    % calculate raw error
+    RawError = Estimate -GT;
+    if HasRotation
+        RawError(:,3) = wrapToPi(RawError(:,3));
+    end
+
     % NEES
     Metric.NEES = evaluation.calculateNEES(RawError, Cov);
+    Metric.NEES_Translation = evaluation.calculateNEES(RawError(:,1:2), Cov(:,1:2,1:2));
     
     % average NEES
     Metric.ANEES = sum(Metric.NEES, 'omitnan') / (NumericalDOF*N);

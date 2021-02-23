@@ -74,6 +74,7 @@
 #include "factors/TrackingDetectionFactor.h"
 #include "factors/MarginalPrior.h"
 #include "factors/PointRegistrationFactor.h"
+#include "factors/PressureDifferenceFactor.h"
 
 #include <ceres/ceres.h>
 #include <ceres/normal_prior.h>

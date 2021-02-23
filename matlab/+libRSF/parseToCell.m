@@ -184,11 +184,20 @@ if isfield(Data,'Pseudorange3')
     Pseudorange3Cell(:,10)                         = num2cell(Data.Pseudorange3.SNR);
 end
 
-%% Laser
+%% raw Laser
 
-%% Radar
+%% raw Radar
 
-%% Camera
+%% raw Camera
+
+%% air pressuere
+PressureCell = cell(0,MaxCellWidth);
+if isfield(Data,'Pressure')
+    [PressureCell{1:length(Data.Pressure.Time),1}]    = deal('pressure');
+    PressureCell(:,2)                          = num2cell(Data.Pressure.Time);
+    PressureCell(:,3)                          = num2cell(Data.Pressure.Mean);
+    PressureCell(:,4)                          = num2cell(Data.Pressure.Cov);
+end
 
 %% Place recognition
 LoopCell = cell(0,MaxCellWidth);
@@ -222,6 +231,7 @@ end
 %% merge data
 MeasurementCell = [ Pos3Cell;Pos2Cell; PosID2Cell; PosID3Cell; QuatCell; Speed3Cell;...
                     IMUCell;...
+                    PressureCell;...
                     Odom2Cell; Odom2DiffCell; Odom3Cell;...
                     Odom3RadarCell; Odom3LaserCell; Odom3VIOCell;...
                     Range2Cell; Range3Cell;...

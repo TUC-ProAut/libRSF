@@ -401,6 +401,10 @@ namespace libRSF
           LoopClosure = Factor;
           break;
 
+        case AbstractFactorType::Pressure:
+          Pressure = Factor;
+          break;
+
         default:
           PRINT_WARNING("Factor name not handled: ", FactorName);
           break;

@@ -11,7 +11,7 @@ function [] = formatPlot(hFig, Config)
 
     %% format lines
     if Config.Overwrite.Lines == true
-        set(hLine,'LineWidth',Config.Axis.Width);
+        set(hLine,'LineWidth',Config.Line.Width);
     end
     
     %% format text

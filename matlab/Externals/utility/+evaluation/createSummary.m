@@ -4,36 +4,30 @@ function [Summary] = createSummary(Metric)
 
 %% get relevant informations
 Algorithm = {Metric.Lable}';
-ATE = [Metric.ATE_RMSE]';
-ATE_Max = [Metric.ATE_Max]';
+ATE = [Metric.ATE]';
+ATE_Max = [Metric.TranslationalErrorMax]';
 
 if isfield(Metric, 'ANEES')
     ANEES = [Metric.ANEES]';
 else
-    ANEES = [Metric.ATE_RMSE]'*0; % fill with zero
-end
-
-if isfield(Metric, 'NCI_GeoMean')
-    NCI = [Metric.NCI_GeoMean]';
-else
-    NCI = [Metric.ATE_RMSE]'*0; % fill with zero
+    ANEES = zeros(size(ATE));
 end
 
 if isfield(Metric, 'RPE')
     RPE = [Metric.RPE]';
 else
-    RPE = [Metric.ATE_RMSE]'*0; % fill with zero
+    RPE = zeros(size(ATE));
 end
 
 if isfield(Metric, 'Duration_Mean')
     Iteration_ms = [Metric.Duration_Mean]'*1000;
 else
-    Iteration_ms = [Metric.ATE_RMSE]'*0; % fill with zero
+    Iteration_ms = zeros(size(ATE));
 end
 
 Runtime = [Metric.Runtime]';
 
-Summary = table(Algorithm, ATE, ATE_Max, RPE, ANEES, NCI, Runtime, Iteration_ms);
+Summary = table(Algorithm, ATE, ATE_Max, RPE, ANEES, Runtime, Iteration_ms);
 
 end
 

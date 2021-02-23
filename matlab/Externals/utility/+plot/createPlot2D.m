@@ -16,7 +16,7 @@ ErrorRel = [];
 ErrorRot = [];
 for m=M:-1:1
     Trajectory(m,:,:) = Metric(m).Estimate;
-    ErrorTrans(m,:) = Metric(m).ATE;
+    ErrorTrans(m,:) = Metric(m).TranslationalError;
     Lables{m} = Metric(m).Lable;
     
     if isfield(Metric, 'RelativeError')
@@ -168,6 +168,7 @@ if isfield(Metric, 'Cov')
         end
         %plot
         Handles{end+1} = plot.createPlotGeneric(Timestamps', sqrt(CovTrace), {Metric.Lable},'Time [s]','StdDev [m]');
+        set(gca, 'YScale', 'log');
     end
 end
 

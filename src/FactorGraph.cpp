@@ -102,9 +102,9 @@ namespace libRSF
       case StateType::Quat:
         {
           /** initialize with valid quaternion */
-          Vector4 Quaternion;
-          Quaternion << 0, 0, 0, 1; /**< x,y,z,w */
-          _StateData.getElement(Name, Timestamp, StateNumber).setMean(Quaternion);
+          Vector4 Quat;
+          Quat << 0, 0, 0, 1; /**< x,y,z,w */
+          _StateData.getElement(Name, Timestamp, StateNumber).setMean(Quat);
 
           _Graph.AddParameterBlock(StatePointer, StateSize, QuaternionLocalParameterization::Create());
           break;
