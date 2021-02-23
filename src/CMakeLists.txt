@@ -1,7 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
-# For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+# For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ set(SOURCEFILES
   FileAccess.cpp
   CalculateCovariance.cpp
   Geometry.cpp
-  misc.cpp
+  Misc.cpp
   Messages.cpp
   Tensor.cpp
   VectorTypes.cpp

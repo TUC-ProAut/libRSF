@@ -1,7 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
-# For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+# For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,8 +27,29 @@ target_link_libraries(Example_FG_Range libRSF)
 add_executable(Example_FG_Pseudorange Example_FG_Pseudorange.cpp)
 target_link_libraries(Example_FG_Pseudorange libRSF)
 
+add_executable(Example_EM Example_EM.cpp)
+target_link_libraries(Example_EM libRSF)
+
+add_executable(Example_KF Example_KF.cpp)
+target_link_libraries(Example_KF libRSF)
+
+add_executable(Example_AutoDiff Example_AutoDiff.cpp)
+target_link_libraries(Example_AutoDiff libRSF)
+
 add_executable(Example_Marginalization Example_Marginalization.cpp)
 target_link_libraries(Example_Marginalization libRSF)
+
+add_executable(Example_IMU Example_IMU.cpp)
+target_link_libraries(Example_IMU libRSF)
+
+add_executable(Example_IMU_Single Example_IMU_Single.cpp)
+target_link_libraries(Example_IMU_Single libRSF)
+
+add_executable(Example_Rotations Example_Rotations.cpp)
+target_link_libraries(Example_Rotations libRSF)
+
+add_executable(Example_Odometry Example_Odometry.cpp)
+target_link_libraries(Example_Odometry libRSF)
 
 add_executable(Example_Robust_Models_1D Example_Robust_Models_1D.cpp)
 target_link_libraries(Example_Robust_Models_1D libRSF)
