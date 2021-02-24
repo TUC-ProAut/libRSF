@@ -36,7 +36,8 @@ namespace libRSF
     this->_Translation.setZero();
     this->_Rotation.setIdentity();
 
-    this->_PoseCov.setZero();
+    /** small initial Cov to avoid rank deficiency*/
+    this->_PoseCov = Matrix77::Identity() * 1e-8;
   }
 
   double OdometryIntegrator::getTime() const
