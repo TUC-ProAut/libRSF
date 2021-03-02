@@ -21,5 +21,19 @@
 # do not compile the main functions of the apps used for testing
 add_compile_definitions(TESTMODE)
 
-add_executable(Test_ICRA19_GNSS Test_ICRA19_GNSS.cpp ../applications/ICRA19_GNSS.cpp)
-target_link_libraries(Test_ICRA19_GNSS libRSF gtest_main)
+# convenience macro to add tests
+macro(package_add_test TESTNAME)
+    # create an executable in which the tests will be stored
+    add_executable(${TESTNAME} ${ARGN})
+    # link the google test main function and the libRSF
+    target_link_libraries(${TESTNAME} libRSF gtest_main)
+    # add test to ctest, https://cmake.org/cmake/help/v3.10/module/GoogleTest.html for more info
+    gtest_discover_tests(${TESTNAME}
+        # set a working directory so that tests can find dataset files
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+endmacro()
+
+package_add_test(Test_ICRA19_GNSS Test_ICRA19_GNSS.cpp ../applications/ICRA19_GNSS.cpp)
+
+package_add_test(Test_Examples Test_Examples.cpp)

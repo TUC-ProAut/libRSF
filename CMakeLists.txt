@@ -87,5 +87,7 @@ add_subdirectory(applications)
 
 # Add tests
 if(LIBRSF_BUILD_TEST)
+  enable_testing()
+  include(GoogleTest)
   add_subdirectory(test)
 endif()

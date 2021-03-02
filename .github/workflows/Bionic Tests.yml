@@ -22,12 +22,13 @@ jobs:
           name: build
           path: build/
       # make tests executable
-      - name: 'make ICRA19_GNSS test executable'
+      - name: 'make tests executable'
         run: 'chmod -R 755 build/test' 
       # install dependencies
       - name: install dependencies
         run: ./InstallDependencies.bash
         shell: bash
-      # run ICRA19_GNSS test
-      - name: 'ICRA19_GNSS test'
-        run: 'build/test/Test_ICRA19_GNSS'
+      # run tests
+      - name: 'run tests'
+        working-directory: build
+        run: 'make test'
