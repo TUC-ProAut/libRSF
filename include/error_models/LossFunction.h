@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,14 +50,14 @@ namespace libRSF
    */
   class DCSLoss : public LossFunction
   {
-    public:
+  public:
       explicit DCSLoss(double Phi) : Phi_(Phi) {};
-      ~DCSLoss() {};
+      ~DCSLoss(){};
 
       virtual void Evaluate(double, double*) const;
 
-    private:
-      const double Phi_;
+  private:
+    const double Phi_;
   };
 
   /** \brief The robust closed form of Dynamic Covariance Estimation
@@ -72,14 +72,14 @@ namespace libRSF
    */
   class cDCELoss : public LossFunction
   {
-    public:
+  public:
       explicit cDCELoss(double Sigma) : Sigma_(Sigma) {};
-      ~cDCELoss() {};
+      ~cDCELoss(){};
 
       virtual void Evaluate(double, double*) const;
 
-    private:
-      const double Sigma_;
+  private:
+    const double Sigma_;
   };
 
 

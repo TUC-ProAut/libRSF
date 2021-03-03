@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,70 +32,53 @@
 #ifndef RANGEFACTOR_H
 #define RANGEFACTOR_H
 
-#include <ceres/ceres.h>
-#include "MeasurementFactor.h"
-#include "../VectorMath.h"
+#include "BaseFactor.h"
+#include "../Geometry.h"
 
 namespace libRSF
 {
-  template <int Dimensions>
-  SensorType RangeType();
-
-  template <int Dimensions>
-  class RangeModel : public SensorModel
+  template <typename ErrorType, int Dim>
+  class RangeFactorBase : public BaseFactor<ErrorType, true, false, Dim>
   {
     public:
-      RangeModel()
-      {
-        _OutputDim = 1;
-        _InputDim = Dimensions + 1;
-      }
-
-      template <typename T>
-      bool Evaluate(const T* const Position1, const ceres::Vector &Position2, const ceres::Vector &Range,  T* Error) const
-      {
-        Error[0] = VectorDistance<Dimensions, T, double>(Position1, Position2.data())
-                   - T(Range[0]);
-        return true;
-      }
-  };
-
-  template <typename ErrorType, int Dimensions>
-  class RangeFactorBase : public MeasurementFactor<RangeModel<Dimensions>, ErrorType, Dimensions>
-  {
-    public:
-      RangeFactorBase(ErrorType &Error, MeasurementList &Measurements)
+      /** construct factor and store measurement */
+      RangeFactorBase(ErrorType &Error, const SensorData &Range)
       {
         this->_Error = Error;
-        this->_MeasurementVector.resize(Dimensions + 1);
-        this->_MeasurementVector[0] = Measurements.get(RangeType<Dimensions>()).getMean()[0];
-        this->_MeasurementVector.tail(Dimensions) = Measurements.get(RangeType<Dimensions>()).getValue(SensorElement::SatPos);
-
-        this->CheckInput();
+        this->_MeasurementVector.resize(Dim + 1);
+        this->_MeasurementVector[0] = Range.getMean()[0];
+        this->_MeasurementVector.tail(Dim) = Range.getValue(SensorElement::SatPos);
       }
 
-      /** normal version for static error models */
+      /** geometric error model */
       template <typename T>
-      bool operator()(const T* const Position,  T* Error) const
+      VectorT<T, 1> Evaluate(const T* const Position1,
+                             const VectorStatic<Dim> &Position2,
+                             const double &Range) const
       {
-        this->_Model.Evaluate(Position, this->_MeasurementVector.tail(Dimensions), this->_MeasurementVector.head(1), Error);
-        this->_Error.Evaluate(Error);
-
-        return true;
+        VectorT<T, 1> Error;
+        Error(0) = VectorDistance<Dim, T, double>(Position1, Position2.data())
+                   - Range;
+        return Error;
       }
 
-      /** special version for SC and DCE */
-      template <typename T>
-      bool operator()(const T* const Position, const T* const ErrorModelState, T* Error) const
+      /** combine probabilistic and geometric model */
+      template <typename T, typename... ParamsType>
+      bool operator()(const T* const Position,
+                      ParamsType... Params) const
       {
-        this->_Model.Evaluate(Position, this->_MeasurementVector.tail(Dimensions), this->_MeasurementVector.head(1), Error);
-        this->_Error.Evaluate(ErrorModelState, Error);
-
-        return true;
+        return this->_Error.template weight<T>(this->Evaluate(Position,
+                                               this->_MeasurementVector.tail(Dim),
+                                               this->_MeasurementVector(0)),
+                                               Params...);
       }
-
   };
 
+  /** compile time mapping from factor type enum to corresponding factor class */
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Range2, ErrorType> {using Type = RangeFactorBase<ErrorType, 2>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Range3, ErrorType> {using Type = RangeFactorBase<ErrorType, 3>;};
 }
 
 #endif // RANGEFACTOR_H

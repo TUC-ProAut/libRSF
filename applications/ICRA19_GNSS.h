@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,25 +23,22 @@
 #ifndef ICRA19_GNSS_H_INCLUDED
 #define ICRA19_GNSS_H_INCLUDED
 
+#include "libRSF.h"
+
 #include <stdio.h>
 #include <string.h>
-
-#include <ceres/ceres.h>
-#include "../include/FactorGraph.h"
-#include "../include/FactorGraphConfig.h"
-#include "../include/FileAccess.h"
-#include "../include/StateDataSet.h"
-#include "../include/SensorDataSet.h"
-
 
 #define POSITION_STATE "Position"
 #define ORIENTATION_STATE "Orientation"
 #define CLOCK_ERROR_STATE "ClockError"
 #define CLOCK_DRIFT_STATE "ClockDrift"
 
-/** Generates a delta time measurement object from two timestamps */
-libRSF::SensorData GenerateDeltaTime(const double TimestampOld,
-                                      const double TimestampNew);
+/** Build the factor Graph with initial values and a first set of measurements */
+void InitGraph(libRSF::FactorGraph &Graph,
+               libRSF::SensorDataSet &Measurements,
+               libRSF::FactorGraphConfig const &Config,
+               ceres::Solver::Options Options,
+               double TimestampFirst);
 
 /** Adds a pseudorange measurement to the graph */
 void AddPseudorangeMeasurements(libRSF::FactorGraph& Graph,
@@ -52,7 +49,15 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph& Graph,
 /** use EM algorithm to tune the gaussian mixture model */
 void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config,
-                    int NumberOfComponents,
-                    double Timestamp);
+                    int NumberOfComponents);
+
+/** parse string from command line to select error model for GNSS*/
+bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config);
+
+/** run the example itself */
+int CreateGraphAndSolve(std::vector<std::string> &Arguments,
+                        libRSF::StateDataSet &Result,
+                        std::string &OutputFile);
 
 #endif // ICRA19_GNSS_H_INCLUDED
+

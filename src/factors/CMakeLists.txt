@@ -1,7 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
-# For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+# For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,14 +19,27 @@
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
 #set source files for library
-  set(SOURCEFILES
-  ${SOURCEFILES}
-  factors/MeasurementFactor.cpp
+  set(SOURCEFILES ${SOURCEFILES}
+  factors/BaseFactor.cpp
+  factors/ConstantValueFactor.cpp
   factors/ConstantDriftFactor.cpp
+  factors/BetweenValueFactor.cpp
+  factors/BetweenPose2Factor.cpp
+  factors/BetweenPose3Factor.cpp
+  factors/BetweenQuaternionFactor.cpp
+  factors/PriorFactor.cpp
   factors/RangeFactor.cpp
   factors/PseudorangeFactor.cpp
+  factors/OdometryFactor2D.cpp
   factors/OdometryFactor2DDifferential.cpp
   factors/OdometryFactor3D.cpp
+  factors/IMUFactor.cpp
+  factors/IMUPreintegrationFactor.cpp
+  factors/PressureDifferenceFactor.cpp
+  factors/TrackingFactor.cpp
+  factors/TrackingDetectionFactor.cpp
+  factors/MarginalPrior.cpp
+  factors/PointRegistrationFactor.cpp
   PARENT_SCOPE
   )
 

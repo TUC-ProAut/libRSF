@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,15 +23,10 @@
 #ifndef ICRA19_GNSS_H_INCLUDED
 #define ICRA19_GNSS_H_INCLUDED
 
+#include "libRSF.h"
+
 #include <stdio.h>
 #include <string.h>
-
-#include <ceres/ceres.h>
-#include "../include/FactorGraph.h"
-#include "../include/FactorGraphConfig.h"
-#include "../include/FileAccess.h"
-#include "../include/StateDataSet.h"
-#include "../include/SensorDataSet.h"
 
 /** pre-defined state names */
 #define POSITION_STATE "Position"
@@ -45,10 +40,6 @@
 
 #define GMM_N 3 /**< fixed number of components (which is used in static case) */
 
-/** Generates a delta time measurement object from two timestamps */
-libRSF::SensorData GenerateDeltaTime(const double TimestampOld,
-                                      const double TimestampNew);
-
 /** Adds a pseudorange measurement to the graph */
 void AddPseudorangeMeasurements(libRSF::FactorGraph& Graph,
                                 libRSF::SensorDataSet & Measurements,
@@ -57,28 +48,9 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph& Graph,
 
 /** use EM algorithm to tune the gaussian mixture model */
 void TuneErrorModel(libRSF::FactorGraph &Graph,
-                    libRSF::FactorGraphConfig &Config,
-                    double Timestamp);
+                    libRSF::FactorGraphConfig &Config);
 
-/** init zero mean GMM with increasing uncertainty in each component */
-template <int Dimension>
-void InitGMM(libRSF::GaussianMixture<Dimension> &GMM, unsigned int NumberOfComponents, double BaseStdDev)
-{
-  libRSF::GaussianComponent<Dimension> Component;
-
-  /** construct Gaussian parameters */
-  Eigen::Matrix<double, Dimension, 1> Mean = Eigen::Matrix<double, Dimension, 1>::Zero();
-  Eigen::Matrix<double, 1, 1> Weight;
-  Weight(0) = 1.0/NumberOfComponents;
-
-  Eigen::Matrix<double, Dimension, Dimension> SqrtInfo = Eigen::Matrix<double, Dimension, Dimension>::Identity() * (1.0/BaseStdDev);
-
-  GMM.clear();
-  for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
-  {
-    Component.setParamsSqrtInformation(SqrtInfo*std::pow(0.1, nComponent), Mean, Weight);
-    GMM.addComponent(Component);
-  }
-}
+/** parse string from command line to select error model for GNSS*/
+bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config);
 
 #endif // ICRA19_GNSS_H_INCLUDED

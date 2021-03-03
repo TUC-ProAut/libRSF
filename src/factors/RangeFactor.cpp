@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,16 +23,4 @@
 #include "factors/RangeFactor.h"
 
 namespace libRSF
-{
-  template<>
-  SensorType RangeType<2>()
-  {
-    return SensorType::Range2;
-  };
-
-  template<>
-  SensorType RangeType<3>()
-  {
-    return SensorType::Range3;
-  };
-}
+{}

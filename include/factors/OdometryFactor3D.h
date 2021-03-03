@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,130 +32,186 @@
 #ifndef ODOMETRYFACTOR3D_H
 #define ODOMETRYFACTOR3D_H
 
-#include <ceres/ceres.h>
-#include "MeasurementFactor.h"
+#include "BaseFactor.h"
 #include "../Geometry.h"
-#include "../QuaternionCalc.h"
+#include "../geometric_models/OdometryModel.h"
 
 namespace libRSF
 {
-  template <int DOF>
-  class OdometryModel3D : public SensorModel
-  {
-    public:
-      OdometryModel3D()
-      {
-        _InputDim = 7;
-        _OutputDim = DOF;
-      }
-  };
-
-  template <>
-  class OdometryModel3D<4> : public SensorModel
-  {
-    public:
-
-      OdometryModel3D<4>()
-      {
-        _InputDim = 7;
-        _OutputDim = 4;
-      }
-
-      template <typename T>
-      bool Evaluate(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2,
-                    const ceres::Vector Odometry, const ceres::Vector DeltaTime,  T* Error) const
-      {
-        T PositionError[3];
-        T PositionErrorBody[3];
-        T QuatOldInv [4];
-        T QuatPose [4];
-        T ZAxis[3], QuatOld[4], QuatYaw[4];
-
-        Eigen::Matrix<T, 4, 1> ErrorVector, Displacement;
-
-        /** construct quaternion */
-        ZAxis[0] = T(0.0);
-        ZAxis[1] = T(0.0);
-        ZAxis[2] = T(1.0);
-
-        RotationBetween(ZAxis, Pos1, QuatPose);
-
-        QuatYaw[0] = ceres::cos(Yaw1[0] / 2.0);
-        QuatYaw[1] = T(0.0);
-        QuatYaw[2] = T(0.0);
-        QuatYaw[3] = ceres::sin(Yaw1[0] / 2.0);
-
-        ceres::QuaternionProduct(QuatPose, QuatYaw, QuatOld);
-
-        /** invert quaternion */
-        libRSF::InvertQuaterion(QuatOld, QuatOldInv);
-
-        /** calculate translation */
-        PositionError[0] = Pos2[0] - Pos1[0];
-        PositionError[1] = Pos2[1] - Pos1[1];
-        PositionError[2] = Pos2[2] - Pos1[2];
-
-        /** rotate translation back in body frame */
-        ceres::QuaternionRotatePoint(QuatOldInv, PositionError, PositionErrorBody);
-
-        /** weight position error */
-        Displacement[0] = PositionErrorBody[0] ;
-        Displacement[1] = PositionErrorBody[1] ;
-        Displacement[2] = PositionErrorBody[2] ;
-
-        /** calculate rotation error rotation */
-        Displacement[3] = NormalizeAngle(Yaw2[0] - Yaw1[0]);
-
-        /** convert to velocities and subtract measurement */
-        ErrorVector = Displacement / T(DeltaTime[0]);
-        ErrorVector.head(3) -= Odometry.head(3).template cast<T>();
-        ErrorVector.tail(1) -= Odometry.tail(1).template cast<T>();
-
-        Error[0] = ErrorVector[0];
-        Error[1] = ErrorVector[1];
-        Error[2] = ErrorVector[2];
-        Error[3] = ErrorVector[3];
-
-        return true;
-      }
-  };
-
-
   template <typename ErrorType>
-  class OdometryFactor3D4DOF : public MeasurementFactor<OdometryModel3D<4>, ErrorType, 3, 3, 1, 1>
+  class OdometryFactor3D4DOF_ECEF : public BaseFactor<ErrorType, true, true, 3, 1, 3, 1>
   {
     public:
-      OdometryFactor3D4DOF(ErrorType &Error, MeasurementList &Measurements)
+      /** construct factor and store measurement */
+      OdometryFactor3D4DOF_ECEF(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
       {
         this->_Error = Error;
 
-        this->_MeasurementVector.resize(7);
-        this->_MeasurementVector.head(6) = Measurements.get(SensorType::Odom3).getMean();
-        this->_MeasurementVector.tail(1) = Measurements.get(SensorType::DeltaTime).getMean();
-
-        this->CheckInput();
+        this->_MeasurementVector.resize(6);
+        this->_MeasurementVector = OdometryMeasurement.getMean();
+        this->_DeltaTime = DeltaTime;
       }
 
-      /** normal version for static error models */
+      /** geometric error model */
       template <typename T>
-      bool operator()(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2,  T* Error) const
+      VectorT<T, 4> Evaluate(const T* const Pos1, const T* const Yaw1,
+                             const T* const Pos2, const T* const Yaw2) const
       {
-        this->_Model.Evaluate(Pos1, Pos2, Yaw1, Yaw2, this->_MeasurementVector.head(6), this->_MeasurementVector.tail(1), Error);
-        this->_Error.Evaluate(Error);
+        const Vector6 Odometry = this->_MeasurementVector;
 
-        return true;
+        /** estimate measurements */
+        VectorT<T, 3> VelocityEst, TurnRateEst;
+        OdometryModel4DOFECEF<T>::applyBackward(Pos1, Yaw1, Pos2, Yaw2, VelocityEst, TurnRateEst, this->_DeltaTime);
+
+        /** error = estimated measurement - measurement */
+        VectorT<T, 4> Error;
+        Error.template head<3>() = VelocityEst - Odometry.template head<3>().template cast<T>();
+        Error(3) = NormalizeAngleVelocity<T>(TurnRateEst(2) - Odometry(5), this->_DeltaTime);
+
+        return Error;
       }
 
-      /** special version for SC and DCE */
-      template <typename T>
-      bool operator()(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2, const T* const ErrorModelState,  T* Error) const
+      /** combine probabilistic and geometric model */
+      template <typename T, typename... ParamsType>
+      bool operator()(const T* const Pos1, const T* const Yaw1,
+                      const T* const Pos2, const T* const Yaw2,
+                      ParamsType... Params) const
       {
-        this->_Model.Evaluate(Pos1, Pos2, Yaw1, Yaw2, this->_MeasurementVector.head(6), this->_MeasurementVector.tail(1), Error);
-        this->_Error.Evaluate(ErrorModelState, Error);
+        return this->_Error.template weight<T>(this->Evaluate(Pos1, Yaw1,
+                                                              Pos2, Yaw2),
+                                               Params...);
+      }
 
-        return true;
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        OdometryModel4DOFECEF<double>::applyForward(StatePointers[0],
+                                                    StatePointers[1],
+                                                    StatePointers[2],
+                                                    StatePointers[3],
+                                                    this->_MeasurementVector.head(3),
+                                                    this->_MeasurementVector.tail(3),
+                                                    this->_DeltaTime);
       }
   };
+
+  template <typename ErrorType>
+  class OdometryFactor3D4DOF : public BaseFactor<ErrorType, true, true, 3, 1, 3, 1>
+  {
+    public:
+      /** construct factor and store measurement */
+      OdometryFactor3D4DOF(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
+      {
+        this->_Error = Error;
+        this->_MeasurementVector.resize(6);
+        this->_MeasurementVector = OdometryMeasurement.getMean();
+        this->_DeltaTime = DeltaTime;
+      }
+
+      /** geometric error model */
+      template <typename T>
+      VectorT<T, 4> Evaluate(const T* const Pos1, const T* const Yaw1,
+                             const T* const Pos2, const T* const Yaw2) const
+      {
+        const Vector6 Odometry = this->_MeasurementVector;
+
+        /** estimate measurements */
+        VectorT<T, 3> VelocityEst, TurnRateEst;
+        OdometryModel4DOF<T>::applyBackward(Pos1, Yaw1, Pos2, Yaw2, VelocityEst, TurnRateEst, this->_DeltaTime);
+
+        /** error = estimated measurement - measurement */
+        VectorT<T, 4> Error;
+        Error.template head<3>() = VelocityEst - Odometry.template head<3>().template cast<T>();
+        Error(3) = NormalizeAngleVelocity<T>(TurnRateEst(2) - Odometry(5), this->_DeltaTime);
+
+        return Error;
+      }
+
+      template <typename T, typename... ParamsType>
+      bool operator()(const T* const Pos1, const T* const Yaw1,
+                      const T* const Pos2, const T* const Yaw2,
+                      ParamsType... Params) const
+      {
+        return this->_Error.template weight<T>(this->Evaluate(Pos1, Yaw1,
+                                                              Pos2, Yaw2),
+                                               Params...);
+      }
+
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        OdometryModel4DOF<double>::applyForward(StatePointers[0],
+                                                StatePointers[1],
+                                                StatePointers[2],
+                                                StatePointers[3],
+                                                this->_MeasurementVector.head(3),
+                                                this->_MeasurementVector.tail(3),
+                                                this->_DeltaTime);
+      }
+  };
+
+  template <typename ErrorType>
+  class OdometryFactor3D6DOF : public BaseFactor< ErrorType, true, true, 3, 4, 3, 4>
+  {
+    public:
+      /** construct factor and store measurement */
+      OdometryFactor3D6DOF(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
+      {
+        this->_Error = Error;
+        this->_MeasurementVector.resize(6);
+        this->_MeasurementVector = OdometryMeasurement.getMean();
+        this->_DeltaTime = DeltaTime;
+      }
+
+      /** geometric error model */
+      template <typename T>
+      VectorT<T, 6> Evaluate(const T* const Pos1, const T* const Quat1,
+                             const T* const Pos2, const T* const Quat2) const
+      {
+        const Vector6 Odometry = this->_MeasurementVector;
+
+        /** estimate measurements */
+        VectorT<T, 3> VelocityEst, TurnRateEst;
+        OdometryModel6DOF<T>::applyBackward(Pos1, Quat1, Pos2, Quat2, VelocityEst, TurnRateEst, this->_DeltaTime);
+
+        /** error = estimated measurement - measurement */
+        VectorT<T, 6> Error;
+        Error.template head<3>() = VelocityEst - Odometry.template head<3>().template cast<T>();
+        Error.template tail<3>() = NormalizeAngleVelocityVector<T, 3>(TurnRateEst - Odometry.template tail<3>().template cast<T>(), this->_DeltaTime);
+
+        return Error;
+      }
+
+      /** combine probabilistic and geometric model */
+      template <typename T, typename... ParamsType>
+      bool operator()(const T* const Pos1, const T* const Quat1,
+                      const T* const Pos2, const T* const Quat2,
+                      ParamsType... Params) const
+      {
+        return this->_Error.template weight<T>(this->Evaluate(Pos1, Quat1,
+                                                              Pos2, Quat2),
+                                               Params...);
+      }
+
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        OdometryModel6DOF<double>::applyForward(StatePointers[0],
+                                                StatePointers[1],
+                                                StatePointers[2],
+                                                StatePointers[3],
+                                                this->_MeasurementVector.head(3),
+                                                this->_MeasurementVector.tail(3),
+                                                this->_DeltaTime);
+      }
+  };
+
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Odom4, ErrorType> {using Type = OdometryFactor3D4DOF<ErrorType>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Odom4_ECEF, ErrorType> {using Type = OdometryFactor3D4DOF_ECEF<ErrorType>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Odom6, ErrorType> {using Type = OdometryFactor3D6DOF<ErrorType>;};
 }
 
 

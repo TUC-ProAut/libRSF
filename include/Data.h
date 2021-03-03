@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,58 +32,278 @@
 #ifndef DATA_H
 #define DATA_H
 
+#include "Messages.h"
+#include "VectorMath.h"
+
 #include <cstdio>
 #include <string>
-#include <ceres/ceres.h>
-
-using std::string;
-using std::map;
-using std::multimap;
-using std::pair;
-using std::make_pair;
-using std::set;
-using std::vector;
 
 namespace libRSF
 {
-
-  template<typename EnumType, typename EnumElement>
-  struct DataConfig
-  {
-    typedef EnumType DataEnumType;
-    typedef EnumElement ElementEnumType;
-
-    typedef struct
-    {
-      vector<pair<ElementEnumType, size_t>> _Elements;
-      DataEnumType _Type;
-      string _Name;
-    } DataConfigElementType;
-
-    std::map<const DataEnumType, const DataConfigElementType> _Config;
-    std::map<const string, const DataEnumType> _Identifier;
-  };
-
-  template<typename TypeConfig>
-  class Data
+  template<typename TypeEnum, typename ElementEnum>
+  class DataConfig
   {
     public:
-      Data() {};
-      ~Data() {};
 
-      typedef typename TypeConfig::DataConfigElementType ConfigType;
-      typedef typename TypeConfig::ElementEnumType ElementType;
-      typedef typename TypeConfig::DataEnumType TypeType;
+      /** define types that store the configuration */
+      typedef std::vector<std::pair<ElementEnum, int>> ConfigType;
+      typedef struct
+      {
+        std::string _Name;
+        TypeEnum _Type;
+        ConfigType _Elements;
+      } InitType;
+      typedef std::vector<InitType> InitVect;
 
+      /** disable the default constructor construction */
+      DataConfig() = delete;
+
+      /** enforce advanced initialization */
+      explicit DataConfig(InitVect InitialConfig)
+      {
+        for (InitType &Init : InitialConfig)
+        {
+          _TypeMap.emplace(Init._Type, Init._Elements);
+          _NameTypeMap.emplace(Init._Name, Init._Type);
+          _TypeNameMap.emplace(Init._Type, Init._Name);
+        }
+      }
+
+      /** destruction */
+      virtual ~DataConfig() = default;
+
+      /** query string */
+      std::string getName(TypeEnum Type) const
+      {
+        return _TypeNameMap.at(Type);
+      }
+
+      TypeEnum getType(std::string Name) const
+      {
+        return _NameTypeMap.at(Name);
+      }
+
+      /** check type or string */
+      bool checkName(std::string Name) const
+      {
+        return (_NameTypeMap.count(Name) > 0);
+      }
+
+      bool checkType(TypeEnum Type) const
+      {
+        return (_TypeNameMap.count(Type) > 0);
+      }
+
+      /** query config */
+      const ConfigType &getConfig(std::string ID) const
+      {
+        return _TypeMap.at(_NameTypeMap.at(ID));
+      }
+
+      const ConfigType &getConfig(TypeEnum Type) const
+      {
+        return _TypeMap.at(Type);
+      }
+
+    private:
+      std::map<std::string, TypeEnum> _NameTypeMap;
+      std::map<TypeEnum, std::string> _TypeNameMap;
+      std::map<TypeEnum, ConfigType> _TypeMap;
+  };
+
+  template<typename TypeEnum, typename ElementEnum>
+  class Data
+  {
+    typedef DataConfig<TypeEnum, ElementEnum> ConfigType;
+
+    public:
+      Data() = default;
+      virtual ~Data() = default;
+
+      /** get properties */
+      TypeEnum getType() const
+      {
+        return _Type;
+      }
+
+      std::string getName() const
+      {
+        return _Name;
+      }
+
+      /** get elements */
+      Vector getValue(const ElementEnum Element) const
+      {
+        return _Data.at(Element);
+      }
+
+      Vector getMean() const
+      {
+        return getValue(ElementEnum::Mean);
+      }
+
+      double getTimestamp() const
+      {
+        return getValue(ElementEnum::Timestamp).operator()(0);
+      }
+
+      /** get pointers */
+      double* getDataPointer(const ElementEnum Element)
+      {
+        return _Data.at(Element).data();
+      }
+
+      double* getMeanPointer()
+      {
+        return getDataPointer(ElementEnum::Mean);
+      }
+
+      double const * getMeanPointerConst()
+      {
+        return getDataPointer(ElementEnum::Mean);
+      }
+
+      /** set elements */
+      void setValue(const ElementEnum Element, const Vector Value)
+      {
+        _Data.at(Element) = Value;
+      }
+
+      void setValueScalar(const ElementEnum Element, const double Value)
+      {
+        _Data.at(Element).fill(Value);
+      }
+
+      void setMean(const Vector Value)
+      {
+        setValue(ElementEnum::Mean, Value);
+      }
+
+      void setTimestamp(const double Timestamp)
+      {
+        Vector1 TS;
+        TS << Timestamp;
+        setValue(ElementEnum::Timestamp, TS);
+      }
+
+      Vector getCovariance() const
+      {
+        return this->getValue(ElementEnum::Covariance);
+      }
+
+      Matrix getCovarianceMatrix() const
+      {
+        Vector CovVect = this->getCovariance();
+        MatrixRef<double, Dynamic, Dynamic> Cov(CovVect.data(), sqrt(CovVect.size()), sqrt(CovVect.size()));
+        return Cov;
+      }
+
+      void setCovariance(const Vector Cov)
+      {
+        setValue(ElementEnum::Covariance, Cov);
+      }
+
+      /** change element size */
+      void resizeElement(const ElementEnum Element, const int Size)
+      {
+        _Data.at(Element).resize(Size);
+      }
+
+      /** generate pretty output strings */
+      std::string getValueString() const
+      {
+        std::string Out;
+
+        for(const auto &Element : _Config->getConfig(_Type))
+        {
+          for(Index nElement = 0; nElement < _Data.at(Element.first).size(); nElement++)
+          {
+            std::ostringstream Stream;
+            Stream.precision(8);
+            Stream << std::scientific << _Data.at(Element.first).operator[](nElement);
+
+            Out.append(Stream.str());
+            Out.append(" ");
+          }
+        }
+
+        return Out;
+      }
+
+      std::string getNameValueString() const
+      {
+        std::string Out;
+        Out.append(_Name);
+        Out.append(": ");
+
+        for(auto const &Element : _Data)
+        {
+          Out.append(" ");
+
+          for(Index nElement = 0; nElement < Element.second.size(); nElement++)
+          {
+            Out.append(std::to_string(Element.second.operator[](nElement)));
+            Out.append(" ");
+          }
+        }
+
+        return Out;
+      }
+
+    protected:
+      /** construct a specific data configuration */
+      void constructEmpty(const TypeEnum Type, double Timestamp = 0.0)
+      {
+        if(_Config->checkType(Type))
+        {
+          _Type = Type;
+          _Name = _Config->getName(Type);
+
+          for(const auto &Element : _Config->getConfig(Type))
+          {
+            _Data.emplace(Element.first, Vector(Element.second));
+            _Data.at(Element.first).fill(0.0);
+          }
+
+          _Data[ElementEnum::Timestamp].operator[](0) = Timestamp;
+        }
+        else
+        {
+          PRINT_ERROR("Type does not exist: ", Type);
+        }
+      }
+
+      void constructFromString(std::string Input)
+      {
+        /** read type from string */
+        auto Split = Input.find_first_of(' ');
+        std::string Name = Input.substr(0, Split);
+
+        /** choose config according to type */
+        if(_Config->checkName(Name))
+        {
+          constructEmpty(_Config->getType(Name));
+          parseSubstring(Input.substr(Split));
+        }
+        else
+        {
+          PRINT_ERROR("Type does not exist: ", Name);
+        }
+      }
+
+    /** pointer to the the list of configurations */
+    const ConfigType * _Config;
+
+    private:
       /** parse an ASCII input string */
-      string parseSubstring(string Input)
+      std::string parseSubstring(std::string Input)
       {
         size_t StringEnd = 0;
         size_t InputStringEnd = 0;
 
-        for(const auto &Element : _Type->_Elements)
+        for(const auto &Element : _Config->getConfig(_Type))
         {
-          for(size_t nElement = 0; nElement < _Data.at(Element.first).size(); nElement++)
+          for(Index nElement = 0; nElement < _Data.at(Element.first).size(); nElement++)
           {
             _Data.at(Element.first).operator[](nElement) = std::stod(Input.substr(InputStringEnd), &StringEnd);
             InputStringEnd += StringEnd;
@@ -93,125 +313,14 @@ namespace libRSF
         return Input.substr(InputStringEnd);
       }
 
-      /** generate pretty output strings */
-      string getValueString()
-      {
-        string Out;
+      /** identifying string */
+      std::string _Name;
 
-        for(const auto &Element : _Type->_Elements)
-        {
-          for(size_t nElement = 0; nElement < _Data.at(Element.first).size(); nElement++)
-          {
-            Out.append(std::to_string(_Data.at(Element.first).operator[](nElement)));
-            Out.append(" ");
-          }
-        }
-
-        return Out;
-      }
-
-      /** get elements */
-      ceres::Vector getValue(ElementType Element)
-      {
-        return _Data.at(Element);
-      }
-
-      ceres::Vector getMean()
-      {
-        return getValue(ElementType::Mean);
-      }
-
-      double getTimeStamp()
-      {
-        return getValue(ElementType::Timestamp).operator[](0);
-      }
-
-      TypeType getType()
-      {
-        return _Type->_Type;
-      }
-
-      string getName()
-      {
-        return _Type->_Name;
-      }
-
-      double* getDataPointer(ElementType Element)
-      {
-        return _Data[Element].data();
-      }
-
-      double* getMeanPointer()
-      {
-        return getDataPointer(ElementType::Mean);
-      }
-
-      /** set elements */
-      void setValue(ElementType Element, ceres::Vector Value)
-      {
-        _Data[Element] = Value;
-      }
-
-      void setMean(ceres::Vector Value)
-      {
-        setValue(ElementType::Mean, Value);
-      }
-
-      void setTimestamp(double Timestamp)
-      {
-        ceres::Vector TS(1);
-        TS << Timestamp;
-        setValue(ElementType::Timestamp, TS);
-      }
-
-    protected:
-
-      /** construct a specific data configuration */
-      void constructEmpty(const ConfigType* Type)
-      {
-        _Type = Type;
-
-        for(const auto &Element : _Type->_Elements)
-        {
-          _Data.emplace(Element.first, ceres::Vector(Element.second));
-          _Data.at(Element.first).fill(0.0);
-        }
-
-        return;
-      }
-
-      void constructEmpty(TypeType Type, double Timestamp)
-      {
-        /** choose config according to type */
-        constructEmpty(&(_TypeDictionary->_Config.at(Type)));
-        _Data[ElementType::Timestamp].operator[](0) = Timestamp;
-      }
-
-      void constructFromString(string Input)
-      {
-        /** read type from string */
-        auto Split = Input.find_first_of(' ');
-        string Type = Input.substr(0, Split);
-
-        /** choose config according to type */
-        if(_TypeDictionary->_Identifier.count(Type) > 0)
-        {
-          constructEmpty(&(_TypeDictionary->_Config.at(_TypeDictionary->_Identifier.at(Type))));
-          parseSubstring(Input.substr(Split));
-        }
-        else
-        {
-          std::cerr << "In String-Constructor of Data: Type does not exist: " << Type << std::endl;
-        }
-      }
-
-      /** pointer to a list of all elements according to the type */
-      const ConfigType* _Type;
-
-      TypeConfig const* _TypeDictionary;
+      /** internal type */
+      TypeEnum _Type;
 
       /** where the data is stored */
-      map<ElementType, ceres::Vector> _Data;
+      std::map<ElementEnum, Vector> _Data;
   };
 }
 

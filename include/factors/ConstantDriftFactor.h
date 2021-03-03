@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,73 +32,70 @@
 #ifndef CONSTANTDRIFTFACTOR_H
 #define CONSTANTDRIFTFACTOR_H
 
-#include <ceres/ceres.h>
-#include "MeasurementFactor.h"
+#include "BaseFactor.h"
 #include "../VectorMath.h"
 
 namespace libRSF
 {
-  template <int Dimension>
-  class ConstantDriftModel : public SensorModel
+  template <typename ErrorType, int Dim>
+  class ConstantDriftFactorBase : public BaseFactor<ErrorType, false, true, Dim, Dim, Dim, Dim>
   {
     public:
-
-      ConstantDriftModel()
-      {
-        _OutputDim = Dimension*2;
-        _InputDim = 1;
-      };
-
-      template <typename T>
-      bool Evaluate(const T* const ValueOld, const T* const ValueNew, const T* const DriftOld, const T* const DriftNew, const ceres::Vector DeltaTime,  T* Error) const
-      {
-        T PredictedValue[Dimension];
-
-        for(int nDim = 0; nDim < Dimension; nDim++)
-        {
-          PredictedValue[nDim] = ValueOld[nDim] + DriftOld[nDim] * DeltaTime[0];
-        }
-
-        VectorDifference<Dimension, T>(PredictedValue, ValueNew, Error);
-        VectorDifference<Dimension, T>(DriftOld, DriftNew, &(Error[Dimension]));
-        return true;
-      }
-  };
-
-  template <typename ErrorType, int Dimensions>
-  class ConstantDriftFactorBase : public MeasurementFactor< ConstantDriftModel<Dimensions>, ErrorType, Dimensions, Dimensions, Dimensions, Dimensions>
-  {
-    public:
-
-      ConstantDriftFactorBase(ErrorType &Error, MeasurementList &Measurements)
+      /** construct factor and store measurement */
+      ConstantDriftFactorBase(ErrorType &Error, double DeltaTime)
       {
         this->_Error = Error;
-        this->_MeasurementVector.resize(1);
-        this->_MeasurementVector = Measurements.get(SensorType::DeltaTime).getMean();
-
-        this->CheckInput();
+        this->_DeltaTime = DeltaTime;
       }
 
-      /** normal version for static error models */
+      /** geometric error model */
       template <typename T>
-      bool operator()(const T* const ValueOld, const T* const ValueNew, const T* const DriftOld, const T* const DriftNew, T* Error) const
+      MatrixT<T, Dim * 2, 1> Evaluate(const T* const ValueOld, const T* const DriftOld,
+                                      const T* const ValueNew, const T* const DriftNew) const
       {
-        this->_Model.Evaluate(ValueOld, ValueNew, DriftOld, DriftNew, this->_MeasurementVector, Error);
-        this->_Error.Evaluate(Error);
+        VectorRefConst<T, Dim> V1(ValueOld);
+        VectorRefConst<T, Dim> D1(DriftOld);
+        VectorRefConst<T, Dim> V2(ValueNew);
+        VectorRefConst<T, Dim> D2(DriftNew);
 
-        return true;
+        VectorT<T, Dim * 2> Error;
+
+        Error.template head<Dim>() = V2 - V1 - (D1 * this->_DeltaTime);
+        Error.template tail<Dim>() = D2 - D1;
+
+        return Error;
       }
 
-      /** special version for SC and DCE */
-      template <typename T>
-      bool operator()(const T* const ValueOld, const T* const ValueNew, const T* const DriftOld, const T* const DriftNew, const T* const ErrorModelState, T* Error) const
+      /** combine probabilistic and geometric model */
+      template <typename T, typename... ParamsType>
+      bool operator()(const T* const ValueOld, const T* const DriftOld,
+                      const T* const ValueNew, const T* const DriftNew,
+                      ParamsType... Params) const
       {
-        this->_Model.Evaluate(ValueOld, ValueNew, DriftOld, DriftNew, this->_MeasurementVector, Error);
-        this->_Error.Evaluate(ErrorModelState, Error);
+        return this->_Error.template weight<T>(this->Evaluate(ValueOld, DriftOld,
+                                                              ValueNew, DriftNew),
+                                               Params...);
+      }
 
-        return true;
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        VectorRefConst<double, Dim> V1(StatePointers.at(0));
+        VectorRefConst<double, Dim> D1(StatePointers.at(1));
+        VectorRef<double, Dim> V2(StatePointers.at(2));
+        VectorRef<double, Dim> D2(StatePointers.at(3));
+
+        V2 = V1 + (D1 * this->_DeltaTime);
+        D2 = D1;
       }
   };
 
+  /** compile time mapping from factor type enum to corresponding factor class */
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::ConstDrift1, ErrorType> {using Type = ConstantDriftFactorBase<ErrorType, 1>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::ConstDrift2, ErrorType> {using Type = ConstantDriftFactorBase<ErrorType, 2>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::ConstDrift3, ErrorType> {using Type = ConstantDriftFactorBase<ErrorType, 3>;};
 }
 #endif // CONSTANTDRIFTFACTOR_H

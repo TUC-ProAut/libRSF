@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,23 +26,12 @@ namespace libRSF
 {
   void SensorDataSet::addElement(SensorData Element)
   {
-    addElement(Element.getName(), Element);
+    addElement(Element.getType(), Element.getTimestamp(), Element);
   }
 
-  void SensorDataSet::addElement(string Name, SensorData Element)
+  std::ostream& operator << (std::ostream& Os, const MeasurementID& ID)
   {
-    if(_Data.count(Name) == 0)
-    {
-      DataStream TempStream;
-      _Data.emplace(Name, TempStream);
-    }
-
-    _Data[Name].emplace(Element.getTimeStamp(), Element);
-  }
-
-  void SensorDataSet::addElement(string Name, SensorType Type, double Timestamp)
-  {
-    SensorData Element(Type, Timestamp);
-    addElement(Name, Element);
+    Os << ID.ID << " " << ID.Timestamp << " " << ID.Number << " ";
+    return Os;
   }
 }

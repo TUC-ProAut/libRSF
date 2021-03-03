@@ -1,0 +1,62 @@
+name: Bionic CI
+on: 
+  push:
+    paths-ignore:
+      - 'datasets/**'
+      - 'docs/**'
+      - 'matlab/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README.md'
+  pull_request:
+    paths-ignore:
+      - 'datasets/**'
+      - 'docs/**'
+      - 'matlab/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README.md'
+  # enable manual trigger
+  workflow_dispatch:
+  schedule:
+    # run on first day of the month
+    - cron: '0 0 1 * *'
+jobs:
+  Bionic-CI:
+    runs-on: ubuntu-18.04
+    steps:
+      # checkout repo & get externals from cache
+      - name: checkout
+        uses: actions/checkout@v2
+      # install dependencies
+      - name: install dependencies
+        run: ./InstallDependencies.bash
+        shell: bash
+      # build & install libRSF
+      - name: create build directory
+        run: mkdir build
+      - name: run cmake
+        working-directory: build
+        run: cmake ..
+      - name: run make
+        working-directory: build
+        run: make all -j$(getconf _NPROCESSORS_ONLN)
+      - name: run make install
+        working-directory: build
+        run: sudo make install
+      # run some examples
+      - name: create exampleResults directory for examples output
+        run: mkdir exampleResults
+      - name: run ICRA 2019 Application
+        run: 'build/applications/ICRA19_GNSS datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt exampleResults/Result_Berlin_Potsdamer_Platz_Web.txt error: gauss'
+      - name: upload exampleResults as artifact
+        uses: actions/upload-artifact@v2
+        with: 
+          name: exampleResults
+          path: exampleResults/
+      # uninstall libRSF
+      - name: run make uninstall
+        working-directory: build
+        run: sudo make uninstall
+      
+

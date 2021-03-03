@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ namespace libRSF
    */
   void DCSLoss::Evaluate(double s, double rho[3]) const
   {
-    if(s <= Phi_)
+    if (s <= Phi_)
     {
       rho[0] = s;
       rho[1] = 1;
@@ -54,7 +54,7 @@ namespace libRSF
   {
     double e = sqrt(s);
 
-    if(e <= Sigma_)
+    if (e <= Sigma_)
     {
       rho[0] = s / (Sigma_ * Sigma_);
       rho[1] = 1.0 / (Sigma_ * Sigma_);

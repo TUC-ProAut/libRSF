@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,68 +32,105 @@
 #ifndef GAUSSIAN_H
 #define GAUSSIAN_H
 
-#include <Eigen/Dense>
 #include "ErrorModel.h"
+#include "../VectorMath.h"
+
+#include <Eigen/Dense>
 
 namespace libRSF
 {
-  template <int Dimension>
-  class GaussianDiagonal : public ErrorModel <Dimension, Dimension>
+  template <int Dim>
+  class GaussianDiagonal : public ErrorModel <Dim, Dim>
   {
-    public:
+  public:
 
-      GaussianDiagonal(){};
+      GaussianDiagonal() = default;
 
-      explicit GaussianDiagonal(Eigen::Matrix<double, Dimension, 1> StdDev)
+      void setStdDevSharedDiagonal(double StdDev)
       {
-        setStdDev(StdDev);
-      };
-
-      void setStdDev(Eigen::Matrix<double, Dimension, 1> StdDev)
-      {
-        _SqrtInformation = StdDev.cwiseInverse().asDiagonal();
+        _SqrtInformationDiagonal.fill(1.0/StdDev);
       }
 
-      Eigen::Matrix<double, Dimension, 1> getStdDev()
+      void setStdDevDiagonal(const VectorStatic<Dim> &StdDev)
       {
+        _SqrtInformationDiagonal = StdDev.cwiseInverse();
+      }
 
+      void setCovarianceDiagonal(const VectorStatic<Dim> &Cov)
+      {
+        _SqrtInformationDiagonal = Cov.cwiseInverse().cwiseSqrt();
+      }
+
+      void setSqrtInformationDiagonal(const VectorStatic<Dim> &SqrtInfo)
+      {
+        _SqrtInformationDiagonal = SqrtInfo;
       }
 
       template <typename T>
-      bool Evaluate(T* Error) const
+      bool weight(const VectorT<T, Dim> &RawError, T* Error) const
       {
-        Eigen::Map<Eigen::Matrix<T, Dimension, 1>> ErrorMap(Error);
+        /** wrap raw pointer to vector*/
+        VectorRef<T, Dim> ErrorMap(Error);
 
-        ErrorMap = _SqrtInformation.template cast<T>() * ErrorMap;
+        if(this->_Enable)
+        {
+          /** scale with diagonal information matrix */
+          ErrorMap = RawError.cwiseProduct(_SqrtInformationDiagonal.template cast<T>());
+        }
+        else
+        {
+          /** pass-trough if error model is disabled*/
+          ErrorMap = RawError;
+        }
 
         return true;
-      };
+      }
 
-    private:
-      Eigen::Matrix<double, Dimension, Dimension> _SqrtInformation;
+  private:
+    /** square root information is more efficient to apply than covariance */
+    VectorStatic<Dim> _SqrtInformationDiagonal;
   };
 
-  template <int Dimension>
-  class GaussianFull : public ErrorModel <Dimension, Dimension>
+  template <int Dim>
+  class GaussianFull : public ErrorModel <Dim, Dim>
   {
-    public:
+  public:
 
-      GaussianFull()
-      {};
+      GaussianFull() = default;
+
+      void setCovarianceMatrix(const MatrixStatic<Dim, Dim> &CovMat)
+      {
+        _SqrtInformation = InverseSquareRoot<Dim, double>(CovMat);
+      }
+
+      void setSqrtInformationMatrix(const MatrixStatic<Dim, Dim> &SqrtInfoMat)
+      {
+        _SqrtInformation = SqrtInfoMat;
+      }
 
       template <typename T>
-      bool Evaluate(T* Error) const
+      bool weight(const VectorT<T, Dim> &RawError, T* Error) const
       {
-        Eigen::Map<Eigen::Matrix<T, Dimension, 1>> ErrorMap(Error);
+        /** wrap raw pointer to vector*/
+        VectorRef<T, Dim> ErrorMap(Error);
 
-        ErrorMap = _SqrtInformation.template cast<T>() * ErrorMap;
+        if(this->_Enable)
+        {
+          /** scale with full information matrix */
+          ErrorMap = _SqrtInformation.template cast<T>() * RawError;
+        }
+        else
+        {
+          /** pass-trough if error model is disabled*/
+          ErrorMap = RawError;
+        }
 
         return true;
-      };
+      }
 
-    private:
-
-      Eigen::Matrix<double, Dimension, Dimension> _SqrtInformation;
+  private:
+      /** square root information is more efficient to apply than covariance */
+      MatrixStatic<Dim, Dim> _SqrtInformation;
   };
 }
 

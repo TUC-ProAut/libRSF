@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,14 +32,13 @@
 #ifndef SENSORDATASET_H
 #define SENSORDATASET_H
 
-#include <ceres/ceres.h>
+#include "DataSet.h"
 #include "SensorData.h"
-#include "ListInTime.h"
 
 namespace libRSF
 {
 
-  class SensorDataSet : public ListInTime<std::string, SensorData>
+  class SensorDataSet : public DataSet<SensorType, SensorData>
   {
     public:
       SensorDataSet() {};
@@ -47,13 +46,13 @@ namespace libRSF
 
       /** add an element according to its internal type and timestamp*/
       void addElement(SensorData Element);
-      /** use external name */
-      void addElement(string Name, SensorData Element);
-      /** add an empty element*/
-      void addElement(string Name, SensorType Type, double Timestamp);
 
-      using ListInTime<std::string, SensorData>::addElement;
+      using DataSet<SensorType, SensorData>::addElement;
   };
+
+  typedef SensorDataSet::UniqueID MeasurementID;
+
+  std::ostream& operator << (std::ostream& Os, const MeasurementID& ID);
 }
 
 #endif // SENSORDATASET_H

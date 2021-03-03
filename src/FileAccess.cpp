@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 namespace libRSF
 {
 
-  void ReadDataFromFile(string Filename,
-                        SensorDataSet &Data)
+  void ReadDataFromFile(const string Filename,
+                        SensorDataSet& Data)
   {
     string Buffer;
     std::ifstream File;
@@ -44,30 +44,38 @@ namespace libRSF
     File.close();
   }
 
-  void WriteDataToFile(string Filename,
-                       string DataName,
-                       StateDataSet &Data)
+  void WriteDataToFile(const string Filename,
+                       const string DataName,
+                       const StateDataSet& Data,
+                       const bool Append)
   {
     double Timestamp;
-    size_t NumberOfStates;
 
-    if(!Data.getFirstTimestamp(DataName, Timestamp))
+    if(!Data.getTimeFirst(DataName,Timestamp))
       return;
 
     std::ofstream File;
-    File.open(Filename, std::ios::out | std::ios::trunc);
+
+    if(Append)
+    {
+      File.open(Filename, std::ios::out | std::ios::app);
+    }
+    else
+    {
+      File.open(Filename, std::ios::out | std::ios::trunc);
+    }
 
     do
     {
-      NumberOfStates = Data.countElement(DataName, Timestamp);
-
-      for(size_t nState = 0; nState < NumberOfStates; ++nState)
+      int NumberOfStates = Data.countElement(DataName,Timestamp);
+      for (int nState = 0; nState < NumberOfStates; ++nState)
       {
-        File << Data.getElement(DataName, Timestamp, nState).getValueString();
-        File << std::endl;
+        StateData State;
+        Data.getElement(DataName, Timestamp, nState, State);
+        File << State.getName() << ' ' << State.getValueString() << std::endl;
       }
     }
-    while(Data.getNextTimestamp(DataName, Timestamp, Timestamp));
+    while(Data.getTimeNext(DataName, Timestamp, Timestamp));
 
     File.close();
   }

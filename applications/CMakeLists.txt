@@ -1,7 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
-# For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+# For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
 add_executable(ICRA19_Ranging ICRA19_Ranging.cpp)
-target_link_libraries(ICRA19_Ranging ${CERES_LIBRARIES} libRSF)
+target_link_libraries(ICRA19_Ranging libRSF)
 
 add_executable(ICRA19_GNSS ICRA19_GNSS.cpp)
-target_link_libraries(ICRA19_GNSS ${CERES_LIBRARIES} libRSF)
+target_link_libraries(ICRA19_GNSS libRSF)
 
 add_executable(IV19_GNSS IV19_GNSS.cpp)
-target_link_libraries(IV19_GNSS ${CERES_LIBRARIES} libRSF)
+target_link_libraries(IV19_GNSS libRSF)

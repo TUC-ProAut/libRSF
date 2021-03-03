@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,21 +32,15 @@
 #ifndef ERRORMODEL_H
 #define ERRORMODEL_H
 
-
-#include <ceres/ceres.h>
-#include "../StateData.h"
-
-using ceres::CostFunctionToFunctor;
-using ceres::Vector;
+#include <utility> /**< for integer_sequence */
 
 namespace libRSF
 {
   class ErrorModelBase
   {
     public:
-      ErrorModelBase() {};
-      virtual ~ErrorModelBase() {};
-
+      ErrorModelBase() = default;
+      virtual ~ErrorModelBase() = default;
 
       void enable()
       {
@@ -63,28 +57,19 @@ namespace libRSF
   };
 
 
-  template <int InputDim, int OutputDim, int ...StateDims>
+  template <int InputDimTemp, int OutputDimTemp, int ...StateDimsTemp>
   class ErrorModel: public ErrorModelBase
   {
     public:
-      ErrorModel() {};
-      virtual ~ErrorModel() {};
+      ErrorModel() = default;
+      virtual ~ErrorModel() = default;
 
-      const int getInputDim() const
-      {
-        return _InputDim;
-      };
-
-      const int getOutputDim() const
-      {
-        return _OutputDim;
-      };
-
-      static const int _OutputDim = OutputDim;
-      static const int _InputDim = InputDim;
+      /** static access to dimensions*/
+      static const int InputDim = InputDimTemp;
+      static const int OutputDim = OutputDimTemp;
 
       /** store the dimension of variables at compile time */
-      using _StateDims = std::integer_sequence<int, StateDims...>;
+      using StateDims = std::integer_sequence<int, StateDimsTemp...>;
   };
 }
 

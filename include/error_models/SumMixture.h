@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,9 @@
 #ifndef SUMMIXTURE_H
 #define SUMMIXTURE_H
 
-#include <ceres/ceres.h>
 #include "ErrorModel.h"
 #include "GaussianMixture.h"
-#include "NumericalRobust.h"
+#include "../NumericalRobust.h"
 
 namespace libRSF
 {
@@ -49,74 +48,101 @@ namespace libRSF
    * \param Mixture Underlying mixture distribution
    *
    */
-  template <int Dimension, typename MixtureType>
-  class SumMixture : public ErrorModel <Dimension, 1>
+  template <int Dim, typename MixtureType, bool SpecialNormalization>
+  class SumMixture : public ErrorModel <Dim, Dim>
   {
   public:
+    SumMixture()
+    {
+      _Normalization = 0;
+    }
 
-      SumMixture()
+    virtual ~SumMixture() = default;
+
+    explicit SumMixture(const MixtureType &Mixture)
+    {
+      this->addMixture(Mixture);
+    }
+
+    void clear()
+    {
+      _Normalization = 0;
+      _Mixture.clear();
+    }
+
+    template <typename T>
+    bool weight(const VectorT<T, Dim> &RawError, T* Error) const
+    {
+      /** map error to eigen matrix for easier access */
+      VectorRef<T, Dim> ErrorMap(Error);
+
+      if(this->_Enable)
       {
-        _Normalization = 0;
-      };
+        const int NumberOfComponents = _Mixture.getNumberOfComponents();
 
-     explicit SumMixture(MixtureType &Mixture)
-     {
-       addMixture(Mixture);
-     };
+        MatrixT<T, Dynamic, 1> Scalings(NumberOfComponents);
+        MatrixT<T, Dynamic, 1> Exponents(NumberOfComponents);
 
-      void addMixture (MixtureType &Mixture)
+        /** calculate all exponents and scalings */
+        for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
+        {
+          Exponents(nComponent) = - 0.5 * (_Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm() + 1e-10);
+          Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError));
+        }
+
+        /** combine them numerically robust and distribute the error equally over all dimensions */
+        ErrorMap.fill(sqrt(-2.0* (ScaledLogSumExp(Exponents, Scalings) - log(_Normalization + 1e-10))) / sqrt(Dim));
+      }
+      else
       {
-        _Mixture = Mixture;
+        /** pass raw error trough */
+        VectorRef<T, Dim> ErrorMap(Error);
+        ErrorMap = RawError;
+      }
 
+      return true;
+    }
+
+  private:
+
+    void addMixture(const MixtureType &Mixture)
+    {
+      _Mixture = Mixture;
+
+      const int NumberOfComponents = _Mixture.getNumberOfComponents();
+
+      if constexpr(SpecialNormalization == false)
+      {
+        /** original version */
         _Normalization = 0;
-
-        size_t NumberOfComponents = _Mixture.getNumberOfComponents();
-        for (int nComponent = 1; nComponent <= NumberOfComponents; ++nComponent)
+        for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
         {
           _Normalization += _Mixture.getMaximumOfComponent(nComponent);
         }
       }
-
-      void clear()
+      else
       {
-        _Normalization = 0;
-        _Mixture.clear();
-      }
-
-      template <typename T>
-      bool Evaluate(T* Error) const
-      {
-        if (this->_Enable)
+        /** version for Reviewer 3 */
+        _Normalization = _Mixture.getMaximumOfComponent(0);
+        for(int nComponent = 1; nComponent < NumberOfComponents; ++nComponent)
         {
-          Eigen::Matrix<T, Eigen::Dynamic, 1> Scalings;
-          Eigen::Matrix<T, Eigen::Dynamic, 1> Exponents;
-          T SquaredError;
-
-          size_t NumberOfComponents = _Mixture.getNumberOfComponents();
-
-          Scalings.resize(NumberOfComponents,1);
-          Exponents.resize(NumberOfComponents,1);
-
-          /** calculate all exponents and scalings */
-          for(int nComponent = 1; nComponent <= NumberOfComponents; ++nComponent)
-          {
-            Exponents(nComponent-1,0) = - 0.5 * _Mixture.getExponentialPartOfComponent(nComponent, Error).squaredNorm();
-            Scalings(nComponent-1,0) = T(_Mixture.getLinearPartOfComponent(nComponent, Error)/_Normalization);
-          }
-
-          /** combine them numerically robust */
-          SquaredError = - ScaledLogSumExp(Exponents.data(), Scalings.data(), NumberOfComponents);
-          *Error = ceres::sqrt(SquaredError * T(2.0));
+          _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
         }
-        return true;
-      };
+        _Normalization = _Normalization*NumberOfComponents + 10;
+      }
+    }
 
-  private:
     MixtureType _Mixture;
     double _Normalization;
   };
 
-  typedef SumMixture<1, GaussianMixture<1>> SumMix1;
+  typedef SumMixture<1, GaussianMixture<1>, false> SumMix1;
+  typedef SumMixture<2, GaussianMixture<2>, false> SumMix2;
+  typedef SumMixture<3, GaussianMixture<3>, false> SumMix3;
+
+  typedef SumMixture<1, GaussianMixture<1>, true> SumMix1Special;
+  typedef SumMixture<2, GaussianMixture<2>, true> SumMix2Special;
+  typedef SumMixture<3, GaussianMixture<3>, true> SumMix3Special;
 }
 
 #endif // SUMMIXTURE_H

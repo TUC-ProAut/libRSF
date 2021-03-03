@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,87 +32,93 @@
 #ifndef ODOMETRYFACTOR2DDIFFERENTIAL_H
 #define ODOMETRYFACTOR2DDIFFERENTIAL_H
 
-#include <ceres/ceres.h>
-#include "MeasurementFactor.h"
+#include "BaseFactor.h"
 #include "../Geometry.h"
 
 namespace libRSF
 {
-  class OdometryModel2DDiffenrential : public SensorModel
-  {
-    public:
-      OdometryModel2DDiffenrential()
-      {
-        _InputDim = 5;
-        _OutputDim = 3;
-      }
-
-      template <typename T>
-      bool Evaluate(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2,
-                    const ceres::Vector &Odometry, const ceres::Vector &DeltaTime, const ceres::Vector &WheelBase,  T* Error) const
-      {
-        /** calculate Error */
-        Eigen::Matrix<T, 3, 1> Displacement, ErrorVector;
-        Displacement = RelativeMotion2D(Pos1, Pos2, Yaw1, Yaw2);
-
-        /** tranform in kinematic space */
-        Eigen::Matrix<T, 2, 3> DifferentialTransformation;
-        DifferentialTransformation << T(1.0), T(0.0), T(-WheelBase[0]),
-                                   T(1.0), T(0.0), T(WheelBase[0]);
-        Eigen::Matrix<T, 2, 1> Wheels = DifferentialTransformation * Displacement;
-
-
-        /** calc and weight error */
-        ErrorVector[0] = Wheels(0, 0);
-        ErrorVector[1] = Wheels(1, 0);
-        ErrorVector[2] = Displacement(1, 0);
-
-        ErrorVector /= T(DeltaTime[0]);
-        ErrorVector -= Odometry.template cast<T>();
-
-        Error[0] = ErrorVector[0]; /** Left */
-        Error[1] = ErrorVector[1]; /** Right */
-        Error[2] = ErrorVector[2]; /** y motion */
-
-        return true;
-      }
-  };
-
   template <typename ErrorType>
-  class OdometryFactor2DDifferential : public MeasurementFactor<OdometryModel2DDiffenrential, ErrorType, 2, 2, 1, 1>
+  class OdometryFactor2DDifferential : public BaseFactor<ErrorType, true, true, 2, 1, 2, 1>
   {
     public:
-      OdometryFactor2DDifferential(ErrorType &Error, MeasurementList &Measurements)
+      /** construct factor and store measurement */
+      OdometryFactor2DDifferential(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
       {
         this->_Error = Error;
-        this->_MeasurementVector.resize(5);
-        this->_MeasurementVector.head(3) = Measurements.get(SensorType::Odom2Diff).getMean();
-        this->_MeasurementVector.segment(3, 1) = Measurements.get(SensorType::Odom2Diff).getValue(SensorElement::WheelBase);
-        this->_MeasurementVector.tail(1) = Measurements.get(SensorType::DeltaTime).getMean();
-
-        this->CheckInput();
+        this->_MeasurementVector.resize(4);
+        this->_MeasurementVector.head(3) = OdometryMeasurement.getMean();
+        this->_MeasurementVector.tail(1) = OdometryMeasurement.getValue(SensorElement::WheelBase);
+        this->_DeltaTime = DeltaTime;
       }
 
-      /** normal version for static error models */
+      /** geometric error model */
       template <typename T>
-      bool operator()(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2,  T* Error) const
+      VectorT<T, 3> Evaluate(const T* const Pos1, const T* const Yaw1,
+                             const T* const Pos2, const T* const Yaw2) const
       {
-        this->_Model.Evaluate(Pos1, Pos2, Yaw1, Yaw2, this->_MeasurementVector.head(3), this->_MeasurementVector.tail(1), this->_MeasurementVector.segment(3, 1), Error);
-        this->_Error.Evaluate(Error);
+        /** get odometry information */
+        const double WheelBase = this->_MeasurementVector(3);
+        const Vector3 Odometry = this->_MeasurementVector.head(3);
 
-        return true;
+        /** calculate Error */
+        VectorT<T, 3> Displacement, Error;
+        Displacement = RelativeMotion2D(Pos1, Yaw1, Pos2, Yaw2);
+
+        /** transform in kinematic space */
+        MatrixT<T, 2, 3> DifferentialTransformation;
+        DifferentialTransformation << T(1.0), T(0.0), T(-WheelBase),
+                                   T(1.0), T(0.0), T(WheelBase);
+        VectorT<T, 2> Wheels = DifferentialTransformation * Displacement;
+
+        /** calc and weight error */
+        Error[0] = Wheels(0, 0);
+        Error[1] = Wheels(1, 0);
+        Error[2] = Displacement(1, 0);
+
+        Error /= T(this->_DeltaTime);
+        Error -= Odometry.template cast<T>();
+
+        return Error;
       }
 
-      /** special version for SC and DCE */
-      template <typename T>
-      bool operator()(const T* const Pos1, const T* const Pos2, const T* const Yaw1, const T* const Yaw2, const T* const ErrorModelState,  T* Error) const
+      /** combine probabilistic and geometric model */
+      template <typename T, typename... ParamsType>
+      bool operator()(const T* const Pos1, const T* const Yaw1,
+                      const T* const Pos2, const T* const Yaw2,
+                      ParamsType... Params) const
       {
-        this->_Model.Evaluate(Pos1, Pos2, Yaw1, Yaw2, this->_MeasurementVector.head(3), this->_MeasurementVector.tail(1), this->_MeasurementVector.segment(3,1), Error);
-        this->_Error.Evaluate(ErrorModelState, Error);
+        return this->_Error.template weight<T>(this->Evaluate(Pos1, Yaw1,
+                                                              Pos2, Yaw2),
+                                               Params...);
+      }
 
-        return true;
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        /** map pointer to vectors */
+        VectorRefConst<double, 2> P1(StatePointers.at(0));
+        VectorRefConst<double, 1> Yaw1(StatePointers.at(1));
+        VectorRef<double, 2>      P2(StatePointers.at(2));
+        VectorRef<double, 1>      Yaw2(StatePointers.at(3));
+
+        /** get odometry information */
+        const double WheelBase = this->_MeasurementVector(3);
+        const Vector3 Odometry = this->_MeasurementVector.head(3);
+
+        /** predict translation */
+        Vector2 POdom;
+        POdom << (Odometry(1) + Odometry(0)) / 2.0, Odometry(2);
+        POdom = RotationMatrix2D(Yaw1(0)) * POdom * this->_DeltaTime;
+        P2 = P1 + POdom;
+
+        /** predict rotation */
+        Yaw2(0) = NormalizeAngle(Yaw1(0) + (Odometry(1) - Odometry(0)) / (WheelBase * 2.0) * this->_DeltaTime);
       }
   };
+
+  /** compile time mapping from factor type enum to corresponding factor class */
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Odom2Diff, ErrorType> {using Type = OdometryFactor2DDifferential<ErrorType>;};
 }
 
 
