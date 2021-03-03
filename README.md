@@ -13,8 +13,8 @@ Main features are:
 
 | Platform     | Build Status  |
 |:------------:|:-------------:|
-| Ubuntu 20.04 | ![Focal CI](https://github.com/tipf/TUC-ProAut/workflows/Focal%20CI/badge.svg) |
-| Ubuntu 18.04 | ![Bionic CI](https://github.com/tipf/TUC-ProAut/workflows/Bionic%20CI/badge.svg) |
+| Ubuntu 20.04 | ![Focal CI](https://github.com/TUC-ProAut/libRSF/workflows/Focal%20CI/badge.svg) |
+| Ubuntu 18.04 | ![Bionic CI](https://github.com/TUC-ProAut/libRSF/workflows/Bionic%20CI/badge.svg) |
 
 ## Installation
 
