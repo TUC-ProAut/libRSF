@@ -20,62 +20,21 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-   /**
-* @file Example_FG_Pseudorange.cpp
-* @author Tim Pfeifer
-* @date 27.07.2016
-* @brief An example application to demonstrate the construction of a simple factor graph with pseudo range measurements.
-* @copyright GNU Public License.
-*
-*/
+/**
+ * @file Test_Example_FG_Pseudorange.cpp
+ * @author Leopold Mauersberger
+ * @date 02 Mar 2021
+ * @brief Comparing the FG_Pseudorange example results against sample solution
+ * @copyright GNU Public License.
+ *
+ */
 
-#include "Example_FG_Pseudorange.h"
+#include "../examples/Example_FG_Pseudorange.h"
+#include "TestUtils.h"
+#include "gtest/gtest.h"
 
-void CreateData (libRSF::SensorDataSet &RangeMeasurements)
+TEST(Example, FG_Pseudorange)
 {
-  std::default_random_engine Generator;
-  std::normal_distribution<double> Distribution(0.0, STDDEV_RANGE);
-
-  libRSF::Vector1 Range, StdDev, SatID;
-  vector<libRSF::Vector2> SatPositions;
-  vector<libRSF::Vector2> EgoPositions;
-
-  StdDev << STDDEV_RANGE;
-
-  SatPositions.push_back((libRSF::Vector2() << 10, 10).finished());
-  SatPositions.push_back((libRSF::Vector2() << 10, -10).finished());
-  SatPositions.push_back((libRSF::Vector2() << -10, 10).finished());
-  SatPositions.push_back((libRSF::Vector2() << -10, -10).finished());
-
-  EgoPositions.push_back((libRSF::Vector2() << 0, 0).finished());
-  EgoPositions.push_back((libRSF::Vector2() << 1, 0).finished());
-  EgoPositions.push_back((libRSF::Vector2() << 1, 1).finished());
-
-  for (int i = 0; i < static_cast<int>(EgoPositions.size()); i++)
-  {
-    for (int j = 0; j < static_cast<int>(SatPositions.size()); j++)
-    {
-      Range[0] = (SatPositions.at(j) - EgoPositions.at(i)).norm() + Distribution(Generator) + OFFSET;
-      SatID << j;
-
-      libRSF::SensorData PseudorangeMasurement(libRSF::SensorType::Pseudorange2, i);
-      PseudorangeMasurement.setMean(Range);
-      PseudorangeMasurement.setStdDev(StdDev);
-      PseudorangeMasurement.setValue(libRSF::SensorElement::SatPos, SatPositions.at(j));
-      PseudorangeMasurement.setValue(libRSF::SensorElement::SatID, SatID);
-
-      RangeMeasurements.addElement(PseudorangeMasurement);
-    }
-  }
-}
-
-#ifndef TESTMODE // only compile main if not used in test context
-
-int main(int ArgC, char** ArgV)
-{
-  (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
-
   double Time, TimeFirst = 0.0, TimeOld = 0.0;
 
   libRSF::Vector1 StdDev, StdDevCCE;
@@ -153,10 +112,23 @@ int main(int ArgC, char** ArgV)
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 2.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(OFFSET_STATE, 0.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(OFFSET_STATE, 1.0).getNameValueString() << std::endl;
-  std::cout << SimpleGraph.getStateData().getElement(OFFSET_STATE, 2.0).getNameValueString() << std::endl <<std::endl;
+  std::cout << SimpleGraph.getStateData().getElement(OFFSET_STATE, 2.0).getNameValueString() << std::endl;
+  
+  /** load expected results - point2*/
+  libRSF::SensorDataSet Expected;
+  Expected.addElement(libRSF::SensorData("point2 0.0 0.0 0.0 0.005 0.0 0.0 0.005"));
+  Expected.addElement(libRSF::SensorData("point2 1.0 1.0 0.0075 0.005 0.0 0.0 0.005"));
+  Expected.addElement(libRSF::SensorData("point2 2.0 1.0 0.931271 0.005 0.0 0.0 0.005"));
 
+  /** calculate maximum componentwise absolute difference between solution and expected (mean and covariance) - point2*/
+  double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Mean, Expected, POSITION_STATE, libRSF::StateElement::Mean, SimpleGraph.getStateData());
+  double maxAbsErrorCov = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Covariance, Expected, POSITION_STATE, libRSF::StateElement::Covariance, SimpleGraph.getStateData());
+  
+  std::cout << "MaxAbsErrorMean:" << maxAbsErrorMean << std::endl;
+  std::cout << "MaxAbsErrorCov:" << maxAbsErrorCov << std::endl;
 
-  return 0;
+  EXPECT_LT(maxAbsErrorMean,0.1);
+  EXPECT_LT(maxAbsErrorCov,1e-3);
 }
 
-#endif // TESTMODE
+// main provided by linking to gtest_main

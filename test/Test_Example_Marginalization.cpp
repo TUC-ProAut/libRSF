@@ -20,24 +20,21 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-  /**
-* @file Example_Marginalization.cpp
-* @author Tim Pfeifer
-* @date 29.11.2019
-* @brief An example application to demonstrate that the Marginalization works.
-* @copyright GNU Public License.
-*
-*/
+/**
+ * @file Test_Example_.cpp
+ * @author Leopold Mauersberger
+ * @date 02 Mar 2021
+ * @brief Comparing the  example results against sample solution
+ * @copyright GNU Public License.
+ *
+ */
 
-#include "Example_Marginalization.h"
+#include "../examples/Example_Marginalization.h"
+#include "TestUtils.h"
+#include "gtest/gtest.h"
 
-#ifndef TESTMODE // only compile main if not used in test context
-
-int main(int ArgC, char** ArgV)
+TEST(Example, Marginalization)
 {
-  (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
-
   ceres::Solver::Options FGOptions;
   FGOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   FGOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
@@ -209,8 +206,46 @@ int main(int ArgC, char** ArgV)
   std::cout << "################ FGO marg ##################" << std::endl;
   std::cout << DataFGMarg.getElement(ROTATION_STATE, 1.0, 0).getNameValueString() << std::endl << std::endl;
 
+  /** create GT sensor measurement objects */
+  libRSF::SensorData SensorPos0 (libRSF::SensorType::Point3, 0.0);
+  SensorPos0.setMean(PosVec0);
+  libRSF::SensorData SensorPos1 (libRSF::SensorType::Point3, 1.0);
+  SensorPos1.setMean(PosVec1);
 
-  return 0;
+  libRSF::SensorData SensorRot0 (libRSF::SensorType::Quaternion, 0.0);
+  SensorRot0.setMean(RotVec0);
+  libRSF::SensorData SensorRot1 (libRSF::SensorType::Quaternion, 1.0);
+  SensorRot1.setMean(RotVec1);
+
+  libRSF::SensorDataSet ExpectedFull;
+
+  ExpectedFull.addElement(libRSF::SensorType::Point3, 0.0, SensorPos0);
+  ExpectedFull.addElement(libRSF::SensorType::Point3, 1.0, SensorPos1);
+
+  ExpectedFull.addElement(libRSF::SensorType::Quaternion, 0.0, SensorRot0);
+  ExpectedFull.addElement(libRSF::SensorType::Quaternion, 1.0, SensorRot1);
+
+  libRSF::SensorDataSet ExpectedMarg;
+
+  ExpectedMarg.addElement(libRSF::SensorType::Point3, 1.0, SensorPos1);
+  ExpectedMarg.addElement(libRSF::SensorType::Quaternion, 1.0, SensorRot1);
+  
+  /** calculate maximum componentwise absolute difference between solution and expected (mean only here) */
+  double maxAbsErrorFullPos = libRSF::MaxAbsError(libRSF::SensorType::Point3, libRSF::SensorElement::Mean, ExpectedFull, POSITION_STATE, libRSF::StateElement::Mean, DataFGFull);
+  double maxAbsErrorFullRot = libRSF::MaxAbsError(libRSF::SensorType::Quaternion, libRSF::SensorElement::Mean, ExpectedFull, ROTATION_STATE, libRSF::StateElement::Mean, DataFGFull);
+
+  double maxAbsErrorMargPos = libRSF::MaxAbsError(libRSF::SensorType::Point3, libRSF::SensorElement::Mean, ExpectedMarg, POSITION_STATE, libRSF::StateElement::Mean, DataFGMarg);
+  double maxAbsErrorMargRot = libRSF::MaxAbsError(libRSF::SensorType::Quaternion, libRSF::SensorElement::Mean, ExpectedMarg, ROTATION_STATE, libRSF::StateElement::Mean, DataFGMarg);
+
+  std::cout << "MaxAbsErrorFullPos:" << maxAbsErrorFullPos << std::endl;
+  std::cout << "MaxAbsErrorFullRot:" << maxAbsErrorFullRot << std::endl;
+  std::cout << "MaxAbsErrorMargPos:" << maxAbsErrorMargPos << std::endl;
+  std::cout << "MaxAbsErrorMargRot:" << maxAbsErrorMargRot << std::endl;
+  
+  EXPECT_LT(maxAbsErrorFullPos,1e-3);
+  EXPECT_LT(maxAbsErrorFullRot,1e-3);
+  EXPECT_LT(maxAbsErrorMargPos,1e-3);
+  EXPECT_LT(maxAbsErrorMargRot,1e-3);
 }
 
-#endif // TESTMODE
+// main provided by linking to gtest_main

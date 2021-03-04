@@ -29,10 +29,9 @@
 *
 */
 
-#include "libRSF.h"
+#include "Example_FG_Generic.h"
 
-/** use define to prevent typos*/
-#define POSITION_STATE "Position2D"
+#ifndef TESTMODE // only compile main if not used in test context
 
 int main(int ArgC, char** ArgV)
 {
@@ -113,3 +112,5 @@ int main(int ArgC, char** ArgV)
 
   return 0;
 }
+
+#endif // TESTMODE

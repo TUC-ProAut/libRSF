@@ -21,21 +21,22 @@
  ***************************************************************************/
 
 /**
- * @file Test_ICRA19_GNSS.cpp
+ * @file Test_Example_FG_Generic.cpp
  * @author Leopold Mauersberger
- * @date 18 Feb 2021
- * @brief Comparing the ICRA19_GNSS application results against sample solution
+ * @date 02 Mar 2021
+ * @brief Comparing the FG_Generic example results against sample solution
  * @copyright GNU Public License.
  *
  */
 
-#include "libRSF.h"
+#include "../examples/Example_FG_Generic.h"
+#include "TestUtils.h"
+#include "gtest/gtest.h"
 
 /** use define to prevent typos*/
 #define POSITION_STATE "Position2D"
-#include "gtest/gtest.h"
 
-TEST(Examples, FG_Generic)
+TEST(Example, FG_Generic)
 {
     /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
@@ -105,39 +106,25 @@ TEST(Examples, FG_Generic)
   std::cout << std::endl << "Optimized Values:" << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 0.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 1.0).getNameValueString() << std::endl;
-  std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 1.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 2.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 3.0).getNameValueString() << std::endl;
 
   /** load expected results */
-  // reading state data set did not work like this
   libRSF::SensorDataSet Expected;
-
-  /*
-  std::vector<std::string> expectedStrings
-  {
-     "point2 0.0 42.0 42.0 2.0 0.25 0.25 5.0" 
-  };
-  Expected.addElement(libRSF::StateData("point2 0.0 42.0 42.0 2.0 0.25 0.25 5.0"));
-  Expected.addElement(libRSF::StateData("point2 1.0 42.0 42.0 1.0 0.25 0.25 4.0"));
-  Expected.addElement(libRSF::StateData("point2 1.0 42.0 42.0 1.0 0.25 0.25 4.0"));
-  Expected.addElement(libRSF::StateData("point2 2.0 42.0 42.0 2.0 0.25 0.25 5.0"));
-  Expected.addElement(libRSF::StateData("point2 3.0 42.0 42.0 3.0 0.25 0.25 6.0"));
-  */
-  /*
-  for (auto str : expectedStrings)
-  {
-    Expected.addElement(libRSF::StateData(str));
-  } 
-  for (int i=0; i<expectedStrings.size(); ++i)
-  {
-    Expected.addElement(libRSF::SensorData(expectedStrings[i]));
-  }
-  */
-
   Expected.addElement(libRSF::SensorData("point2 0.0 42.0 42.0 2.0 0.25 0.25 5.0"));
-// see ate for fix
-  std::cout << Expected.getElement(libRSF::SensorType::Point2, 0.0).getNameValueString() << std::endl;
+  Expected.addElement(libRSF::SensorData("point2 1.0 42.0 42.0 1.0 0.25 0.25 4.0"));
+  Expected.addElement(libRSF::SensorData("point2 2.0 42.0 42.0 2.0 0.25 0.25 5.0"));
+  Expected.addElement(libRSF::SensorData("point2 3.0 42.0 42.0 3.0 0.25 0.25 6.0"));
+
+  /** calculate maximum componentwise absolute difference between solution and expected (mean and covariance) */
+  double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Mean, Expected, POSITION_STATE, libRSF::StateElement::Mean, SimpleGraph.getStateData());
+  double maxAbsErrorCov = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Covariance, Expected, POSITION_STATE, libRSF::StateElement::Covariance, SimpleGraph.getStateData());
+  
+  std::cout << "MaxAbsErrorMean:" << maxAbsErrorMean << std::endl;
+  std::cout << "MaxAbsErrorCov:" << maxAbsErrorCov << std::endl;
+
+  EXPECT_LT(maxAbsErrorMean,1e-3);
+  EXPECT_LT(maxAbsErrorCov,1e-3);
 }
 
 // main provided by linking to gtest_main

@@ -21,19 +21,19 @@
  ***************************************************************************/
 
 /**
- * @file Test_ICRA19_GNSS.cpp
- * @author Leopold Mauersberger
- * @date 18 Feb 2021
- * @brief Comparing the ICRA19_GNSS application results against sample solution
+ * @file Test_IV19_GNSS.cpp
+ * @author Tim Pfeifer and Leopold Mauersberger
+ * @date 04 Mar 2021
+ * @brief File containing a test for an application for 3D pose estimation based on pseudo range measurements. This special version is made for the Intelligent Vehicles Symposium 2019.
  * @copyright GNU Public License.
  *
  */
 
-#include "../applications/ICRA19_GNSS.h"
+#include "../applications/IV19_GNSS.h"
 #include "TestUtils.h"
 #include "gtest/gtest.h"
 
-TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
+TEST(IV19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
 {
     /** assign all arguments to string vector*/
     std::vector<std::string> Arguments;
@@ -60,14 +60,14 @@ TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
     EXPECT_LT(ate,100.0);
 }
 
-TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_stsm)
+TEST(IV19_GNSS, smartLoc_Berlin_Potsdamer_Platz_stsm_vbi)
 {
     /** assign all arguments to string vector*/
     std::vector<std::string> Arguments;
     Arguments.push_back("datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt");
     Arguments.push_back("Result_smartLoc_Berlin_Potsdamer_Platz_gauss.txt"); // shouldn't be neccesary, not writing
     Arguments.push_back("error:");
-    Arguments.push_back("stsm");
+    Arguments.push_back("stsm_vbi");
 
     /** calculate example */
     libRSF::StateDataSet Result;
@@ -86,7 +86,3 @@ TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_stsm)
 
     EXPECT_LT(ate,30.0);
 }
-
-// main provided by linking to gtest_main
-
-
