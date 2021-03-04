@@ -1,13 +1,13 @@
 name: Focal Build
 on: 
-  # push:
-  #   paths-ignore:
-  #     - 'datasets/**'
-  #     - 'docs/**'
-  #     - 'matlab/**'
-  #     - '.gitignore'
-  #     - 'LICENSE'
-  #     - 'README.md'
+  push:
+    paths-ignore:
+      - 'datasets/**'
+      - 'docs/**'
+      - 'matlab/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README.md'
   pull_request:
     paths-ignore:
       - 'datasets/**'
