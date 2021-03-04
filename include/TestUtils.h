@@ -20,25 +20,38 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-#include "Statistics.h"
+/**
+ * @file Statistics.h
+ * @author Tim Pfeifer and Leopold Mauersberger
+ * @date 02.03.2021
+ * @brief Collection of testing tools.
+ * @copyright GNU Public License.
+ *
+ */
+
+#ifndef TESTUTILS_H
+#define TESTUTILS_H
+
+#include "VectorMath.h"
+#include "StateDataSet.h"
+#include "SensorDataSet.h"
 
 namespace libRSF
 {
-  double Median(std::vector<double> &V)
-  {
-    int n = V.size() / 2;
-    std::nth_element(V.begin(), V.begin() + n, V.end());
-    return V[n];
-  }
+  double RMSE(Vector V);
 
-  double Median(Vector V)
-  {
-    std::vector<double> Vec(V.data(), V.data() + V.rows() * V.cols());
-    return Median(Vec);
-  }
+  // maximum componentwise absolute difference between two datasets (mean and covariance)
+  double MaxAbsError(SensorType TypeGT,
+             SensorElement ElementGT,
+             SensorDataSet GT,
+             std::string TypeEstimate,
+             StateElement ElementEstimate,
+             StateDataSet Estimate);
 
-  double MAD(Vector V)
-  {
-    return Median((V.array() - Median(V)).abs().matrix());
-  }
+  double ATE(SensorType TypeGT,
+             SensorDataSet GT,
+             std::string TypeEstimate,
+             StateDataSet Estimate);
 }
+
+#endif // TESTUTILS_H
