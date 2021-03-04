@@ -144,18 +144,18 @@ Since this examples use just a small subset of functionalities from the libRSF, 
 
 A full example could be:
 
-      ./Example_Robust_Models_2D # # Data_2D_Output.txt 10 8 MaxSumMix 0 0 1 2 0.5 0 0 1 2 0 0 5 0.35 0.65
-                                                        ^  ^     ^     ^ ^ ^ ^  ^  ^ ^ ^ ^ ^ ^ ^  ^    ^
-                                                        |  |     |     | | | |  |  | | | | | | |  |    |
-                  Number of points (per dimension) -----+  |     |     | | | |  |  | | | | | | |  |    |
-                                   Range of points --------+     |     | | | |  |  | | | | | | |  |    |
-                             Type of mixture model --------------+     \_/ | |  |  | | | | | | |  |    |
-                                   Mean of comp. 1 ---------------------+  \_/  |  | | | | | | |  |    |
-                                   Mean of comp. 2 -------------------------+   \______/ | | | |  |    |
-                     Standard deviation of comp. 1 --------------------------------+     \_____/  |    |
-                     Standard deviation of comp. 2 -----------------------------------------+     |    |
-                                 Weight of comp. 1 -----------------------------------------------+    |
-                                 Weight of comp. 2 ----------------------------------------------------+
+      ./Example_Robust_Models_2D empty empty Data_2D_Output.txt 10 8 MaxSumMix 0 0 1 2 0.5 0 0 1 2 0 0 5 0.35 0.65
+                                                                ^  ^     ^     ^ ^ ^ ^  ^  ^ ^ ^ ^ ^ ^ ^  ^    ^
+                                                                |  |     |     | | | |  |  | | | | | | |  |    |
+                          Number of points (per dimension) -----+  |     |     | | | |  |  | | | | | | |  |    |
+                                           Range of points --------+     |     | | | |  |  | | | | | | |  |    |
+                                     Type of mixture model --------------+     \_/ | |  |  | | | | | | |  |    |
+                                           Mean of comp. 1 ---------------------+  \_/  |  | | | | | | |  |    |
+                                           Mean of comp. 2 -------------------------+   \______/ | | | |  |    |
+                             Standard deviation of comp. 1 --------------------------------+     \_____/  |    |
+                             Standard deviation of comp. 2 -----------------------------------------+     |    |
+                                         Weight of comp. 1 -----------------------------------------------+    |
+                                         Weight of comp. 2 ----------------------------------------------------+
 
 
 ### Point set Registration
