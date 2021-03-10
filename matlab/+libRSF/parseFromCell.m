@@ -64,37 +64,37 @@ for n = 1:size(ResultCell,1)
             ResultStruct.PositionID2.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,8:11)),[],2,2);
             
         case 'point_id3'
-                if ~isfield(ResultStruct,'PositionID3')
-                    ResultStruct.PositionID3 = [];
-                    ResultStruct.PositionID3.Time = [];
-                    ResultStruct.PositionID3.X = [];
-                    ResultStruct.PositionID3.Y = [];
-                    ResultStruct.PositionID3.Z = [];
-                    ResultStruct.PositionID3.ID = [];
-                    ResultStruct.PositionID3.Idx = [];
-                    ResultStruct.PositionID3.Conf = [];
-                    ResultStruct.PositionID3.Cov = [];
-                    ResultStruct.PositionID3.WLH = [];
-                    ResultStruct.PositionID3.R = [];
-                    ResultStruct.PositionID3.R_Quat = [];
-                    ResultStruct.PositionID3.ClassNum = [];
-                    ResultStruct.PositionID3.KeyNum = [];
-                    ResultStruct.PositionID3.Velocity = [];
-                end
-                ResultStruct.PositionID3.Time(end+1,1) = cell2mat(ResultCell(n,2));
-                ResultStruct.PositionID3.X(end+1,1) = cell2mat(ResultCell(n,3));
-                ResultStruct.PositionID3.Y(end+1,1) = cell2mat(ResultCell(n,4));
-                ResultStruct.PositionID3.Z(end+1,1) = cell2mat(ResultCell(n,5));
-                ResultStruct.PositionID3.ID(end+1,1) = cell2mat(ResultCell(n,6));
-                ResultStruct.PositionID3.Idx(end+1,1) = cell2mat(ResultCell(n,7));
-                ResultStruct.PositionID3.Conf(end+1,1) = cell2mat(ResultCell(n,8));
-                ResultStruct.PositionID3.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,9:17)),[],3,3);
-                ResultStruct.PositionID3.WLH(end+1,:)   = cell2mat(ResultCell(n,18:20));
-                ResultStruct.PositionID3.R(end+1,:)   = cell2mat(ResultCell(n,21));
-                ResultStruct.PositionID3.R_Quat(end+1,:)   = cell2mat(ResultCell(n,22:25));
-                ResultStruct.PositionID3.ClassNum(end+1,:)   = cell2mat(ResultCell(n,26));
-                ResultStruct.PositionID3.KeyNum(end+1,:)   = cell2mat(ResultCell(n,27));
-                ResultStruct.PositionID3.Velocity(end+1,:)   = cell2mat(ResultCell(n,28:30));
+            if ~isfield(ResultStruct,'PositionID3')
+                ResultStruct.PositionID3 = [];
+                ResultStruct.PositionID3.Time = [];
+                ResultStruct.PositionID3.X = [];
+                ResultStruct.PositionID3.Y = [];
+                ResultStruct.PositionID3.Z = [];
+                ResultStruct.PositionID3.ID = [];
+                ResultStruct.PositionID3.Idx = [];
+                ResultStruct.PositionID3.Conf = [];
+                ResultStruct.PositionID3.Cov = [];
+                ResultStruct.PositionID3.WLH = [];
+                ResultStruct.PositionID3.R = [];
+                ResultStruct.PositionID3.R_Quat = [];
+                ResultStruct.PositionID3.ClassNum = [];
+                ResultStruct.PositionID3.KeyNum = [];
+                ResultStruct.PositionID3.Velocity = [];
+            end
+            ResultStruct.PositionID3.Time(end+1,1) = cell2mat(ResultCell(n,2));
+            ResultStruct.PositionID3.X(end+1,1) = cell2mat(ResultCell(n,3));
+            ResultStruct.PositionID3.Y(end+1,1) = cell2mat(ResultCell(n,4));
+            ResultStruct.PositionID3.Z(end+1,1) = cell2mat(ResultCell(n,5));
+            ResultStruct.PositionID3.ID(end+1,1) = cell2mat(ResultCell(n,6));
+            ResultStruct.PositionID3.Idx(end+1,1) = cell2mat(ResultCell(n,7));
+            ResultStruct.PositionID3.Conf(end+1,1) = cell2mat(ResultCell(n,8));
+            ResultStruct.PositionID3.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,9:17)),[],3,3);
+            ResultStruct.PositionID3.WLH(end+1,:)   = cell2mat(ResultCell(n,18:20));
+            ResultStruct.PositionID3.R(end+1,:)   = cell2mat(ResultCell(n,21));
+            ResultStruct.PositionID3.R_Quat(end+1,:)   = cell2mat(ResultCell(n,22:25));
+            ResultStruct.PositionID3.ClassNum(end+1,:)   = cell2mat(ResultCell(n,26));
+            ResultStruct.PositionID3.KeyNum(end+1,:)   = cell2mat(ResultCell(n,27));
+            ResultStruct.PositionID3.Velocity(end+1,:)   = cell2mat(ResultCell(n,28:30));
             
         case 'point3'
             if ~isfield(ResultStruct,'Position3')
@@ -202,43 +202,37 @@ for n = 1:size(ResultCell,1)
             ResultStruct.Error6.Time(end+1,1) = cell2mat(ResultCell(n,2));
             ResultStruct.Error6.Mean(end+1,1:6) = cell2mat(ResultCell(n,3:8));
             
-        case 'cost_gradient'
-            Row = [ResultCell{n,2:end}];
-            TrueSize = length(rmmissing(Row));
-            
-            if TrueSize == 5 || TrueSize ==3
-                if ~isfield(ResultStruct,'Cost1')
-                    ResultStruct.Cost1 = [];
-                    ResultStruct.Cost1.Time = [];
-                    ResultStruct.Cost1.Position = [];
-                    ResultStruct.Cost1.Cost = [];
-                    ResultStruct.Cost1.Gradient = [];
-                    ResultStruct.Cost1.Hessian = [];
-                end
-                ResultStruct.Cost1.Time(end+1,1)     = cell2mat(ResultCell(n,2));
-                ResultStruct.Cost1.Position(end+1,1) = cell2mat(ResultCell(n,3));
-                ResultStruct.Cost1.Cost(end+1,1)     = cell2mat(ResultCell(n,4));
-                ResultStruct.Cost1.Gradient(end+1,1) = cell2mat(ResultCell(n,5));
-                ResultStruct.Cost1.Hessian(end+1,1) = cell2mat(ResultCell(n,6));
-                
-            elseif TrueSize == 10
-                if ~isfield(ResultStruct,'Cost2')
-                    ResultStruct.Cost2 = [];
-                    ResultStruct.Cost2.Time = [];
-                    ResultStruct.Cost2.Position = [];
-                    ResultStruct.Cost2.Cost = [];
-                    ResultStruct.Cost2.Gradient = [];
-                    ResultStruct.Cost2.Hessian = [];
-                end
-                ResultStruct.Cost2.Time(end+1,1)     = cell2mat(ResultCell(n,2));
-                ResultStruct.Cost2.Position(end+1,:) = cell2mat(ResultCell(n,3:4));
-                ResultStruct.Cost2.Cost(end+1,1)     = cell2mat(ResultCell(n,5));
-                ResultStruct.Cost2.Gradient(end+1,:) = cell2mat(ResultCell(n,6:7));
-                ResultStruct.Cost2.Hessian(end+1,:) = cell2mat(ResultCell(n,8:11));
-                
-            else
-                error(['Wrong cost size: ' num2str(TrueSize)]);
+        case 'cost_gradient1'
+            if ~isfield(ResultStruct,'Cost1')
+                ResultStruct.Cost1 = [];
+                ResultStruct.Cost1.Time = [];
+                ResultStruct.Cost1.Position = [];
+                ResultStruct.Cost1.Cost = [];
+                ResultStruct.Cost1.Gradient = [];
+                ResultStruct.Cost1.Hessian = [];
             end
+            ResultStruct.Cost1.Time(end+1,1)     = cell2mat(ResultCell(n,2));
+            ResultStruct.Cost1.Position(end+1,1) = cell2mat(ResultCell(n,3));
+            ResultStruct.Cost1.Cost(end+1,1)     = cell2mat(ResultCell(n,4));
+            ResultStruct.Cost1.Gradient(end+1,1) = cell2mat(ResultCell(n,5));
+            ResultStruct.Cost1.Hessian(end+1,1) = cell2mat(ResultCell(n,6));
+            
+        case 'cost_gradient2'
+            
+            
+            if ~isfield(ResultStruct,'Cost2')
+                ResultStruct.Cost2 = [];
+                ResultStruct.Cost2.Time = [];
+                ResultStruct.Cost2.Position = [];
+                ResultStruct.Cost2.Cost = [];
+                ResultStruct.Cost2.Gradient = [];
+                ResultStruct.Cost2.Hessian = [];
+            end
+            ResultStruct.Cost2.Time(end+1,1)     = cell2mat(ResultCell(n,2));
+            ResultStruct.Cost2.Position(end+1,:) = cell2mat(ResultCell(n,3:4));
+            ResultStruct.Cost2.Cost(end+1,1)     = cell2mat(ResultCell(n,5));
+            ResultStruct.Cost2.Gradient(end+1,:) = cell2mat(ResultCell(n,6:7));
+            ResultStruct.Cost2.Hessian(end+1,:) = cell2mat(ResultCell(n,8:11));
             
         case 'solver_summary'
             if ~isfield(ResultStruct,'SolverSummary')

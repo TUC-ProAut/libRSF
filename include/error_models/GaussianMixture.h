@@ -33,7 +33,7 @@
 #define GAUSSIANMIXTURE_H
 
 #include "GaussianComponent.h"
-#include "../StateData.h"
+#include "../Data.h"
 #include "../Misc.h"
 #include "../Messages.h"
 #include "../Statistics.h"
@@ -712,7 +712,7 @@ namespace libRSF
       }
 
       /** export GMM into state data for logging */
-      StateData exportToStateData(double Timestamp);
+      Data exportToStateData(double Timestamp);
 
     private:
       std::vector<GaussianComponent<Dim>> _Mixture;

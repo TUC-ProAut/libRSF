@@ -70,7 +70,7 @@ namespace libRSF
   double RSME(Vector V);
 
   /** absolute trajectory error (RMSE) */
-  double ATE(SensorType GTType,
+  double ATE(DataType GTType,
              SensorDataSet GT,
              std::string EstimateType,
              StateDataSet Estimate);

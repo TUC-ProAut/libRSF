@@ -52,12 +52,12 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      PseudorangeFactorBase(ErrorType &Error, const SensorData &Pseudorange)
+      PseudorangeFactorBase(ErrorType &Error, const Data &Pseudorange)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(Dim + 1);
         this->_MeasurementVector[0] = Pseudorange.getMean()[0];
-        this->_MeasurementVector.tail(Dim) = Pseudorange.getValue(SensorElement::SatPos);
+        this->_MeasurementVector.tail(Dim) = Pseudorange.getValue(DataElement::SatPos);
       }
 
       /** geometric error model */
@@ -93,12 +93,12 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      PseudorangeSagnacFactorBase(ErrorType &Error, const SensorData &Pseudorange)
+      PseudorangeSagnacFactorBase(ErrorType &Error, const Data &Pseudorange)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(Dim + 1);
         this->_MeasurementVector[0] = Pseudorange.getMean()[0];
-        this->_MeasurementVector.tail(Dim) = Pseudorange.getValue(SensorElement::SatPos);
+        this->_MeasurementVector.tail(Dim) = Pseudorange.getValue(DataElement::SatPos);
       }
 
       /** geometric error model */

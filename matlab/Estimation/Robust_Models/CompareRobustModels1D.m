@@ -64,7 +64,7 @@ for n = numel(ErrorModels):-1:1
         num2str(GMM.Mean(1,1)) ' ' num2str(GMM.Mean(2,1)) ' '...
         num2str(sqrt(GMM.Cov(1,1,1))) ' ' num2str(sqrt(GMM.Cov(1,1,2))) ' ' ...
         num2str(GMM.Weight(1)) ' ' num2str(GMM.Weight(2))];    
-    ResultCeres(n) = libRSF.wrapCeres([], Config, 'Example_Robust_Models_1D', 'Data_1D', true, false);
+    ResultCeres(n) = libRSF.wrapCeres([], Config, 'App_Robust_Models_1D', 'Data_1D', true, false);
 end
 
 %% assigne output

@@ -42,12 +42,12 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      RangeFactorBase(ErrorType &Error, const SensorData &Range)
+      RangeFactorBase(ErrorType &Error, const Data &Range)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(Dim + 1);
         this->_MeasurementVector[0] = Range.getMean()[0];
-        this->_MeasurementVector.tail(Dim) = Range.getValue(SensorElement::SatPos);
+        this->_MeasurementVector.tail(Dim) = Range.getValue(DataElement::SatPos);
       }
 
       /** geometric error model */

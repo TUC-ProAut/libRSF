@@ -32,6 +32,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include "DataConfig.h"
+
 #include <map>
 #include <iostream>
 
@@ -74,75 +76,71 @@ namespace libRSF
     Ranging, GNSS, ClockModel, Odometry, IMU, Radar, Laser, Vision, MotionModel, LoopClosure, Prior, Pressure
   };
 
-  /** types of state data */
-  enum class StateType {Point1, Point2, Point3,
-                        PointID2, PointID3,
-                        Pose2, Pose3,
-                        Quat, Angle, UnitCircle,
-                        GMM, Switch,
-                        Covariance1,
-                        Error1, Error2, Error3, Error6,
-                        Cost, CostGradient,
-                        ClockError, ClockDrift,
-                        IMUBias,
-                        IterationSummary};
-  enum class StateElement {Timestamp,
-                           Mean, Covariance,
+  /** types of data that have to be stored */
+  enum class DataType
+  {
+    Point1, Point2, Point3,                               /**< translation */
+    Quaternion, Angle, UnitCircle,                        /**< rotation */
+    Pose2, Pose3,                                         /**< translation + rotation*/
+    PointID2, PointID3,                                   /**< bounding boxes */
+    ClockError, ClockDrift,                               /**< GNSS receiver clock error */
+    IMUBias,                                              /**< IMU Speedbias [Vel, B_Acc, B_Gyr] */
+    GMM, Switch, Covariance1,                             /**< dynamic error models */
+    Range2, Range3,                                       /**< range to fixed point */
+    Pseudorange3, Pseudorange2,                           /**< GNSS pseudo-range */
+    Odom2, Odom3, Odom2Diff,                              /**< wheel based dometry */
+    Odom3Radar, Odom3Laser, Odom3VIO,                     /**< odometry based on other sensors */
+    Point2Radar,                                          /**< point with doppler velocity*/
+    Point1Set, Point2Set, Point3Set,                      /**< two corresponding points */
+    Point2SetRadar,                                       /**< two corresponding points with doppler */
+    LoopClosure,                                          /**< correspondence information */
+    AirPressure, AirPressureDiff,                         /**< barometric pressure */
+    IMU,                                                  /**< IM [Acc, Gyr] */
+    IterationSummary,                                     /**< timing of the optimizer */
+    Error1, Error2, Error3, Error6,                       /**< residuals of cost functions */
+    Cost, CostGradient1, CostGradient2, CostGradient3,    /**< cost of the optimizer */
+    Value1                                                /**< generic vector */
+  };
+
+  enum class DataElement  {Timestamp, TimestampRef,
+                           Mean, Covariance, CovarianceDiagonal,
+                           SatPos, SatElevation, SNR, SatID,
                            Cost, Gradient, Hessian,
                            Weight,
-                           TF,
+                           WheelBase, TF, Velocity,
                            Other,
-                           ID, Conf, Idx, WLH, R, R_Quat, Class, Key, Velocity,
+                           ID, BoxConf, Idx, BoxWLH, BoxAngle, BoxQuat, BoxClass, Key,
                            DurationSolver, DurationMarginal, DurationAdaptive, DurationTotal,
                            IterationSolver, IterationAdaptive};
 
-  enum class SensorType {Range2, Range3,
-                         Pseudorange3, Pseudorange2,
-                         Odom2, Odom3, Odom2Diff,
-                         Odom3Radar, Odom3Laser, Odom3VIO,
-                         Point1, Point2, Point3,
-                         Point2Radar,
-                         Point1Set, Point2Set, Point3Set,
-                         Point2SetRadar,
-                         PointID2, PointID3,
-                         Angle, Quaternion,
-                         Pose2, Pose3,
-                         LoopClosure,
-                         AirPressure, AirPressureDiff,
-                         IMU,
-                         Val1,
-                         Other};
-  enum class SensorElement {Timestamp, TimestampRef,
-                            Mean, StdDev, Covariance,
-                            SatPos, SatElevation, SNR, SatID,
-                            WheelBase, TF,
-                            ID, Conf, Idx, Velocity, WLH, R, R_Quat, Class, Key};
+  /** store the configuration of each data type in a global variable */
+  typedef DataConfig<DataType, DataElement> DataTypeConfig;
+  extern const DataTypeConfig GlobalDataConfig;
 
   /** cout enums */
-  std::ostream& operator << (std::ostream& Os, const SensorType& Type);
-  std::ostream& operator << (std::ostream& Os, const StateType& Type);
+  std::ostream& operator << (std::ostream& Os, const DataType& Type);
   std::ostream& operator << (std::ostream& Os, const FactorType& Type);
   std::ostream& operator << (std::ostream& Os, const SolutionType& Type);
   std::ostream& operator << (std::ostream& Os, const ErrorModelType& Type);
 
   /** dictionary to translate factor types into related sensor types */
-  const std::map<FactorType, SensorType> FactorSensorDict =
+  const std::map<FactorType, DataType> FactorSensorDict =
   {
-    {FactorType::Range2, SensorType::Range2},
-    {FactorType::Range3, SensorType::Range3},
-    {FactorType::BetweenPose2, SensorType::Pose2},
-    {FactorType::BetweenPose3, SensorType::Pose3},
-    {FactorType::Point2Reg, SensorType::Point2Set},
-    {FactorType::Pseudorange2, SensorType::Pseudorange2},
-    {FactorType::Pseudorange3, SensorType::Pseudorange3},
-    {FactorType::Pseudorange3_ECEF, SensorType::Pseudorange3},
-    {FactorType::IMUPretintegration, SensorType::IMU},
-    {FactorType::IMUSimple, SensorType::IMU},
-    {FactorType::Odom2, SensorType::Odom2},
-    {FactorType::Odom2Diff, SensorType::Odom2Diff},
-    {FactorType::Odom4_ECEF, SensorType::Odom3},
-    {FactorType::Odom4, SensorType::Odom3},
-    {FactorType::Odom6, SensorType::Odom3}
+    {FactorType::Range2, DataType::Range2},
+    {FactorType::Range3, DataType::Range3},
+    {FactorType::BetweenPose2, DataType::Pose2},
+    {FactorType::BetweenPose3, DataType::Pose3},
+    {FactorType::Point2Reg, DataType::Point2Set},
+    {FactorType::Pseudorange2, DataType::Pseudorange2},
+    {FactorType::Pseudorange3, DataType::Pseudorange3},
+    {FactorType::Pseudorange3_ECEF, DataType::Pseudorange3},
+    {FactorType::IMUPretintegration, DataType::IMU},
+    {FactorType::IMUSimple, DataType::IMU},
+    {FactorType::Odom2, DataType::Odom2},
+    {FactorType::Odom2Diff, DataType::Odom2Diff},
+    {FactorType::Odom4_ECEF, DataType::Odom3},
+    {FactorType::Odom4, DataType::Odom3},
+    {FactorType::Odom6, DataType::Odom3}
   };
 
   /** dictionaries translate strings (from files) to enums*/

@@ -21,10 +21,10 @@
  ***************************************************************************/
 
 /**
-* @file VectorTypes.h
+* @file Tensor.h
 * @author Tim Pfeifer
 * @date 19.05.2020
-* @brief Derived types for vectors, matrices and 2D/3D rotations.
+* @brief A very simplistic class to represent n-dimensional tensors. Just for storage.
 * @copyright GNU Public License.
 *
 */

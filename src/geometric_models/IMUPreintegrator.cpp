@@ -128,7 +128,7 @@ namespace libRSF
     return Result;
   }
 
-  void IMUPreintegrator::addMeasurement(const SensorData &IMUMeasurement)
+  void IMUPreintegrator::addMeasurement(const Data &IMUMeasurement)
   {
     /** add to measurement list and perform an integration step */
     _Measurements.emplace_back(IMUMeasurement);
@@ -175,7 +175,7 @@ namespace libRSF
     Matrix33 AccelerationCov;
     if(_NoiseDensityAcc <= 0.0)
     {
-      AccelerationCov = _Measurements.at(Index).getCovariance().head(3).asDiagonal();
+      AccelerationCov = _Measurements.at(Index).getCovarianceDiagonal().head(3).asDiagonal();
     }
     else
     {
@@ -185,7 +185,7 @@ namespace libRSF
     Matrix33 TurnRateCov ;
     if(_NoiseDensityGyro <= 0.0)
     {
-      TurnRateCov = _Measurements.at(Index).getCovariance().tail(3).asDiagonal();
+      TurnRateCov = _Measurements.at(Index).getCovarianceDiagonal().tail(3).asDiagonal();
     }
     else
     {

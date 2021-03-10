@@ -21,7 +21,7 @@
  ***************************************************************************/
 
  /**
-* @file Example_Robust_Models_2D.cpp
+* @file App_Robust_Models_2D.cpp
 * @author Tim Pfeifer
 * @date 27.08.2019
 * @brief An simple application to evaluate the robust error functions in 2D.
@@ -107,14 +107,14 @@ int main(int argc, char** argv)
   GMM.addComponent(Gaussian);
 
   /** create zero-measurement */
-  libRSF::SensorData AbsoluteMeasurement(libRSF::SensorType::Point2, 0.0);
+  libRSF::Data AbsoluteMeasurement(libRSF::DataType::Point2, 0.0);
   AbsoluteMeasurement.setMean(libRSF::Vector2::Zero());
 
   /** create initial values */
   libRSF::Vector InitialValues = libRSF::Vector::LinSpaced(NumberPoints, -Range / 2, Range / 2);
 
   /** add state to graph */
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 0.0);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 0.0);
 
   /** add factor to graph */
   if (ErrorModel.compare("Gaussian") == 0)
@@ -182,9 +182,9 @@ int main(int argc, char** argv)
       PostOptimizationData.addElement(POSITION_STATE, 0.0, SimpleGraph.getStateData().getElement(POSITION_STATE, 0.0));
 
       /** save solution information */
-      SolverData.addElement(SOLVE_TIME_STATE, libRSF::StateType::IterationSummary, 0.0);
-      SolverData.getElement(SOLVE_TIME_STATE, 0.0, nPointX*NumberPoints+nPointY).setValueScalar(libRSF::StateElement::DurationSolver, SimpleGraph.getSolverDurationAndReset());
-      SolverData.getElement(SOLVE_TIME_STATE, 0.0, nPointX*NumberPoints+nPointY).setValueScalar(libRSF::StateElement::IterationSolver, SimpleGraph.getSolverIterationsAndReset());
+      SolverData.addElement(SOLVE_TIME_STATE, libRSF::DataType::IterationSummary, 0.0);
+      SolverData.getElement(SOLVE_TIME_STATE, 0.0, nPointX*NumberPoints+nPointY).setValueScalar(libRSF::DataElement::DurationSolver, SimpleGraph.getSolverDurationAndReset());
+      SolverData.getElement(SOLVE_TIME_STATE, 0.0, nPointX*NumberPoints+nPointY).setValueScalar(libRSF::DataElement::IterationSolver, SimpleGraph.getSolverIterationsAndReset());
 
       libRSF::PrintProgress((100.0*nPointX)/NumberPoints);
     }
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
   }
 
   /** write everything to file */
-  libRSF::WriteDataToFile(Config.OutputFile, "cost_gradient", CostSurfaceData, false);
+  libRSF::WriteDataToFile(Config.OutputFile, "cost_gradient2", CostSurfaceData, false);
   libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, PreOptimizationData, true);
   libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, PostOptimizationData, true);
   libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, SolverData, true);

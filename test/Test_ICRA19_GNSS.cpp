@@ -52,7 +52,7 @@ TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
     libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", Gt);
 
     /** calculate RMSE */
-    double ate = libRSF::ATE(libRSF::SensorType::Point3, Gt, POSITION_STATE, Result);
+    double ate = libRSF::ATE(libRSF::DataType::Point3, Gt, POSITION_STATE, Result);
 
     std::cout << "ATE: " << ate << std::endl;
 

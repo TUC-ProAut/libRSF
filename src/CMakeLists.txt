@@ -30,10 +30,11 @@ list(APPEND HEADERFILES ../include/libRSF.h)
 # set source files for library
 set(SOURCEFILES
   Data.cpp
+  DataGeneric.cpp
+  DataConfig.cpp
+  DataStream.cpp
   DataSet.cpp
-  StateData.cpp
   StateDataSet.cpp
-  SensorData.cpp
   SensorDataSet.cpp
   FactorGraph.cpp
   FactorGraphConfig.cpp

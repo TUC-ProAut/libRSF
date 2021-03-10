@@ -33,7 +33,7 @@
 #define ODOMETRYINTEGRATOR_H
 
 #include "OdometryModel.h"
-#include "../SensorData.h"
+#include "../Data.h"
 
 namespace libRSF
 {
@@ -51,7 +51,7 @@ namespace libRSF
       void addMeasurement(const Vector3 &Velocity, const Vector3 &TurnRate,
                           const Vector3 &VelocityCov, const Vector3 &TurnRateCov,
                           const double DeltaTime);
-      void addMeasurement(const SensorData &Odom, const double DeltaTime);
+      void addMeasurement(const Data &Odom, const double DeltaTime);
 
       /** get results */
       void getPose(Vector3 &Translation, Quaternion &Rotation) const;

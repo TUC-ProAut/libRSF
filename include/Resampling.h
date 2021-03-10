@@ -21,7 +21,7 @@
  ***************************************************************************/
 
 /**
- * @file SensorData.h
+ * @file Resampling.h
  * @author Tim Pfeifer
  * @date 29.07.2019
  * @brief Helper Function to resample measurements;
@@ -39,9 +39,9 @@
 namespace libRSF
 {
   /** sample measurements down */
-  std::vector<SensorData> SampleMeasurementsDown(const std::vector<SensorData> &Input, const double SampleTime);
+  std::vector<Data> SampleMeasurementsDown(const std::vector<Data> &Input, const double SampleTime);
 
-  SensorData AverageMeasurement(const std::vector<SensorData> &Input);
+  Data AverageMeasurement(const std::vector<Data> &Input);
 }
 
 #endif // RESAMPLING_H

@@ -62,7 +62,7 @@ namespace libRSF
         {
           Covariance.GetCovarianceBlock(States.getElement(Type, Timestamp).getMeanPointer(),
                                         States.getElement(Type, Timestamp).getMeanPointer(),
-                                        States.getElement(Type, Timestamp).getDataPointer(StateElement::Covariance));
+                                        States.getElement(Type, Timestamp).getDataPointer(DataElement::Covariance));
         }
         while (States.getTimeNext(Type, Timestamp, Timestamp));
       }
@@ -111,7 +111,7 @@ namespace libRSF
         /** read covariance values to vector */
         Covariance.GetCovarianceBlock(States.getElement(Type, Timestamp, StateNumber).getMeanPointer(),
                                       States.getElement(Type, Timestamp, StateNumber).getMeanPointer(),
-                                      States.getElement(Type, Timestamp, StateNumber).getDataPointer(StateElement::Covariance));
+                                      States.getElement(Type, Timestamp, StateNumber).getDataPointer(DataElement::Covariance));
       }
       else if (Graph.NumParameterBlocks() < 100)
       {
@@ -130,7 +130,7 @@ namespace libRSF
           /** read covariance values to vector */
           CovarianceSVD.GetCovarianceBlock(States.getElement(Type, Timestamp, StateNumber).getMeanPointer(),
                                            States.getElement(Type, Timestamp, StateNumber).getMeanPointer(),
-                                           States.getElement(Type, Timestamp, StateNumber).getDataPointer(StateElement::Covariance));
+                                           States.getElement(Type, Timestamp, StateNumber).getDataPointer(DataElement::Covariance));
         }
       }
       else

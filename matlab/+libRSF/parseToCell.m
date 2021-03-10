@@ -58,7 +58,7 @@ end
 
 QuatCell = cell(0,MaxCellWidth);
 if isfield(Data,'Quaternion')
-    [QuatCell{1:length(Data.Quaternion.Time),1}]    = deal('quat');
+    [QuatCell{1:length(Data.Quaternion.Time),1}]    = deal('quaternion');
     QuatCell(:,2)                                 = num2cell(Data.Quaternion.Time);
     QuatCell(:,3)                                 = num2cell(Data.Quaternion.X);
     QuatCell(:,4)                                 = num2cell(Data.Quaternion.Y);

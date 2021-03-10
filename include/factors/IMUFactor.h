@@ -42,7 +42,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      IMUFactor(ErrorType &Error, const SensorData &IMUMeasurement, double DeltaTime)
+      IMUFactor(ErrorType &Error, const Data &IMUMeasurement, double DeltaTime)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(6);

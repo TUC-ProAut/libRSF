@@ -42,7 +42,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      BetweenValueFactorBase(ErrorType &Error, const SensorData &Measurement)
+      BetweenValueFactorBase(ErrorType &Error, const Data &Measurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(Dim);

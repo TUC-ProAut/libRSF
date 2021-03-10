@@ -49,12 +49,12 @@ void InitGraph(libRSF::FactorGraph &Graph,
 {
   /** build simple graph */
   libRSF::FactorGraph SimpleGraph;
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, TimestampFirst);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, TimestampFirst);
 
   /** add multiple range measurements to get useful initialization */
   double Timestamp;
   libRSF::StateList ListRange;
-  libRSF::SensorData Range;
+  libRSF::Data Range;
   libRSF::GaussianDiagonal<1> NoiseRange;
 
   ListRange.add(POSITION_STATE, TimestampFirst);
@@ -62,11 +62,11 @@ void InitGraph(libRSF::FactorGraph &Graph,
 
   for(int i = 0; i < 4; ++i)
   {
-    Range = Measurements.getElement(libRSF::SensorType::Range2, Timestamp);
-    NoiseRange.setStdDevDiagonal(Range.getStdDev());
+    Range = Measurements.getElement(libRSF::DataType::Range2, Timestamp);
+    NoiseRange.setStdDevDiagonal(Range.getStdDevDiagonal());
     SimpleGraph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange);
 
-    Measurements.getTimeNext(libRSF::SensorType::Range2, Timestamp, Timestamp);
+    Measurements.getTimeNext(libRSF::DataType::Range2, Timestamp, Timestamp);
   }
 
   /** solve */
@@ -75,8 +75,8 @@ void InitGraph(libRSF::FactorGraph &Graph,
   SimpleGraph.solve(Options);
 
   /**add first state variables */
-  Graph.addState(POSITION_STATE, libRSF::StateType::Point2, TimestampFirst);
-  Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, TimestampFirst);
+  Graph.addState(POSITION_STATE, libRSF::DataType::Point2, TimestampFirst);
+  Graph.addState(ORIENTATION_STATE, libRSF::DataType::Angle, TimestampFirst);
 
   /** copy values to real graph */
   Graph.getStateData().getElement(POSITION_STATE, TimestampFirst).setMean(SimpleGraph.getStateData().getElement(POSITION_STATE, TimestampFirst).getMean());
@@ -101,7 +101,7 @@ void AddRangeMeasurements2D(libRSF::FactorGraph &Graph,
                             double Timestamp)
 {
   libRSF::StateList ListRange;
-  libRSF::SensorData Range;
+  libRSF::Data Range;
   libRSF::GaussianDiagonal<1> NoiseRange;
 
   ListRange.add(POSITION_STATE, Timestamp);
@@ -112,24 +112,24 @@ void AddRangeMeasurements2D(libRSF::FactorGraph &Graph,
                                          (libRSF::Vector2() << 0.5, 0.5).finished());
 
   /** get measurement */
-  Range = Measurements.getElement(libRSF::SensorType::Range2, Timestamp, 0);
+  Range = Measurements.getElement(libRSF::DataType::Range2, Timestamp, 0);
 
   /** add factor */
   switch(Config.Ranging.ErrorModel.Type)
   {
     case libRSF::ErrorModelType::Gaussian:
-      NoiseRange.setStdDevDiagonal(Range.getStdDev());
+      NoiseRange.setStdDevDiagonal(Range.getStdDevDiagonal());
       Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange);
       break;
 
     case libRSF::ErrorModelType::DCS:
-      NoiseRange.setStdDevDiagonal(Range.getStdDev());
+      NoiseRange.setStdDevDiagonal(Range.getStdDevDiagonal());
       Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange, new libRSF::DCSLoss(1.0));
       break;
 
     case libRSF::ErrorModelType::cDCE:
       NoiseRange.setStdDevDiagonal(libRSF::Matrix11::Ones());
-      Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange, new libRSF::cDCELoss(Range.getStdDev()[0]));
+      Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRange, new libRSF::cDCELoss(Range.getStdDevDiagonal()[0]));
       break;
 
     case libRSF::ErrorModelType::GMM:
@@ -301,11 +301,11 @@ int main(int argc, char** argv)
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
   libRSF::StateDataSet Result;
-  libRSF::SensorData DeltaTime;
+  libRSF::Data DeltaTime;
 
   double Timestamp = 0.0, TimestampFirst = 0.0, TimestampOld = 0.0, TimestampLast = 0.0;
-  InputData.getTimeFirst(libRSF::SensorType::Range2, TimestampFirst);
-  InputData.getTimeLast(libRSF::SensorType::Range2, TimestampLast);
+  InputData.getTimeFirst(libRSF::DataType::Range2, TimestampFirst);
+  InputData.getTimeLast(libRSF::DataType::Range2, TimestampLast);
   Timestamp = TimestampFirst;
   TimestampOld = TimestampFirst;
   int nTimestamp = 0;
@@ -320,17 +320,17 @@ int main(int argc, char** argv)
   Result.addElement(POSITION_STATE, Graph.getStateData().getElement(POSITION_STATE, Timestamp, 0));
 
   /** get odometry noise from first measurement */
-  libRSF::SensorData Odom = InputData.getElement(libRSF::SensorType::Odom2Diff, Timestamp);
+  libRSF::Data Odom = InputData.getElement(libRSF::DataType::Odom2Diff, Timestamp);
   libRSF::GaussianDiagonal<3> NoiseOdom2Diff;
-  NoiseOdom2Diff.setStdDevDiagonal(Odom.getStdDev());
+  NoiseOdom2Diff.setStdDevDiagonal(Odom.getStdDevDiagonal());
 
   /** iterate over timestamps */
-  while(InputData.getTimeNext(libRSF::SensorType::Range2, Timestamp, Timestamp))
+  while(InputData.getTimeNext(libRSF::DataType::Range2, Timestamp, Timestamp))
   {
 
     /** add required states */
-    Graph.addState(POSITION_STATE, libRSF::StateType::Point2, Timestamp);
-    Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, Timestamp);
+    Graph.addState(POSITION_STATE, libRSF::DataType::Point2, Timestamp);
+    Graph.addState(ORIENTATION_STATE, libRSF::DataType::Angle, Timestamp);
 
     /** add motion model or odometry */
     libRSF::StateList MotionList;
@@ -338,7 +338,7 @@ int main(int argc, char** argv)
     MotionList.add(ORIENTATION_STATE, TimestampOld);
     MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, Timestamp);
-    Graph.addFactor<libRSF::FactorType::Odom2Diff>(MotionList, InputData.getElement(libRSF::SensorType::Odom2Diff, Timestamp), NoiseOdom2Diff);
+    Graph.addFactor<libRSF::FactorType::Odom2Diff>(MotionList, InputData.getElement(libRSF::DataType::Odom2Diff, Timestamp), NoiseOdom2Diff);
 
     /** add all range measurements of with current timestamp */
     AddRangeMeasurements2D(Graph, InputData, Config, Timestamp);

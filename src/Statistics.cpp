@@ -47,7 +47,7 @@ namespace libRSF
     return sqrt(V.squaredNorm() / V.size());
   }
 
-  double ATE(SensorType TypeGT,
+  double ATE(DataType TypeGT,
              SensorDataSet GT,
              std::string TypeEstiamte,
              StateDataSet Estimate)

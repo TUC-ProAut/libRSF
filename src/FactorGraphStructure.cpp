@@ -33,7 +33,7 @@ namespace libRSF
                                               std::vector<int> &StateDims,
                                               std::vector<int> &StateDimsLocal,
                                               std::vector<StateID> &StateIDs,
-                                              std::vector<StateType> &StateTypes) const
+                                              std::vector<DataType> &StateTypes) const
   {
     /** sets to store unique values */
     std::set<double*> BaseStatePointers;
@@ -233,7 +233,14 @@ namespace libRSF
     double StartTime;
     if(_FactorList.getTimeFirst(Type, StartTime))
     {
-      this->getTimesBetween(Type, StartTime, EndTime, Times);
+      if(StartTime <= EndTime)
+      {
+        this->getTimesBetween(Type, StartTime, EndTime, Times);
+      }
+      else
+      {
+        PRINT_WARNING("There is now element of type ", Type, " below timestamp ", EndTime, ".");
+      }
     }
   }
 

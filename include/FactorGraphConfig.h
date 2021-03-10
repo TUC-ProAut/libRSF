@@ -33,7 +33,6 @@
 #define FACTORGRAPHCONFIG_H
 
 #include "FactorGraph.h"
-#include "SensorData.h"
 #include "Messages.h"
 #include "Types.h"
 
@@ -104,7 +103,7 @@ namespace libRSF
       /** time handling */
       bool IsAsync;
       double AsyncRate;
-      SensorType SyncSensor;
+      DataType SyncSensor;
 
       /** covariance estimation */
       bool EstimateCov;

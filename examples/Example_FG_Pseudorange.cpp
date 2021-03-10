@@ -34,7 +34,7 @@
 /** use define to prevent typos*/
 #define POSITION_STATE "Position"
 #define OFFSET_STATE "Offset"
-#define PSEUDORANGE_MEASUREMENT libRSF::SensorType::Pseudorange2
+#define PSEUDORANGE_MEASUREMENT libRSF::DataType::Pseudorange2
 
 #define STDDEV_RANGE  0.1
 #define STDDEV_CCE    1.0
@@ -67,11 +67,11 @@ void CreateData (libRSF::SensorDataSet &RangeMeasurements)
       Range[0] = (SatPositions.at(j) - EgoPositions.at(i)).norm() + Distribution(Generator) + OFFSET;
       SatID << j;
 
-      libRSF::SensorData PseudorangeMasurement(libRSF::SensorType::Pseudorange2, i);
+      libRSF::Data PseudorangeMasurement(libRSF::DataType::Pseudorange2, i);
       PseudorangeMasurement.setMean(Range);
-      PseudorangeMasurement.setStdDev(StdDev);
-      PseudorangeMasurement.setValue(libRSF::SensorElement::SatPos, SatPositions.at(j));
-      PseudorangeMasurement.setValue(libRSF::SensorElement::SatID, SatID);
+      PseudorangeMasurement.setStdDevDiagonal(StdDev);
+      PseudorangeMasurement.setValue(libRSF::DataElement::SatPos, SatPositions.at(j));
+      PseudorangeMasurement.setValue(libRSF::DataElement::SatID, SatID);
 
       RangeMeasurements.addElement(PseudorangeMasurement);
     }
@@ -111,10 +111,10 @@ int main(int ArgC, char** ArgV)
   do
   {
     /** add position variables to graph */
-    SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, Time);
+    SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, Time);
 
     /** add offset variables to graph */
-    SimpleGraph.addState(OFFSET_STATE, libRSF::StateType::ClockError, Time);
+    SimpleGraph.addState(OFFSET_STATE, libRSF::DataType::ClockError, Time);
 
     RangeList.add(POSITION_STATE, Time);
     RangeList.add(OFFSET_STATE, Time);

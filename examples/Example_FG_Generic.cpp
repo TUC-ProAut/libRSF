@@ -50,10 +50,10 @@ int main(int ArgC, char** ArgV)
   SolverOptions.minimizer_progress_to_stdout = true;
 
   /** add states to graph */
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 0);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 1);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 2);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 3);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 0);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 1);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 2);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 3);
 
   /** set initial values values */
   libRSF::Vector2 StateVect;
@@ -89,7 +89,7 @@ int main(int ArgC, char** ArgV)
   NoisePrior.setCovarianceMatrix(CovMat);
 
   /** add absolute measurement factor*/
-  libRSF::SensorData AbsoluteMeasurement(libRSF::SensorType::Point2, 1.0);
+  libRSF::Data AbsoluteMeasurement(libRSF::DataType::Point2, 1.0);
   AbsoluteMeasurement.setMean(StateVect * 4.2);
   SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 1.0), AbsoluteMeasurement, NoisePrior);
 

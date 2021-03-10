@@ -42,7 +42,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      BetweenQuaternionFactor(ErrorType &Error, const SensorData &QuaternionMeasurement)
+      BetweenQuaternionFactor(ErrorType &Error, const Data &QuaternionMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(4);

@@ -42,7 +42,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      OdometryFactor2D(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
+      OdometryFactor2D(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(3);

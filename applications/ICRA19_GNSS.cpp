@@ -52,18 +52,18 @@ void InitGraph(libRSF::FactorGraph &Graph,
   SimpleConfig.GNSS.ErrorModel.Type = libRSF::ErrorModelType::Gaussian;
   libRSF::FactorGraph SimpleGraph;
 
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point3, TimestampFirst);
-  SimpleGraph.addState(CLOCK_ERROR_STATE, libRSF::StateType::ClockError, TimestampFirst);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point3, TimestampFirst);
+  SimpleGraph.addState(CLOCK_ERROR_STATE, libRSF::DataType::ClockError, TimestampFirst);
   AddPseudorangeMeasurements(SimpleGraph, Measurements, SimpleConfig, TimestampFirst);
 
   /** solve */
   SimpleGraph.solve(Options);
 
   /**add first state variables */
-  Graph.addState(POSITION_STATE, libRSF::StateType::Point3, TimestampFirst);
-  Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::ClockError, TimestampFirst);
-  Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::ClockDrift, TimestampFirst);
-  Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, TimestampFirst);
+  Graph.addState(POSITION_STATE, libRSF::DataType::Point3, TimestampFirst);
+  Graph.addState(CLOCK_ERROR_STATE, libRSF::DataType::ClockError, TimestampFirst);
+  Graph.addState(CLOCK_DRIFT_STATE, libRSF::DataType::ClockDrift, TimestampFirst);
+  Graph.addState(ORIENTATION_STATE, libRSF::DataType::Angle, TimestampFirst);
 
   /** copy values to real graph */
   Graph.getStateData().getElement(POSITION_STATE, TimestampFirst).setMean(SimpleGraph.getStateData().getElement(POSITION_STATE, TimestampFirst).getMean());
@@ -90,18 +90,18 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
                                 double Timestamp)
 {
   libRSF::StateList ListPseudorange;
-  libRSF::SensorData Pseudorange;
+  libRSF::Data Pseudorange;
   libRSF::GaussianDiagonal<1> NoisePseudorange;
 
   ListPseudorange.add(POSITION_STATE, Timestamp);
   ListPseudorange.add(CLOCK_ERROR_STATE, Timestamp);
 
-  int SatNumber = Measurements.countElement(libRSF::SensorType::Pseudorange3, Timestamp);
+  int SatNumber = Measurements.countElement(libRSF::DataType::Pseudorange3, Timestamp);
 
   for(int SatCounter = 0; SatCounter < SatNumber; ++SatCounter)
   {
     /** get measurement */
-    Pseudorange = Measurements.getElement(libRSF::SensorType::Pseudorange3, Timestamp, SatCounter);
+    Pseudorange = Measurements.getElement(libRSF::DataType::Pseudorange3, Timestamp, SatCounter);
 
     /** default error model */
     static libRSF::GaussianMixture<1> GMM((libRSF::Vector2() << 0, 0).finished(),
@@ -112,18 +112,18 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
     switch(Config.GNSS.ErrorModel.Type)
     {
       case libRSF::ErrorModelType::Gaussian:
-        NoisePseudorange.setStdDevDiagonal(Pseudorange.getStdDev());
+        NoisePseudorange.setStdDevDiagonal(Pseudorange.getStdDevDiagonal());
         Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorange);
         break;
 
       case libRSF::ErrorModelType::DCS:
-        NoisePseudorange.setStdDevDiagonal(Pseudorange.getStdDev());
+        NoisePseudorange.setStdDevDiagonal(Pseudorange.getStdDevDiagonal());
         Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::DCSLoss(1.0));
         break;
 
       case libRSF::ErrorModelType::cDCE:
         NoisePseudorange.setStdDevDiagonal(libRSF::Matrix11::Ones());
-        Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::cDCELoss(Pseudorange.getStdDev()[0]));
+        Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorange, new libRSF::cDCELoss(Pseudorange.getStdDevDiagonal()[0]));
         break;
 
       case libRSF::ErrorModelType::GMM:
@@ -296,11 +296,11 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
 
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
-  libRSF::SensorData DeltaTime;
+  libRSF::Data DeltaTime;
 
   double Timestamp, TimestampFirst = 0.0, TimestampOld, TimestampLast;
-  InputData.getTimeFirst(libRSF::SensorType::Pseudorange3, TimestampFirst);
-  InputData.getTimeLast(libRSF::SensorType::Pseudorange3, TimestampLast);
+  InputData.getTimeFirst(libRSF::DataType::Pseudorange3, TimestampFirst);
+  InputData.getTimeLast(libRSF::DataType::Pseudorange3, TimestampLast);
   Timestamp = TimestampFirst;
   TimestampOld = TimestampFirst;
   int nTimestamp = 0;
@@ -317,9 +317,9 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   Result.addElement(POSITION_STATE, Graph.getStateData().getElement(POSITION_STATE, Timestamp, 0));
 
   /** get odometry noise from first measurement */
-  libRSF::SensorData Odom = InputData.getElement(libRSF::SensorType::Odom3, Timestamp);
+  libRSF::Data Odom = InputData.getElement(libRSF::DataType::Odom3, Timestamp);
   libRSF::Vector4 StdOdom4DOF(4);
-  StdOdom4DOF << Odom.getStdDev().head(3), Odom.getStdDev().tail(1);
+  StdOdom4DOF << Odom.getStdDevDiagonal().head(3), Odom.getStdDevDiagonal().tail(1);
   libRSF::GaussianDiagonal<4> NoiseOdom4DOF;
   NoiseOdom4DOF.setStdDevDiagonal(StdOdom4DOF);
 
@@ -337,14 +337,14 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   NoiseCCED.setStdDevDiagonal(StdCCED);
 
   /** iterate over timestamps */
-  while(InputData.getTimeNext(libRSF::SensorType::Pseudorange3, Timestamp, Timestamp))
+  while(InputData.getTimeNext(libRSF::DataType::Pseudorange3, Timestamp, Timestamp))
   {
 
     /** add position, orientation and clock error */
-    Graph.addState(POSITION_STATE, libRSF::StateType::Point3, Timestamp);
-    Graph.addState(ORIENTATION_STATE, libRSF::StateType::Angle, Timestamp);
-    Graph.addState(CLOCK_ERROR_STATE, libRSF::StateType::ClockError, Timestamp);
-    Graph.addState(CLOCK_DRIFT_STATE, libRSF::StateType::ClockDrift, Timestamp);
+    Graph.addState(POSITION_STATE, libRSF::DataType::Point3, Timestamp);
+    Graph.addState(ORIENTATION_STATE, libRSF::DataType::Angle, Timestamp);
+    Graph.addState(CLOCK_ERROR_STATE, libRSF::DataType::ClockError, Timestamp);
+    Graph.addState(CLOCK_DRIFT_STATE, libRSF::DataType::ClockDrift, Timestamp);
 
     /** add odometry */
     libRSF::StateList MotionList;
@@ -352,7 +352,7 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
     MotionList.add(ORIENTATION_STATE, TimestampOld);
     MotionList.add(POSITION_STATE, Timestamp);
     MotionList.add(ORIENTATION_STATE, Timestamp);
-    Graph.addFactor<libRSF::FactorType::Odom4_ECEF>(MotionList, InputData.getElement(libRSF::SensorType::Odom3, Timestamp), NoiseOdom4DOF);
+    Graph.addFactor<libRSF::FactorType::Odom4_ECEF>(MotionList, InputData.getElement(libRSF::DataType::Odom3, Timestamp), NoiseOdom4DOF);
 
     /** add clock drift model */
     libRSF::StateList ClockList;

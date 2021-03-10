@@ -44,8 +44,8 @@ Feel free to try them out and to play with the configuration parameter at the be
 If you do not want to use Matlab, you can also execute the compiled binaries directly. 
 Since this examples use just a small subset of functionalities from the libRSF, it is important to mention that some input/output/config parameters are not used. To run both examples, the same following syntax have to be applied:
 
-      libRSF/build/examples/Example_Robust_Models_1D  empty empty  <output file> <number points> <range points> <error model> <model parameters>
-      libRSF/build/examples/Example_Robust_Models_2D  empty empty  <output file> <number points> <range points> <error model> <model parameters>
+      libRSF/build/applications/App_Robust_Models_1D  empty empty  <output file> <number points> <range points> <error model> <model parameters>
+      libRSF/build/applications/App_Robust_Models_2D  empty empty  <output file> <number points> <range points> <error model> <model parameters>
 
 - the parameters start with two placeholder strings **"empty"** that are separated by a space. These are required for compatibility reasons.
 
@@ -144,18 +144,18 @@ Since this examples use just a small subset of functionalities from the libRSF, 
 
 A full example could be:
 
-      ./Example_Robust_Models_2D empty empty Data_2D_Output.txt 10 8 MaxSumMix 0 0 1 2 0.5 0 0 1 2 0 0 5 0.35 0.65
-                                                                ^  ^     ^     ^ ^ ^ ^  ^  ^ ^ ^ ^ ^ ^ ^  ^    ^
-                                                                |  |     |     | | | |  |  | | | | | | |  |    |
-                          Number of points (per dimension) -----+  |     |     | | | |  |  | | | | | | |  |    |
-                                           Range of points --------+     |     | | | |  |  | | | | | | |  |    |
-                                     Type of mixture model --------------+     \_/ | |  |  | | | | | | |  |    |
-                                           Mean of comp. 1 ---------------------+  \_/  |  | | | | | | |  |    |
-                                           Mean of comp. 2 -------------------------+   \______/ | | | |  |    |
-                             Standard deviation of comp. 1 --------------------------------+     \_____/  |    |
-                             Standard deviation of comp. 2 -----------------------------------------+     |    |
-                                         Weight of comp. 1 -----------------------------------------------+    |
-                                         Weight of comp. 2 ----------------------------------------------------+
+      ./App_Robust_Models_2D empty empty Data_2D_Output.txt 10 8 MaxSumMix 0 0 1 2 0.5 0 0 1 2 0 0 5 0.35 0.65
+                                                            ^  ^     ^     ^ ^ ^ ^  ^  ^ ^ ^ ^ ^ ^ ^  ^    ^
+                                                            |  |     |     | | | |  |  | | | | | | |  |    |
+                      Number of points (per dimension) -----+  |     |     | | | |  |  | | | | | | |  |    |
+                                       Range of points --------+     |     | | | |  |  | | | | | | |  |    |
+                                 Type of mixture model --------------+     \_/ | |  |  | | | | | | |  |    |
+                                       Mean of comp. 1 ---------------------+  \_/  |  | | | | | | |  |    |
+                                       Mean of comp. 2 -------------------------+   \______/ | | | |  |    |
+                         Standard deviation of comp. 1 --------------------------------+     \_____/  |    |
+                         Standard deviation of comp. 2 -----------------------------------------+     |    |
+                                     Weight of comp. 1 -----------------------------------------------+    |
+                                     Weight of comp. 2 ----------------------------------------------------+
 
 
 ### Point set Registration

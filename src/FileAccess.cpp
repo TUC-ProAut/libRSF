@@ -27,7 +27,7 @@ namespace libRSF
 {
 
   void ReadDataFromFile(const string Filename,
-                        SensorDataSet& Data)
+                        SensorDataSet& SensorData)
   {
     string Buffer;
     std::ifstream File;
@@ -37,7 +37,7 @@ namespace libRSF
 
     while(Buffer.length() > 0)
     {
-      Data.addElement(SensorData(Buffer));
+      SensorData.addElement(Data(Buffer));
       std::getline(File, Buffer);
     }
 
@@ -46,12 +46,12 @@ namespace libRSF
 
   void WriteDataToFile(const string Filename,
                        const string DataName,
-                       const StateDataSet& Data,
+                       const StateDataSet& SensorData,
                        const bool Append)
   {
     double Timestamp;
 
-    if(!Data.getTimeFirst(DataName,Timestamp))
+    if(!SensorData.getTimeFirst(DataName,Timestamp))
       return;
 
     std::ofstream File;
@@ -67,15 +67,15 @@ namespace libRSF
 
     do
     {
-      int NumberOfStates = Data.countElement(DataName,Timestamp);
+      int NumberOfStates = SensorData.countElement(DataName,Timestamp);
       for (int nState = 0; nState < NumberOfStates; ++nState)
       {
-        StateData State;
-        Data.getElement(DataName, Timestamp, nState, State);
+        Data State;
+        SensorData.getElement(DataName, Timestamp, nState, State);
         File << State.getName() << ' ' << State.getValueString() << std::endl;
       }
     }
-    while(Data.getTimeNext(DataName, Timestamp, Timestamp));
+    while(SensorData.getTimeNext(DataName, Timestamp, Timestamp));
 
     File.close();
   }

@@ -84,14 +84,14 @@ int main(int ArgC, char** ArgV)
   PoseVec1 << PosVec1, Quat1.vec(), Quat1.w();
 
   /** create state objects as GT */
-  libRSF::StateData StatePos0 (libRSF::StateType::Point3, 0.0);
+  libRSF::Data StatePos0 (libRSF::DataType::Point3, 0.0);
   StatePos0.setMean(PosVec0);
-  libRSF::StateData StatePos1 (libRSF::StateType::Point3, 1.0);
+  libRSF::Data StatePos1 (libRSF::DataType::Point3, 1.0);
   StatePos1.setMean(PosVec1);
 
-  libRSF::StateData StateRot0 (libRSF::StateType::Quat, 0.0);
+  libRSF::Data StateRot0 (libRSF::DataType::Quaternion, 0.0);
   StateRot0.setMean(RotVec0);
-  libRSF::StateData StateRot1 (libRSF::StateType::Quat, 1.0);
+  libRSF::Data StateRot1 (libRSF::DataType::Quaternion, 1.0);
   StateRot1.setMean(RotVec1);
 
   /** calculate relative transformations */
@@ -102,20 +102,20 @@ int main(int ArgC, char** ArgV)
   PoseVecRel << Quat0.conjugate()*PosVecRel, QuatRel.vec(), QuatRel.w();
 
   /** create measurement objects */
-  libRSF::SensorData Pos0(libRSF::SensorType::Point3, 0.0);
-  libRSF::SensorData PosRel(libRSF::SensorType::Point3, 1.0);
+  libRSF::Data Pos0(libRSF::DataType::Point3, 0.0);
+  libRSF::Data PosRel(libRSF::DataType::Point3, 1.0);
 
   Pos0.setMean(PosVec0);
   PosRel.setMean(PosVecRel);
 
-  libRSF::SensorData Rot0(libRSF::SensorType::Quaternion, 0.0);
-  libRSF::SensorData RotRel(libRSF::SensorType::Quaternion, 1.0);
+  libRSF::Data Rot0(libRSF::DataType::Quaternion, 0.0);
+  libRSF::Data RotRel(libRSF::DataType::Quaternion, 1.0);
 
   Rot0.setMean(RotVec0);
   RotRel.setMean((libRSF::Vector4() << QuatRel.vec(), QuatRel.w()).finished());
 
-  libRSF::SensorData Pose0(libRSF::SensorType::Pose3, 0.0);
-  libRSF::SensorData PoseRel(libRSF::SensorType::Pose3, 1.0);
+  libRSF::Data Pose0(libRSF::DataType::Pose3, 0.0);
+  libRSF::Data PoseRel(libRSF::DataType::Pose3, 1.0);
 
   Pose0.setMean(PoseVec0);
   PoseRel.setMean(PoseVecRel);
@@ -126,11 +126,11 @@ int main(int ArgC, char** ArgV)
   libRSF::FactorGraph PoseGraph;
 
   /** add states */
-  PositionGraph.addState(POSITION_STATE, libRSF::StateType::Point3, 0.0);
-  PositionGraph.addState(POSITION_STATE, libRSF::StateType::Point3, 1.0);
+  PositionGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 0.0);
+  PositionGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 1.0);
 
-  RotationGraph.addState(ROTATION_STATE, libRSF::StateType::Quat, 0.0);
-  RotationGraph.addState(ROTATION_STATE, libRSF::StateType::Quat, 1.0);
+  RotationGraph.addState(ROTATION_STATE, libRSF::DataType::Quaternion, 0.0);
+  RotationGraph.addState(ROTATION_STATE, libRSF::DataType::Quaternion, 1.0);
 
   /** add factors */
   libRSF::StateID IDPos0(POSITION_STATE, 0.0, 0);

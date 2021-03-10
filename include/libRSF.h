@@ -43,6 +43,7 @@
 #include "Resampling.h"
 #include "TimeMeasurement.h"
 #include "geometric_models/OdometryIntegrator.h"
+#include "geometric_models/IMUPreintegrator.h"
 #include "Statistics.h"
 
 #endif // LIBRSF_H_INCLUDED

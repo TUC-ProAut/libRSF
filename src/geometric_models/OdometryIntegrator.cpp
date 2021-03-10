@@ -86,10 +86,10 @@ namespace libRSF
     RotationCov = JacQuat * this->_PoseCov.bottomRightCorner<4,4>() * JacQuat.transpose();
   }
 
-  void OdometryIntegrator::addMeasurement(const libRSF::SensorData &Odom, const double DeltaTime)
+  void OdometryIntegrator::addMeasurement(const libRSF::Data &Odom, const double DeltaTime)
   {
     this->addMeasurement(Odom.getMean().head(3), Odom.getMean().tail(3),
-                         Odom.getCovariance().head(3), Odom.getCovariance().tail(3),
+                         Odom.getCovarianceDiagonal().head(3), Odom.getCovarianceDiagonal().tail(3),
                          DeltaTime);
   }
 

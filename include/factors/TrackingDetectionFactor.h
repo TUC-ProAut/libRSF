@@ -44,7 +44,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(3);
@@ -77,7 +77,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionRotFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(5);
@@ -118,7 +118,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionDimFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionDimFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(6);
@@ -159,7 +159,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionVelFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionVelFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(6);
@@ -200,7 +200,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionDimRotFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionDimRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(8);
@@ -245,7 +245,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionVelRotFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionVelRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(8);
@@ -290,7 +290,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionVelDimFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionVelDimFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(9);
@@ -335,7 +335,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      TrackingDetectionVelDimRotFactor(ErrorType &Error, const SensorData &PriorMeasurement)
+      TrackingDetectionVelDimRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(11);

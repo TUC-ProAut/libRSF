@@ -53,7 +53,7 @@ namespace libRSF
         size_t operator() (const UniqueID &Object) const
         {
           size_t H1 = std::hash<size_t>()(static_cast<size_t>(Object.ID));
-          size_t H2 = std::hash<double>()(Object.Timestamp);
+          size_t H2 = std::hash<double>()(roundToTick(Object.Timestamp));
           size_t H3 = std::hash<size_t>()(Object.Number);
 
           return H1 ^ H2 ^ H3;

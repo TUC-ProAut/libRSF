@@ -60,10 +60,10 @@ namespace libRSF
     bool isInitialized();
 
     /** element-wise interface */
-    void convertMeasurementToLocal(SensorData &Measurement);
-    void convertMeasurementToGlobal(SensorData &Measurement);
-    void convertStateToLocal(StateData &State);
-    void convertStateToGlobal(StateData &State);
+    void convertMeasurementToLocal(Data &Measurement);
+    void convertMeasurementToGlobal(Data &Measurement);
+    void convertStateToLocal(Data &State);
+    void convertStateToGlobal(Data &State);
 
     /** batch interface */
     void convertAllPseudorangesToLocal(SensorDataSet &Measurements);

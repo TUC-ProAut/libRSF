@@ -66,13 +66,13 @@ namespace libRSF
     this->solve();
   }
 
-  void FactorGraph::addState(string Name, StateType Type, double Timestamp)
+  void FactorGraph::addState(string Name, DataType Type, double Timestamp)
   {
-    StateData Element(Type, Timestamp);
+    Data Element(Type, Timestamp);
     addState(Name, Element);
   }
 
-  void FactorGraph::addState(string Name, StateData &Element)
+  void FactorGraph::addState(string Name, Data &Element)
   {
     _StateData.addElement(Name, Element);
     double Timestamp = Element.getTimestamp();
@@ -84,11 +84,11 @@ namespace libRSF
     /** add state vector as parameter block with local parametrization if required */
     switch (_StateData.getElement(Name, Timestamp, StateNumber).getType())
     {
-      case StateType::Angle:
+      case DataType::Angle:
         _Graph.AddParameterBlock(StatePointer, StateSize, AngleLocalParameterization::Create());
         break;
 
-      case StateType::UnitCircle:
+      case DataType::UnitCircle:
         {
           /** initialize with 0 degree rotation */
           Vector2 Circle;
@@ -99,7 +99,7 @@ namespace libRSF
           break;
         }
 
-      case StateType::Quat:
+      case DataType::Quaternion:
         {
           /** initialize with valid quaternion */
           Vector4 Quat;
@@ -110,14 +110,14 @@ namespace libRSF
           break;
         }
 
-      case StateType::Pose2:
+      case DataType::Pose2:
         {
           ceres::LocalParameterization *LocalParamPose2 = new ceres::ProductParameterization(new ceres::IdentityParameterization(2), AngleLocalParameterization::Create());
           _Graph.AddParameterBlock(StatePointer, StateSize, LocalParamPose2);
           break;
         }
 
-      case StateType::Pose3:
+      case DataType::Pose3:
         {
           /** initialize with valid quaternion */
           Vector7 Pose3;
@@ -129,7 +129,7 @@ namespace libRSF
           break;
         }
 
-      case StateType::Switch:
+      case DataType::Switch:
         {
           /** initialize with one */
           _StateData.getElement(Name, Timestamp, StateNumber).setMean(Vector1::Identity());
@@ -148,7 +148,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::addStateWithCheck(string Name, StateType Type, double Timestamp)
+  void FactorGraph::addStateWithCheck(string Name, DataType Type, double Timestamp)
   {
     if (!this->getStateData().checkElement(Name, Timestamp))
     {
@@ -238,7 +238,7 @@ namespace libRSF
     }
   }
 
-  bool FactorGraph::marginalizeStates(std::vector<StateID> States)
+  bool FactorGraph::marginalizeStates(std::vector<StateID> States, const double Inflation)
   {
     /** time measurement */
     Timer MargTimer;
@@ -274,7 +274,7 @@ namespace libRSF
     std::vector<int> GlobalSize;
     std::vector<int> LocalSize;
     std::vector<StateID> StateIDs;
-    std::vector<StateType> StateTypes;
+    std::vector<DataType> StateTypes;
     _Structure.getMarginalizationInfo(MarginalStates, ConnectedStates, Factors, GlobalSize, LocalSize, StateIDs, StateTypes);
 
     if (ConnectedStates.empty() == false)
@@ -308,7 +308,7 @@ namespace libRSF
       /** compute marginalization */
       Matrix JacobianMarg;
       Vector ResidualMarg;
-      Marginalize(Residuals, Jacobian, ResidualMarg, JacobianMarg, MarginalSize);
+      Marginalize(Residuals, Jacobian, ResidualMarg, JacobianMarg, MarginalSize, Inflation);
 
       /** store original states */
       std::vector<Vector> OriginalStates;
@@ -356,10 +356,10 @@ namespace libRSF
     return this->marginalizeStates(SingleState);
   }
 
-  bool FactorGraph::marginalizeAllStatesOutsideWindow(double TimeWindow, double CurrentTime)
+  bool FactorGraph::marginalizeAllStatesOutsideWindow(const double TimeWindow, const double CurrentTime, const double Inflation)
   {
     /** calculate time boarder */
-    double CutTime = CurrentTime - TimeWindow;
+    const double CutTime = roundToTick(CurrentTime - TimeWindow);
 
     /** check if marginalization is required before doing anything  */
     double TimeFirst = CutTime;
@@ -402,7 +402,7 @@ namespace libRSF
     }
 
     /** marginalize */
-    return this->marginalizeStates(States);
+    return this->marginalizeStates(States, Inflation);
   }
 
   bool FactorGraph::computeCovariance(const string Name, const double Timestamp)
@@ -545,7 +545,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeFactor(FactorType CurrentFactorType, double Timestamp)
+  void FactorGraph::removeFactor(const FactorType CurrentFactorType, const double Timestamp)
   {
     if (_Structure.checkFactor(CurrentFactorType, Timestamp))
     {
@@ -569,15 +569,21 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeFactorsOutsideWindow(FactorType CurrentFactorType, double TimeWindow, double CurrentTime)
+  void FactorGraph::removeFactorsOutsideWindow(const FactorType CurrentFactorType, const double TimeWindow, const double CurrentTime)
   {
+    /** find start of the existing factors */
     double FirstTime;
     _Structure.getTimeFirst(CurrentFactorType, FirstTime);
-    if (CurrentTime - TimeWindow >= FirstTime)
+
+    /** calculate cut-off time */
+    const double TimeWindowEnd = roundToTick(CurrentTime - TimeWindow);
+
+    /** remove factors one by one */
+    if (TimeWindowEnd >= FirstTime)
     {
       /** get relevant Timestamps */
       std::vector<double> Timestamps;
-      _Structure.getTimesBelow(CurrentFactorType, CurrentTime - TimeWindow, Timestamps);
+      _Structure.getTimesBelow(CurrentFactorType, TimeWindowEnd, Timestamps);
 
       /** remove all */
       for (const double &Time : Timestamps)
@@ -587,7 +593,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeAllFactorsOutsideWindow(double TimeWindow, double CurrentTime)
+  void FactorGraph::removeAllFactorsOutsideWindow(const double TimeWindow, const double CurrentTime)
   {
     std::vector<FactorType> Factors;
     _Structure.getFactorTypes(Factors);
@@ -793,12 +799,12 @@ namespace libRSF
     const int Dim = ErrorVector.size() / FactorVector.size();
     const int Length = FactorVector.size();
 
-    /** convert to StateData */
+    /** convert to Data */
     switch (Dim)
     {
       case 1:
         {
-          StateData ErrorState(StateType::Error1, 0.0);
+          Data ErrorState(DataType::Error1, 0.0);
           for (int i = 0; i < Length; i++)
           {
             const int Index = i*Dim;
@@ -811,7 +817,7 @@ namespace libRSF
 
       case 2:
         {
-          StateData ErrorState(StateType::Error2, 0.0);
+          Data ErrorState(DataType::Error2, 0.0);
           for (int i = 0; i < Length; i++)
           {
             const int Index = i*Dim;
@@ -824,7 +830,7 @@ namespace libRSF
 
       case 3:
         {
-          StateData ErrorState(StateType::Error3, 0.0);
+          Data ErrorState(DataType::Error3, 0.0);
           for (int i = 0; i < Length; i++)
           {
             const int Index = i*Dim;
@@ -837,7 +843,7 @@ namespace libRSF
 
       case 6:
         {
-          StateData ErrorState(StateType::Error6, 0.0);
+          Data ErrorState(DataType::Error6, 0.0);
           for (int i = 0; i < Length; i++)
           {
             const int Index = i*Dim;
@@ -850,7 +856,7 @@ namespace libRSF
         break;
 
       default:
-        PRINT_ERROR("There is no StateData type for errors with dimension of: ", Dim);
+        PRINT_ERROR("There is no Data type for errors with dimension of: ", Dim);
         break;
     }
   }

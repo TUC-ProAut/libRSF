@@ -42,7 +42,7 @@ namespace libRSF
   {
   public:
     /** construct factor and store measurement */
-    PressureDifferenceFactorBase(ErrorType &Error, const SensorData &PressureMeasurement)
+    PressureDifferenceFactorBase(ErrorType &Error, const Data &PressureMeasurement)
     {
       this->_Error = Error;
       this->_MeasurementVector.resize(1);

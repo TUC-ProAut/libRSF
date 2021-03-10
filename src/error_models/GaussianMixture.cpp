@@ -92,7 +92,7 @@ namespace libRSF
   }
 
   template <>
-  StateData GaussianMixture<1>::exportToStateData(double Timestamp)
+  Data GaussianMixture<1>::exportToStateData(double Timestamp)
   {
     int NumberOfComponents = this->getNumberOfComponents();
 
@@ -114,54 +114,54 @@ namespace libRSF
     {
 //      case 1:
 //        {
-//          StateData GMMState(StateType::GM1, Timestamp);
+//          Data GMMState(DataType::GM1, Timestamp);
 //          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::StateElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::StateElement::GMM_Weight, Weights);
+//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
+//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
 //          return GMMState;
 //        }
 //        break;
 //      case 2:
 //        {
-//          StateData GMMState(StateType::GM2, Timestamp);
+//          Data GMMState(DataType::GM2, Timestamp);
 //          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::StateElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::StateElement::GMM_Weight, Weights);
+//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
+//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
 //          return GMMState;
 //        }
 //        break;
 //      case 3:
 //        {
-//          StateData GMMState(StateType::GM3, Timestamp);
+//          Data GMMState(DataType::GM3, Timestamp);
 //          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::StateElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::StateElement::GMM_Weight, Weights);
+//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
+//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
 //          return GMMState;
 //        }
 //        break;
 //      case 4:
 //        {
-//          StateData GMMState(StateType::GM4, Timestamp);
+//          Data GMMState(DataType::GM4, Timestamp);
 //          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::StateElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::StateElement::GMM_Weight, Weights);
+//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
+//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
 //          return GMMState;
 //        }
 //        break;
 //      case 5:
 //        {
-//          StateData GMMState(StateType::GM5, Timestamp);
+//          Data GMMState(DataType::GM5, Timestamp);
 //          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::StateElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::StateElement::GMM_Weight, Weights);
+//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
+//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
 //          return GMMState;
 //        }
 //        break;
       default:
-          std::cerr << "Error in StateData GaussianMixture<1>::exportToStateData: wrong number of GMM components: " << NumberOfComponents << std::endl;
+          std::cerr << "Error in Data GaussianMixture<1>::exportToStateData: wrong number of GMM components: " << NumberOfComponents << std::endl;
         break;
     }
 
-    return StateData();
+    return Data();
   }
 }

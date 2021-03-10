@@ -42,7 +42,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      PriorFactorBase(ErrorType &Error, const SensorData &PriorMeasurement)
+      PriorFactorBase(ErrorType &Error, const Data &PriorMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(Dim);
@@ -82,7 +82,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      PriorFactorAngle(ErrorType &Error, const SensorData &PriorAngle)
+      PriorFactorAngle(ErrorType &Error, const Data &PriorAngle)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(1);
@@ -121,7 +121,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      PriorFactorQuaternion(ErrorType &Error, const SensorData &PriorQuaternion)
+      PriorFactorQuaternion(ErrorType &Error, const Data &PriorQuaternion)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(4);
