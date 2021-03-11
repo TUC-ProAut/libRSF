@@ -1,6 +1,6 @@
-## RA-L 2020 Applications
+## RA-L 2021 Applications
 
-In 2020 we introduced a new representation of Gaussian mixtures for factor graphs that reliy on a least squares back-end.
+In 2021 we introduced a new representation of Gaussian mixtures for factor graphs that reliy on a least squares back-end.
 Previous models are either approximations like Max-Mixture [2] or ill-posed like Sum-Mixture which is based on [3].
 We proposed the Max-Sum-Mixture model [1] which combines the advantages of both approaches without their drawbacks.
 Our model is an almost linear and exact representation of a GMM for least squares.
@@ -166,16 +166,16 @@ The point set registration example from [1] is currently not available for the C
 
 If you are interested in this work, feel free to have a look at our recent paper:
 
-[1] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2020
+[1] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021
 
 BibTeX:
 
 ```latex
-    @Article{Pfeifer2020,
+    @Article{Pfeifer2021,
       author       = {Tim Pfeifer, Sven Lange and Peter Protzel},
       journal      = {Robotics and Automation Letters (RA-L)},
       title        = {Advancing Mixture Models for Least Squares Optimization},
-      year         = {2020},
+      year         = {2021},
     }
 ```
 
