@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,15 +49,15 @@ TEST(IV19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
     ASSERT_FALSE(CreateGraphAndSolve(Arguments, Result, OutputFile)) << "Error calculating example";
 
     /** read gt */
-    libRSF::SensorDataSet Gt;
-    libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", Gt);
+    libRSF::SensorDataSet GT;
+    libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", GT);
 
     /** calculate RMSE */
-    double ate = libRSF::ATE(libRSF::SensorType::Point3, Gt, POSITION_STATE, Result);
+    const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
 
-    std::cout << "ATE: " << ate << std::endl;
+    std::cout << "ATE: " << ATE << std::endl;
 
-    EXPECT_LT(ate,100.0);
+    EXPECT_LT(ATE, 70.0);
 }
 
 TEST(IV19_GNSS, smartLoc_Berlin_Potsdamer_Platz_stsm_vbi)
@@ -76,13 +76,13 @@ TEST(IV19_GNSS, smartLoc_Berlin_Potsdamer_Platz_stsm_vbi)
     ASSERT_FALSE(CreateGraphAndSolve(Arguments, Result, OutputFile)) << "Error calculating example";
 
     /** read gt */
-    libRSF::SensorDataSet Gt;
-    libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", Gt);
+    libRSF::SensorDataSet GT;
+    libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", GT);
 
     /** calculate RMSE */
-    double ate = libRSF::ATE(libRSF::SensorType::Point3, Gt, POSITION_STATE, Result);
+    const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
 
-    std::cout << "ATE: " << ate << std::endl;
+    std::cout << "ATE: " << ATE << std::endl;
 
-    EXPECT_LT(ate,30.0);
+    EXPECT_LT(ATE, 20.0);
 }

@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2020 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,15 +24,10 @@
 
 namespace libRSF
 {
-  double RMSE(Vector V)
-  {
-    return sqrt(V.squaredNorm() / V.size());
-  }
-
-  double ATE(SensorType TypeGT,
-             SensorDataSet GT,
-             std::string TypeEstimate,
-             StateDataSet Estimate)
+  double ATE(const DataType TypeGT,
+             const SensorDataSet &GT,
+             const std::string &TypeEstimate,
+             const StateDataSet &Estimate)
   {
     /** check length */
     const int LengthGT = GT.countElements(TypeGT);
@@ -56,7 +51,13 @@ namespace libRSF
     int n = 0;
     do
     {
-      Error(n) = (Estimate.getElement(TypeEstimate, Time).getMean() - GT.getElement(TypeGT, Time).getMean()).norm();
+      /** get data at this timestamp */
+      Data DataGT, DataEstimate;
+      Estimate.getElement(TypeEstimate, Time, 0, DataEstimate);
+      GT.getElement(TypeGT, Time, 0, DataGT);
+
+      /** euclidean distance*/
+      Error(n) = (DataEstimate.getMean() - DataGT.getMean()).norm();
       n++;
     }
     while(GT.getTimeNext(TypeGT, Time, Time));
@@ -66,12 +67,11 @@ namespace libRSF
   }
 
   // maximum componentwise absolute difference between two datasets (mean and covariance)
-  double MaxAbsError(SensorType TypeGT,
-             SensorElement ElementGT,
-             SensorDataSet GT,
-             std::string TypeEstimate,
-             StateElement ElementEstimate,
-             StateDataSet Estimate)
+  double MaxAbsError(const DataType TypeGT,
+                     const SensorDataSet &GT,
+                     const std::string &TypeEstimate,
+                     const StateDataSet &Estimate,
+                     const DataElement Element)
   {
     /** check length */
     const int LengthGT = GT.countElements(TypeGT);
@@ -94,8 +94,19 @@ namespace libRSF
     /** calculate overall maximum */
     do
     {
-      double maxAbsErrorMean = (Estimate.getElement(TypeEstimate, Time).getValue(ElementEstimate) - GT.getElement(TypeGT, Time).getValue(ElementGT)).cwiseAbs().maxCoeff();
-      if(maxAbsErrorMean > maxAbsError) maxAbsError = maxAbsErrorMean;
+      /** get data at this timestamp */
+      Data DataGT, DataEstimate;
+      Estimate.getElement(TypeEstimate, Time, 0, DataEstimate);
+      GT.getElement(TypeGT, Time, 0, DataGT);
+
+      /** get maximum difference */
+      const double maxAbsErrorMean = (DataEstimate.getValue(Element) - DataGT.getValue(Element)).cwiseAbs().maxCoeff();
+
+      /** store maximum of loop */
+      if(maxAbsErrorMean > maxAbsError)
+      {
+        maxAbsError = maxAbsErrorMean;
+      }
     }
     while(GT.getTimeNext(TypeGT, Time, Time));
 

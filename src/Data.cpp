@@ -139,6 +139,13 @@ namespace libRSF
 
   void Data::setStdDevDiagonal(const Vector StdDev)
   {
-    this->setValue(DataElement::CovarianceDiagonal, StdDev.array().square());
+    if (this->checkElement(DataElement::Covariance) && this->getValue(DataElement::Covariance).size() == 1)
+    {
+      this->setValue(DataElement::Covariance, StdDev.array().square());
+    }
+    else
+    {
+      this->setValue(DataElement::CovarianceDiagonal, StdDev.array().square());
+    }
   }
 }

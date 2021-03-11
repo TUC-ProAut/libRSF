@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,10 +49,10 @@ TEST(Example, FG_Generic)
   SolverOptions.minimizer_progress_to_stdout = true;
 
   /** add states to graph */
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 0);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 1);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 2);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 3);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 0);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 1);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 2);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 3);
 
   /** set initial values values */
   libRSF::Vector2 StateVect;
@@ -88,7 +88,7 @@ TEST(Example, FG_Generic)
   NoisePrior.setCovarianceMatrix(CovMat);
 
   /** add absolute measurement factor*/
-  libRSF::SensorData AbsoluteMeasurement(libRSF::SensorType::Point2, 1.0);
+  libRSF::Data AbsoluteMeasurement(libRSF::DataType::Point2, 1.0);
   AbsoluteMeasurement.setMean(StateVect * 4.2);
   SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 1.0), AbsoluteMeasurement, NoisePrior);
 
@@ -111,15 +111,22 @@ TEST(Example, FG_Generic)
 
   /** load expected results */
   libRSF::SensorDataSet Expected;
-  Expected.addElement(libRSF::SensorData("point2 0.0 42.0 42.0 2.0 0.25 0.25 5.0"));
-  Expected.addElement(libRSF::SensorData("point2 1.0 42.0 42.0 1.0 0.25 0.25 4.0"));
-  Expected.addElement(libRSF::SensorData("point2 2.0 42.0 42.0 2.0 0.25 0.25 5.0"));
-  Expected.addElement(libRSF::SensorData("point2 3.0 42.0 42.0 3.0 0.25 0.25 6.0"));
+  Expected.addElement(libRSF::Data("point2 0.0 42.0 42.0 2.0 0.25 0.25 5.0"));
+  Expected.addElement(libRSF::Data("point2 1.0 42.0 42.0 1.0 0.25 0.25 4.0"));
+  Expected.addElement(libRSF::Data("point2 2.0 42.0 42.0 2.0 0.25 0.25 5.0"));
+  Expected.addElement(libRSF::Data("point2 3.0 42.0 42.0 3.0 0.25 0.25 6.0"));
 
   /** calculate maximum componentwise absolute difference between solution and expected (mean and covariance) */
-  double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Mean, Expected, POSITION_STATE, libRSF::StateElement::Mean, SimpleGraph.getStateData());
-  double maxAbsErrorCov = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Covariance, Expected, POSITION_STATE, libRSF::StateElement::Covariance, SimpleGraph.getStateData());
-  
+  const double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::DataType::Point2,
+                                                     Expected,
+                                                     POSITION_STATE,
+                                                     SimpleGraph.getStateData(),
+                                                     libRSF::DataElement::Mean);
+  const double maxAbsErrorCov = libRSF::MaxAbsError(libRSF::DataType::Point2,
+                                                    Expected, POSITION_STATE,
+                                                    SimpleGraph.getStateData(),
+                                                    libRSF::DataElement::Covariance);
+
   std::cout << "MaxAbsErrorMean:" << maxAbsErrorMean << std::endl;
   std::cout << "MaxAbsErrorCov:" << maxAbsErrorCov << std::endl;
 
@@ -127,6 +134,4 @@ TEST(Example, FG_Generic)
   EXPECT_LT(maxAbsErrorCov,1e-3);
 }
 
-// main provided by linking to gtest_main
-
-
+/** main provided by linking to gtest_main */

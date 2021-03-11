@@ -69,10 +69,6 @@ find_package(GeographicLib REQUIRED)
 
 # google test
 if(LIBRSF_BUILD_TEST)
-
-  # enable tests for CMake
-  enable_testing()
-
   # download and install GTest
   include(cmake/InstallGoogleTest.cmake.in)
 endif()

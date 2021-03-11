@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2020 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,26 +32,22 @@
 #ifndef TESTUTILS_H
 #define TESTUTILS_H
 
-#include "VectorMath.h"
-#include "StateDataSet.h"
-#include "SensorDataSet.h"
+#include "libRSF.h"
 
 namespace libRSF
 {
-  double RMSE(Vector V);
+  /**< maximum component-wise absolute difference between two datasets */
+  double MaxAbsError(const DataType TypeGT,
+                     const SensorDataSet &GT,
+                     const std::string &TypeEstimate,
+                     const StateDataSet &Estimate,
+                     const DataElement Element);
 
-  // maximum componentwise absolute difference between two datasets (mean and covariance)
-  double MaxAbsError(SensorType TypeGT,
-             SensorElement ElementGT,
-             SensorDataSet GT,
-             std::string TypeEstimate,
-             StateElement ElementEstimate,
-             StateDataSet Estimate);
-
-  double ATE(SensorType TypeGT,
-             SensorDataSet GT,
-             std::string TypeEstimate,
-             StateDataSet Estimate);
+  /** RMSE of the euclidean distance of means */
+  double ATE(const DataType TypeGT,
+             const SensorDataSet &GT,
+             const std::string &TypeEstimate,
+             const StateDataSet &Estimate);
 }
 
 #endif // TESTUTILS_H

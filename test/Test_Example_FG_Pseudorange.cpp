@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,10 +63,10 @@ TEST(Example, FG_Pseudorange)
   do
   {
     /** add position variables to graph */
-    SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, Time);
+    SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, Time);
 
     /** add offset variables to graph */
-    SimpleGraph.addState(OFFSET_STATE, libRSF::StateType::ClockError, Time);
+    SimpleGraph.addState(OFFSET_STATE, libRSF::DataType::ClockError, Time);
 
     RangeList.add(POSITION_STATE, Time);
     RangeList.add(OFFSET_STATE, Time);
@@ -113,17 +113,24 @@ TEST(Example, FG_Pseudorange)
   std::cout << SimpleGraph.getStateData().getElement(OFFSET_STATE, 0.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(OFFSET_STATE, 1.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(OFFSET_STATE, 2.0).getNameValueString() << std::endl;
-  
+
   /** load expected results - point2*/
   libRSF::SensorDataSet Expected;
-  Expected.addElement(libRSF::SensorData("point2 0.0 0.0 0.0 0.005 0.0 0.0 0.005"));
-  Expected.addElement(libRSF::SensorData("point2 1.0 1.0 0.0075 0.005 0.0 0.0 0.005"));
-  Expected.addElement(libRSF::SensorData("point2 2.0 1.0 0.931271 0.005 0.0 0.0 0.005"));
+  Expected.addElement(libRSF::Data("point2 0.0 0.0 0.0 0.005 0.0 0.0 0.005"));
+  Expected.addElement(libRSF::Data("point2 1.0 1.0 0.0075 0.005 0.0 0.0 0.005"));
+  Expected.addElement(libRSF::Data("point2 2.0 1.0 0.931271 0.005 0.0 0.0 0.005"));
 
   /** calculate maximum componentwise absolute difference between solution and expected (mean and covariance) - point2*/
-  double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Mean, Expected, POSITION_STATE, libRSF::StateElement::Mean, SimpleGraph.getStateData());
-  double maxAbsErrorCov = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Covariance, Expected, POSITION_STATE, libRSF::StateElement::Covariance, SimpleGraph.getStateData());
-  
+  const double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::DataType::Point2,
+                                                     Expected,
+                                                     POSITION_STATE,
+                                                     SimpleGraph.getStateData(),
+                                                     libRSF::DataElement::Mean);
+  const double maxAbsErrorCov = libRSF::MaxAbsError(libRSF::DataType::Point2,
+                                                    Expected, POSITION_STATE,
+                                                    SimpleGraph.getStateData(),
+                                                    libRSF::DataElement::Covariance);
+
   std::cout << "MaxAbsErrorMean:" << maxAbsErrorMean << std::endl;
   std::cout << "MaxAbsErrorCov:" << maxAbsErrorCov << std::endl;
 
@@ -131,4 +138,4 @@ TEST(Example, FG_Pseudorange)
   EXPECT_LT(maxAbsErrorCov,1e-3);
 }
 
-// main provided by linking to gtest_main
+/** main provided by linking to gtest_main */

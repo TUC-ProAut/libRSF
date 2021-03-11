@@ -41,4 +41,9 @@ namespace libRSF
   {
     return Median((V.array() - Median(V)).abs().matrix());
   }
+
+  double RMSE(const Vector V)
+  {
+    return sqrt(V.squaredNorm() / V.size());
+  }
 }

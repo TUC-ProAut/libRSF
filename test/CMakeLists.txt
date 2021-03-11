@@ -34,14 +34,14 @@ macro(package_add_test TESTNAME)
     )
 endmacro()
 
-package_add_test(Test_Example_FG_Generic Test_Example_FG_Generic.cpp ../examples/Example_FG_Generic.cpp)
+package_add_test(Test_Example_FG_Generic Test_Example_FG_Generic.cpp TestUtils.cpp ../examples/Example_FG_Generic.cpp)
 
-package_add_test(Test_Example_FG_Pseudorange Test_Example_FG_Pseudorange.cpp ../examples/Example_FG_Pseudorange.cpp)
+package_add_test(Test_Example_FG_Pseudorange Test_Example_FG_Pseudorange.cpp TestUtils.cpp ../examples/Example_FG_Pseudorange.cpp)
 
-package_add_test(Test_Example_FG_Range Test_Example_FG_Range.cpp ../examples/Example_FG_Range.cpp)
+package_add_test(Test_Example_FG_Range Test_Example_FG_Range.cpp TestUtils.cpp ../examples/Example_FG_Range.cpp)
 
-package_add_test(Test_Example_Marginalization Test_Example_Marginalization.cpp ../examples/Example_Marginalization.cpp)
+package_add_test(Test_Example_Marginalization Test_Example_Marginalization.cpp TestUtils.cpp ../examples/Example_Marginalization.cpp)
 
-package_add_test(Test_ICRA19_GNSS Test_ICRA19_GNSS.cpp ../applications/ICRA19_GNSS.cpp)
+package_add_test(Test_ICRA19_GNSS Test_ICRA19_GNSS.cpp TestUtils.cpp ../applications/ICRA19_GNSS.cpp)
 
-package_add_test(Test_IV19_GNSS Test_IV19_GNSS.cpp ../applications/IV19_GNSS.cpp)
+package_add_test(Test_IV19_GNSS Test_IV19_GNSS.cpp TestUtils.cpp ../applications/IV19_GNSS.cpp)

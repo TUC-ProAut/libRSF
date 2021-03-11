@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,14 +75,14 @@ TEST(Example, Marginalization)
   PoseVec1 << PosVec1, Quat1.vec(), Quat1.w();
 
   /** create state objects as GT */
-  libRSF::StateData StatePos0 (libRSF::StateType::Point3, 0.0);
+  libRSF::Data StatePos0 (libRSF::DataType::Point3, 0.0);
   StatePos0.setMean(PosVec0);
-  libRSF::StateData StatePos1 (libRSF::StateType::Point3, 1.0);
+  libRSF::Data StatePos1 (libRSF::DataType::Point3, 1.0);
   StatePos1.setMean(PosVec1);
 
-  libRSF::StateData StateRot0 (libRSF::StateType::Quat, 0.0);
+  libRSF::Data StateRot0 (libRSF::DataType::Quaternion, 0.0);
   StateRot0.setMean(RotVec0);
-  libRSF::StateData StateRot1 (libRSF::StateType::Quat, 1.0);
+  libRSF::Data StateRot1 (libRSF::DataType::Quaternion, 1.0);
   StateRot1.setMean(RotVec1);
 
   /** calculate relative transformations */
@@ -93,20 +93,20 @@ TEST(Example, Marginalization)
   PoseVecRel << Quat0.conjugate()*PosVecRel, QuatRel.vec(), QuatRel.w();
 
   /** create measurement objects */
-  libRSF::SensorData Pos0(libRSF::SensorType::Point3, 0.0);
-  libRSF::SensorData PosRel(libRSF::SensorType::Point3, 1.0);
+  libRSF::Data Pos0(libRSF::DataType::Point3, 0.0);
+  libRSF::Data PosRel(libRSF::DataType::Point3, 1.0);
 
   Pos0.setMean(PosVec0);
   PosRel.setMean(PosVecRel);
 
-  libRSF::SensorData Rot0(libRSF::SensorType::Quaternion, 0.0);
-  libRSF::SensorData RotRel(libRSF::SensorType::Quaternion, 1.0);
+  libRSF::Data Rot0(libRSF::DataType::Quaternion, 0.0);
+  libRSF::Data RotRel(libRSF::DataType::Quaternion, 1.0);
 
   Rot0.setMean(RotVec0);
   RotRel.setMean((libRSF::Vector4() << QuatRel.vec(), QuatRel.w()).finished());
 
-  libRSF::SensorData Pose0(libRSF::SensorType::Pose3, 0.0);
-  libRSF::SensorData PoseRel(libRSF::SensorType::Pose3, 1.0);
+  libRSF::Data Pose0(libRSF::DataType::Pose3, 0.0);
+  libRSF::Data PoseRel(libRSF::DataType::Pose3, 1.0);
 
   Pose0.setMean(PoseVec0);
   PoseRel.setMean(PoseVecRel);
@@ -117,11 +117,11 @@ TEST(Example, Marginalization)
   libRSF::FactorGraph PoseGraph;
 
   /** add states */
-  PositionGraph.addState(POSITION_STATE, libRSF::StateType::Point3, 0.0);
-  PositionGraph.addState(POSITION_STATE, libRSF::StateType::Point3, 1.0);
+  PositionGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 0.0);
+  PositionGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 1.0);
 
-  RotationGraph.addState(ROTATION_STATE, libRSF::StateType::Quat, 0.0);
-  RotationGraph.addState(ROTATION_STATE, libRSF::StateType::Quat, 1.0);
+  RotationGraph.addState(ROTATION_STATE, libRSF::DataType::Quaternion, 0.0);
+  RotationGraph.addState(ROTATION_STATE, libRSF::DataType::Quaternion, 1.0);
 
   /** add factors */
   libRSF::StateID IDPos0(POSITION_STATE, 0.0, 0);
@@ -207,45 +207,60 @@ TEST(Example, Marginalization)
   std::cout << DataFGMarg.getElement(ROTATION_STATE, 1.0, 0).getNameValueString() << std::endl << std::endl;
 
   /** create GT sensor measurement objects */
-  libRSF::SensorData SensorPos0 (libRSF::SensorType::Point3, 0.0);
+  libRSF::Data SensorPos0 (libRSF::DataType::Point3, 0.0);
   SensorPos0.setMean(PosVec0);
-  libRSF::SensorData SensorPos1 (libRSF::SensorType::Point3, 1.0);
+  libRSF::Data SensorPos1 (libRSF::DataType::Point3, 1.0);
   SensorPos1.setMean(PosVec1);
 
-  libRSF::SensorData SensorRot0 (libRSF::SensorType::Quaternion, 0.0);
+  libRSF::Data SensorRot0 (libRSF::DataType::Quaternion, 0.0);
   SensorRot0.setMean(RotVec0);
-  libRSF::SensorData SensorRot1 (libRSF::SensorType::Quaternion, 1.0);
+  libRSF::Data SensorRot1 (libRSF::DataType::Quaternion, 1.0);
   SensorRot1.setMean(RotVec1);
 
   libRSF::SensorDataSet ExpectedFull;
 
-  ExpectedFull.addElement(libRSF::SensorType::Point3, 0.0, SensorPos0);
-  ExpectedFull.addElement(libRSF::SensorType::Point3, 1.0, SensorPos1);
+  ExpectedFull.addElement(libRSF::DataType::Point3, 0.0, SensorPos0);
+  ExpectedFull.addElement(libRSF::DataType::Point3, 1.0, SensorPos1);
 
-  ExpectedFull.addElement(libRSF::SensorType::Quaternion, 0.0, SensorRot0);
-  ExpectedFull.addElement(libRSF::SensorType::Quaternion, 1.0, SensorRot1);
+  ExpectedFull.addElement(libRSF::DataType::Quaternion, 0.0, SensorRot0);
+  ExpectedFull.addElement(libRSF::DataType::Quaternion, 1.0, SensorRot1);
 
   libRSF::SensorDataSet ExpectedMarg;
 
-  ExpectedMarg.addElement(libRSF::SensorType::Point3, 1.0, SensorPos1);
-  ExpectedMarg.addElement(libRSF::SensorType::Quaternion, 1.0, SensorRot1);
-  
-  /** calculate maximum componentwise absolute difference between solution and expected (mean only here) */
-  double maxAbsErrorFullPos = libRSF::MaxAbsError(libRSF::SensorType::Point3, libRSF::SensorElement::Mean, ExpectedFull, POSITION_STATE, libRSF::StateElement::Mean, DataFGFull);
-  double maxAbsErrorFullRot = libRSF::MaxAbsError(libRSF::SensorType::Quaternion, libRSF::SensorElement::Mean, ExpectedFull, ROTATION_STATE, libRSF::StateElement::Mean, DataFGFull);
+  ExpectedMarg.addElement(libRSF::DataType::Point3, 1.0, SensorPos1);
+  ExpectedMarg.addElement(libRSF::DataType::Quaternion, 1.0, SensorRot1);
 
-  double maxAbsErrorMargPos = libRSF::MaxAbsError(libRSF::SensorType::Point3, libRSF::SensorElement::Mean, ExpectedMarg, POSITION_STATE, libRSF::StateElement::Mean, DataFGMarg);
-  double maxAbsErrorMargRot = libRSF::MaxAbsError(libRSF::SensorType::Quaternion, libRSF::SensorElement::Mean, ExpectedMarg, ROTATION_STATE, libRSF::StateElement::Mean, DataFGMarg);
+  /** calculate maximum componentwise absolute difference between solution and expected (mean only here) */
+  const double maxAbsErrorFullPos = libRSF::MaxAbsError(libRSF::DataType::Point3,
+                                                        ExpectedFull,
+                                                        POSITION_STATE,
+                                                        DataFGFull,
+                                                        libRSF::DataElement::Mean);
+  const double maxAbsErrorFullRot = libRSF::MaxAbsError(libRSF::DataType::Quaternion,
+                                                        ExpectedFull,
+                                                        ROTATION_STATE,
+                                                        DataFGFull,
+                                                        libRSF::DataElement::Mean);
+
+  const double maxAbsErrorMargPos = libRSF::MaxAbsError(libRSF::DataType::Point3,
+                                                        ExpectedMarg,
+                                                        POSITION_STATE,
+                                                        DataFGMarg,
+                                                        libRSF::DataElement::Mean);
+  const double maxAbsErrorMargRot = libRSF::MaxAbsError(libRSF::DataType::Quaternion,
+                                                        ExpectedMarg, ROTATION_STATE,
+                                                        DataFGMarg,
+                                                        libRSF::DataElement::Mean);
 
   std::cout << "MaxAbsErrorFullPos:" << maxAbsErrorFullPos << std::endl;
   std::cout << "MaxAbsErrorFullRot:" << maxAbsErrorFullRot << std::endl;
   std::cout << "MaxAbsErrorMargPos:" << maxAbsErrorMargPos << std::endl;
   std::cout << "MaxAbsErrorMargRot:" << maxAbsErrorMargRot << std::endl;
-  
+
   EXPECT_LT(maxAbsErrorFullPos,1e-3);
   EXPECT_LT(maxAbsErrorFullRot,1e-3);
   EXPECT_LT(maxAbsErrorMargPos,1e-3);
   EXPECT_LT(maxAbsErrorMargRot,1e-3);
 }
 
-// main provided by linking to gtest_main
+/** main provided by linking to gtest_main */
