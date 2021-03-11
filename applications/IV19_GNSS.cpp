@@ -333,18 +333,16 @@ bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &C
   return true;
 }
 
-int main(int argc, char** argv)
+int CreateGraphAndSolve(std::vector<std::string> &Arguments,
+                       libRSF::StateDataSet &Result,
+                       std::string &OutputFile)
 {
-  google::InitGoogleLogging(argv[0]);
   libRSF::FactorGraphConfig Config;
-
-  /** assign all arguments to string vector*/
-  std::vector<std::string> Arguments;
-  Arguments.assign(argv+1, argv + argc);
 
   /** read filenames */
   Config.InputFile = Arguments.at(0);
   Config.OutputFile = Arguments.at(1);
+  OutputFile = Config.OutputFile; // for call by refrence "return-value"
 
   /** parse the error model string */
   if (ParseErrorModel(Arguments.at(3), Config) == false)
@@ -367,7 +365,6 @@ int main(int argc, char** argv)
 
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
-  libRSF::StateDataSet Result;
 
   double Timestamp, TimestampFirst = 0.0, TimestampOld, TimestampLast;
   InputData.getTimeFirst(libRSF::DataType::Pseudorange3, TimestampFirst);
@@ -457,8 +454,31 @@ int main(int argc, char** argv)
   /** print last report */
   Graph.printReport();
 
+  return 0;
+}
+
+#ifndef TESTMODE // only compile main if not used in test context
+
+int main(int argc, char** argv)
+{
+  google::InitGoogleLogging(argv[0]);
+
+  /** assign all arguments to string vector*/
+  std::vector<std::string> Arguments;
+  Arguments.assign(argv+1, argv + argc);
+
+  libRSF::StateDataSet Result;
+  std::string OutputFile;
+
+  if (CreateGraphAndSolve(Arguments, Result, OutputFile))
+  {
+    return 1;
+  }
+
   /** write results to disk */
-  libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result);
+  libRSF::WriteDataToFile(OutputFile, POSITION_STATE, Result);
 
   return 0;
 }
+
+#endif // TESTMODE

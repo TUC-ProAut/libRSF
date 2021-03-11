@@ -71,6 +71,11 @@ add_subdirectory(error_models)
 # geometric models to represent the relation between states and measurements
 add_subdirectory(geometric_models)
 
+# testing utilities
+if(LIBRSF_BUILD_TEST)
+  list(APPEND SOURCEFILES TestUtils.cpp)
+endif()
+
 # set include directory
 string(CONCAT INCLUDEDIR ${PROJECT_SOURCE_DIR}/../include/)
 

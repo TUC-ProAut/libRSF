@@ -2,7 +2,7 @@
  * libRSF - A Robust Sensor Fusion Library
  *
  * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,25 +20,25 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
- /**
-* @file Example_FG_Generic.cpp
-* @author Tim Pfeifer
-* @date 07.05.2018
-* @brief An example application to demonstrate the construction of a simple factor graph.
-* @copyright GNU Public License.
-*
-*/
+/**
+ * @file Test_Example_FG_Generic.cpp
+ * @author Leopold Mauersberger
+ * @date 02 Mar 2021
+ * @brief Comparing the FG_Generic example results against sample solution
+ * @copyright GNU Public License.
+ *
+ */
 
-#include "Example_FG_Generic.h"
+#include "../examples/Example_FG_Generic.h"
+#include "TestUtils.h"
+#include "gtest/gtest.h"
 
-#ifndef TESTMODE // only compile main if not used in test context
+/** use define to prevent typos*/
+#define POSITION_STATE "Position2D"
 
-int main(int ArgC, char** ArgV)
+TEST(Example, FG_Generic)
 {
-  (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
-
-  /** create our own graph object */
+    /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
 
   /** set the solver options for ceres */
@@ -49,10 +49,10 @@ int main(int ArgC, char** ArgV)
   SolverOptions.minimizer_progress_to_stdout = true;
 
   /** add states to graph */
-  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 0);
-  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 1);
-  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 2);
-  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 3);
+  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 0);
+  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 1);
+  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 2);
+  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 3);
 
   /** set initial values values */
   libRSF::Vector2 StateVect;
@@ -88,7 +88,7 @@ int main(int ArgC, char** ArgV)
   NoisePrior.setCovarianceMatrix(CovMat);
 
   /** add absolute measurement factor*/
-  libRSF::Data AbsoluteMeasurement(libRSF::DataType::Point2, 1.0);
+  libRSF::SensorData AbsoluteMeasurement(libRSF::SensorType::Point2, 1.0);
   AbsoluteMeasurement.setMean(StateVect * 4.2);
   SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 1.0), AbsoluteMeasurement, NoisePrior);
 
@@ -106,11 +106,27 @@ int main(int ArgC, char** ArgV)
   std::cout << std::endl << "Optimized Values:" << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 0.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 1.0).getNameValueString() << std::endl;
-  std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 1.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 2.0).getNameValueString() << std::endl;
   std::cout << SimpleGraph.getStateData().getElement(POSITION_STATE, 3.0).getNameValueString() << std::endl;
 
-  return 0;
+  /** load expected results */
+  libRSF::SensorDataSet Expected;
+  Expected.addElement(libRSF::SensorData("point2 0.0 42.0 42.0 2.0 0.25 0.25 5.0"));
+  Expected.addElement(libRSF::SensorData("point2 1.0 42.0 42.0 1.0 0.25 0.25 4.0"));
+  Expected.addElement(libRSF::SensorData("point2 2.0 42.0 42.0 2.0 0.25 0.25 5.0"));
+  Expected.addElement(libRSF::SensorData("point2 3.0 42.0 42.0 3.0 0.25 0.25 6.0"));
+
+  /** calculate maximum componentwise absolute difference between solution and expected (mean and covariance) */
+  double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Mean, Expected, POSITION_STATE, libRSF::StateElement::Mean, SimpleGraph.getStateData());
+  double maxAbsErrorCov = libRSF::MaxAbsError(libRSF::SensorType::Point2, libRSF::SensorElement::Covariance, Expected, POSITION_STATE, libRSF::StateElement::Covariance, SimpleGraph.getStateData());
+  
+  std::cout << "MaxAbsErrorMean:" << maxAbsErrorMean << std::endl;
+  std::cout << "MaxAbsErrorCov:" << maxAbsErrorCov << std::endl;
+
+  EXPECT_LT(maxAbsErrorMean,1e-3);
+  EXPECT_LT(maxAbsErrorCov,1e-3);
 }
 
-#endif // TESTMODE
+// main provided by linking to gtest_main
+
+

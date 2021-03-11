@@ -1,4 +1,4 @@
-name: Focal CI
+name: Focal Build
 on: 
   push:
     paths-ignore:
@@ -22,10 +22,10 @@ on:
     # run on first day of the month
     - cron: '0 0 1 * *'
 jobs:
-  Focal-CI:
+  Focal-Build:
     runs-on: ubuntu-20.04
     steps:
-      # checkout repo & get externals from cache
+      # checkout repo
       - name: checkout
         uses: actions/checkout@v2
       # install dependencies

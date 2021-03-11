@@ -1,8 +1,8 @@
 /***************************************************************************
  * libRSF - A Robust Sensor Fusion Library
  *
- * Copyright (C) 2020 Chair of Automation Technology / TU Chemnitz
- * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
+ * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
+ * For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
  *
  * libRSF is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,25 +20,17 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-#include "Statistics.h"
+#ifndef EXAMPLE_MARGINALIZATION_H_INCLUDED
+#define EXAMPLE_MARGINALIZATION_H_INCLUDED
 
-namespace libRSF
-{
-  double Median(std::vector<double> &V)
-  {
-    int n = V.size() / 2;
-    std::nth_element(V.begin(), V.begin() + n, V.end());
-    return V[n];
-  }
+#include <ceres/ceres.h>
+#include "libRSF.h"
 
-  double Median(Vector V)
-  {
-    std::vector<double> Vec(V.data(), V.data() + V.rows() * V.cols());
-    return Median(Vec);
-  }
+/** use define to prevent typos*/
+#define POSITION_STATE "Position"
+#define ROTATION_STATE "Quaternion"
 
-  double MAD(Vector V)
-  {
-    return Median((V.array() - Median(V)).abs().matrix());
-  }
-}
+#define STDDEV_POS    0.5
+#define STDDEV_ROT    0.2
+
+#endif // EXAMPLE_MARGINALIZATION_H_INCLUDED

@@ -20,8 +20,8 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-#ifndef ICRA19_GNSS_H_INCLUDED
-#define ICRA19_GNSS_H_INCLUDED
+#ifndef IV19_GNSS_H_INCLUDED
+#define IV19_GNSS_H_INCLUDED
 
 #include "libRSF.h"
 
@@ -53,4 +53,8 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
 /** parse string from command line to select error model for GNSS*/
 bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config);
 
-#endif // ICRA19_GNSS_H_INCLUDED
+int CreateGraphAndSolve(std::vector<std::string> &Arguments,
+                       libRSF::StateDataSet &Result,
+                       std::string &OutputFile);
+
+#endif // IV19_GNSS_H_INCLUDED
