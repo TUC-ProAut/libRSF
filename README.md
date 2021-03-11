@@ -13,8 +13,8 @@ Main features are:
 
 | Platform     | Build Status  | Test Status |
 |:------------:|:-------------:|:-----------:|
-| Ubuntu 20.04 | ![Focal Build](https://github.com/lemauee/libRSF/workflows/Focal%20Build/badge.svg) | ![Focal Tests](https://github.com/lemauee/libRSF/workflows/Focal%20Tests/badge.svg) 
-| Ubuntu 18.04 | ![Bionic Build](https://github.com/lemauee/libRSF/workflows/Bionic%20Build/badge.svg) | ![Bionic Tests](https://github.com/lemauee/libRSF/workflows/Bionic%20Tests/badge.svg) |
+| Ubuntu 20.04 | ![Focal Build](https://github.com/tipf/libRSF/workflows/Focal%20Build/badge.svg) | ![Focal Tests](https://github.com/tipf/libRSF/workflows/Focal%20Tests/badge.svg) 
+| Ubuntu 18.04 | ![Bionic Build](https://github.com/tipf/libRSF/workflows/Bionic%20Build/badge.svg) | ![Bionic Tests](https://github.com/tipf/libRSF/workflows/Bionic%20Tests/badge.svg) |
 
 ## Installation
 
