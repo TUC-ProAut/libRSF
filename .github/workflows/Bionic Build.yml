@@ -39,6 +39,8 @@ jobs:
         shell: bash
         
       # build libRSF
+      - name: Create build directory
+        run: mkdir build
       - name: Run CMake
         working-directory: build
         run: cmake -DLIBRSF_BUILD_TEST=on ..
