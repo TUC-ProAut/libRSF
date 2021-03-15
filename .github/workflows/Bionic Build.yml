@@ -29,23 +29,18 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       # install dependencies
-      - name: install dependencies
+      - name: Install dependencies
         run: ./InstallDependencies.bash
         shell: bash
       # build & install libRSF
-      - name: create build directory
-        run: mkdir build
-      - name: run cmake
-        working-directory: build
-        run: cmake ..
-      - name: run make
-        working-directory: build
-        run: make all -j$(getconf _NPROCESSORS_ONLN)
-      - name: run make install
+      - name: Build lib
+        run: ./Build.bash
+        shell: bash 
+      - name: Install lib
         working-directory: build
         run: sudo make install
       # uninstall libRSF
-      - name: run make uninstall
+      - name: Uninstall lib
         working-directory: build
         run: sudo make uninstall
       
