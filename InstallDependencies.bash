@@ -29,9 +29,6 @@ set -e
 readonly linux_distributor=$(lsb_release -is)
 readonly linux_version=$(lsb_release -rs)
 
-# Boolean variable to store the apt-get update state
-has_updated=false
-
 # check linux version
 if [ "$linux_distributor" != "Ubuntu" ]; then
     echo "ERROR: Unsupported operation system, this script covers only Ubuntu systems!"
@@ -47,19 +44,9 @@ install_if_not_exist ()
   if dpkg -s $1 &>/dev/null; then
     PKG_EXIST=$(dpkg -s $1 | grep "install ok installed")
     if [ -z "$PKG_EXIST" ]; then
-      # update your repos once
-      if [ "$has_updated" = false ] ; then
-        sudo apt-get update
-        has_updated=true
-      fi
       sudo apt-get install $1 --assume-yes
     fi
   else
-    # update your repos once
-    if [ "$has_updated" = false ] ; then
-      sudo apt-get update
-      has_updated=true
-    fi
     sudo apt-get install $1 --assume-yes
   fi
 }
