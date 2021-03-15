@@ -103,25 +103,37 @@ namespace libRSF
       MatrixStatic<Dim,Dim> Hessian = Jacobian.transpose()*Jacobian;
 
       /** create state data to store the result */
-      StateData CostState(StateType::CostGradient, 0.0);
-      CostState.resizeElement(StateElement::Mean, Dim);
-      CostState.resizeElement(StateElement::Cost, 1);
-      CostState.resizeElement(StateElement::Gradient, Dim);
-      CostState.resizeElement(StateElement::Hessian, Dim*Dim);
+      Data CostState;
+      if (Dim == 1)
+      {
+        CostState = Data(DataType::CostGradient1, 0.0);
+      }
+      else if (Dim == 2)
+      {
+        CostState = Data(DataType::CostGradient2, 0.0);
+      }
+      else if (Dim == 3)
+      {
+        CostState = Data(DataType::CostGradient3, 0.0);
+      }
+      else
+      {
+        PRINT_ERROR("There is no data type for ", Dim, " dimensional data!");
+      }
 
       /** point where the cost is evaluated */
       CostState.setMean(State);
 
       /** actual cost value */
-      CostState.setValue(StateElement::Cost, (Vector1() << Cost).finished());
+      CostState.setValueScalar(DataElement::Cost, Cost);
 
       /** gradient of the cost surface */
       SizedVector GradientVector(Gradient.data());
-      CostState.setValue(StateElement::Gradient, GradientVector);
+      CostState.setValue(DataElement::Gradient, GradientVector);
 
       /** hessian at the evaluated point */
       VectorStatic<Dim*Dim> HessianVector(Hessian.data());
-      CostState.setValue(StateElement::Hessian, HessianVector);
+      CostState.setValue(DataElement::Hessian, HessianVector);
 
       /** push to data set */
       Result.addElement(CostState);

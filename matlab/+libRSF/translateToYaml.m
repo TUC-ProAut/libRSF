@@ -28,6 +28,10 @@ for nError = 1:numel(Config.ErrorModel)
                         Lables{end} = [Lables{end} 'Odom'];
                     case 'odom2'
                         Lables{end} = [Lables{end} 'Odom 2D'];
+                    case 'odom4'
+                        Lables{end} = [Lables{end} 'Odom'];
+                    case 'odom6'
+                        Lables{end} = [Lables{end} 'Odom'];
                     case 'odom_int'
                         Lables{end} = [Lables{end} 'Odom Int.'];
                     case 'odom_radar'

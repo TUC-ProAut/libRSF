@@ -34,9 +34,7 @@
 
 #include "Messages.h"
 #include "Constants.h"
-
-#include <cmath>
-#include <chrono>
+#include "DataStream.h"
 
 namespace libRSF
 {
@@ -49,7 +47,7 @@ namespace libRSF
       virtual ~DataSet() = default;
 
       /** chronological list of arbitrary objects*/
-      typedef std::multimap<double, ObjectType> DataStream;
+      typedef DataStream<ObjectType> ObjectStream;
 
       /** unique ID that identifies one object */
       struct UniqueID
@@ -76,7 +74,7 @@ namespace libRSF
       {
         if (!this->checkID(ID))
         {
-          DataStream TempStream;
+          ObjectStream TempStream;
           _DataStreams.emplace(ID, TempStream);
         }
 
@@ -343,7 +341,7 @@ namespace libRSF
           return false;
         }
 
-        auto It = _DataStreams.at(ID).upper_bound(Timestamp);
+        const auto It = _DataStreams.at(ID).upper_bound(Timestamp);
 
         if (It != _DataStreams.at(ID).end())
         {
@@ -364,21 +362,17 @@ namespace libRSF
           return false;
         }
 
-        auto It = _DataStreams.at(ID).lower_bound(TimeIn);
+        const auto It = _DataStreams.at(ID).lower_bound(TimeIn);
 
-        if (It != _DataStreams.at(ID).begin())
+        /** case 1: there is no element below */
+        if (It == _DataStreams.at(ID).begin())
         {
-          It--;
-          /** return element under Timestamp*/
-          TimeOut = It->first;
-          return true;
+          return false;
         }
-        else if (It == _DataStreams.at(ID).end())
-        {
-          /** container is empty */
-          PRINT_ERROR("List is empty!");
-        }
-        return false;
+
+        /** case 2: there is a element*/
+        TimeOut = std::prev(It)->first;
+        return true;
       }
 
       bool getTimeBelowOrEqual(const KeyType &ID, const double TimeIn, double& TimeOut) const
@@ -389,92 +383,86 @@ namespace libRSF
           return false;
         }
 
-        auto It = _DataStreams.at(ID).lower_bound(TimeIn);
-
-
-        if (It != _DataStreams.at(ID).end() || It != _DataStreams.at(ID).begin())
+        /** catch equal case at first */
+        if (_DataStreams.at(ID).count(TimeIn) > 0)
         {
-          if (It != _DataStreams.at(ID).end() && It->first == TimeIn)
-          {
-            TimeOut = It->first;
-            return true; /**< equal */
-          }
-
-          if (It != _DataStreams.at(ID).begin())
-          {
-            It--;
-            TimeOut = It->first;
-            return true; /**< below */
-          }
-
-          PRINT_WARNING("Key ", ID, " does not have any element below ", TimeIn, "!");
-          return false; /**< there is nothing below */
+          const auto It = _DataStreams.at(ID).find(TimeIn);
+          TimeOut = It->first;
+          return true; /**< equal */
         }
         else
         {
-          /** container is empty */
-          PRINT_ERROR("Key does not have any element: ", ID);
-          return false;
+          return getTimeBelow(ID, TimeIn, TimeOut); /**< below */
         }
       }
 
       bool getTimeCloseTo(const KeyType &ID, const double Timestamp, double& TimestampClose) const
       {
+        /** catch non-existing key */
         if (!this->checkID(ID))
         {
           PRINT_ERROR("Key does not exist: ", ID);
           return false;
         }
-
-        auto It = _DataStreams.at(ID).lower_bound(Timestamp);
-
-        if (It->first == Timestamp)
+        /** catch empty container */
+        if(this->countElements(ID) == 0)
         {
-          /** Timestamp equal to existing one*/
-          TimestampClose = It->first;
-          return true;
+          PRINT_ERROR("Container is empty for key: ", ID);
+          return false;
         }
-        else if (It == _DataStreams.at(ID).end() && It != _DataStreams.at(ID).begin())
-        {
-          /** last timestamp is the closest one */
-          It--;
-          TimestampClose = It->first;
-          return true;
-        }
-        else if (It != _DataStreams.at(ID).end() && It == _DataStreams.at(ID).begin())
-        {
-          /** first timestamp is the closest one */
-          TimestampClose = It->first;
-          return true;
-        }
-        else if (It != _DataStreams.at(ID).end() && It != _DataStreams.at(ID).begin())
-        {
-          /** we have to check both sides */
-          double TimeBelow;
 
-          if(this->getTimePrev(ID, It->first, TimeBelow)) /**< this should always be true, since we are somewhere in the middle */
+        /** find closest iterators */
+        const auto ItLow = _DataStreams.at(ID).lower_bound(Timestamp);
+        const auto ItHigh = _DataStreams.at(ID).upper_bound(Timestamp);
+
+        /** case 1: element is above all */
+        if(ItLow == _DataStreams.at(ID).end())
+        {
+          TimestampClose = std::prev(ItLow)->first;
+        }
+        else if (ItHigh == _DataStreams.at(ID).begin())
+        {
+          /** case 2: element is below all */
+          TimestampClose = ItLow->first;
+        }
+        else
+        {
+          /** general case: element is somewhere between */
+          double TimeLow;
+          double TimeHigh;
+
+          /** safely get time below lower bound */
+          if(ItLow == _DataStreams.at(ID).begin())
           {
-            if((It->first - Timestamp) <= (Timestamp - TimeBelow))
-            {
-              TimestampClose = It->first;
-            }
-            else
-            {
-              TimestampClose = TimeBelow;
-            }
-            return true;
+            TimeLow = ItLow->first;
           }
           else
           {
-            PRINT_ERROR("Something gone wrong badly!");
+            TimeLow = std::prev(ItLow)->first;
+          }
+
+          /** safely get time at upper bound */
+          if(ItHigh == _DataStreams.at(ID).end())
+          {
+            TimeHigh = std::prev(ItHigh)->first;
+          }
+          else
+          {
+            TimeHigh = ItHigh->first;
+          }
+
+          /** compare times */
+          if (abs(TimeLow - Timestamp) < abs(TimeHigh - Timestamp))
+          {
+            TimestampClose = TimeLow;
+          }
+          else
+          {
+            TimestampClose = TimeHigh;
           }
         }
-        else /**< this means It == begin == end, so the map is empty */
-        {
-          PRINT_ERROR("List is empty!");
-        }
 
-        return false;
+        return true;
       }
 
       int countTimes(const KeyType &ID) const
@@ -622,7 +610,7 @@ namespace libRSF
         if(this->checkID(ID))
         {
           /** loop over timestamps */
-          const DataStream &StreamRef = _DataStreams.at(ID);
+          const ObjectStream &StreamRef = _DataStreams.at(ID);
           for(auto it = StreamRef.begin(); it != StreamRef.end(); it = StreamRef.upper_bound(it->first))
           {
             /** loop over elements at one timestamp */
@@ -644,7 +632,7 @@ namespace libRSF
       {
         if(this->checkID(ID))
         {
-          const DataStream &StreamRef = _DataStreams.at(ID);
+          const ObjectStream &StreamRef = _DataStreams.at(ID);
           for(auto it = StreamRef.begin(); it != StreamRef.end(); it = StreamRef.upper_bound(it->first))
           {
             Times.push_back(it->first);
@@ -678,7 +666,7 @@ namespace libRSF
           }
           else
           {
-            PRINT_WARNING("Could not find timestamps between", StartTime, " and ", EndTime, " for ", ID);
+            PRINT_WARNING("Could not find timestamps between ", StartTime, " and ", EndTime, " for ", ID);
             return false;
           }
         }
@@ -798,7 +786,7 @@ namespace libRSF
         return true;
       }
 
-      std::map<KeyType, DataStream> _DataStreams;
+      std::map<KeyType, ObjectStream> _DataStreams;
 
       /** for empty references */
       ObjectType NullObject;

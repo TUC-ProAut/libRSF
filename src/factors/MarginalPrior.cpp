@@ -28,7 +28,7 @@ namespace libRSF
   MarginalPrior::MarginalPrior(const std::vector<int> &LocalSize,
                                const std::vector<int> &GlobalSize,
                                const std::vector<Vector> &LinearizationPoints,
-                               const std::vector<StateType> & StateTypes,
+                               const std::vector<DataType> & StateTypes,
                                const Matrix &J,
                                const Vector &R)
   {
@@ -108,7 +108,7 @@ namespace libRSF
       const VectorRefConst<double, Dynamic> State(Parameters[nState], GlobalSize);
       const Vector LinearState = _LinearizationPoints.segment(IndexState, GlobalSize);
 
-      if (_StateTypes.at(nState) == StateType::Angle)
+      if (_StateTypes.at(nState) == DataType::Angle)
       {
         /** angle case */
         DeltaState.segment(IndexError, LocalSize) = NormalizeAngleVector<double, 1>(State - LinearState);
@@ -120,7 +120,7 @@ namespace libRSF
         }
 
       }
-      else if (_StateTypes.at(nState) == StateType::Quat)
+      else if (_StateTypes.at(nState) == DataType::Quaternion)
       {
         /** quaternion case */
         QuaternionRefConst<double> QState (State.data());

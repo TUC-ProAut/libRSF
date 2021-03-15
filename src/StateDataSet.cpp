@@ -24,25 +24,25 @@
 
 namespace libRSF
 {
-  void StateDataSet::addElement(StateData &Element)
+  void StateDataSet::addElement(Data &Element)
   {
     addElement(Element.getName(),Element);
   }
 
-  void StateDataSet::addElement(std::string Name, StateData &Element)
+  void StateDataSet::addElement(std::string Name, Data &Element)
   {
     if (!this->checkID(Name))
     {
-      DataStream TempStream;
+      ObjectStream TempStream;
       _DataStreams.emplace(Name, TempStream);
     }
 
     _DataStreams[Name].emplace(Element.getTimestamp(), Element);
   }
 
-  void StateDataSet::addElement(std::string Name, StateType Type, double Timestamp)
+  void StateDataSet::addElement(std::string Name, DataType Type, double Timestamp)
   {
-    StateData Element(Type, Timestamp);
+    Data Element(Type, Timestamp);
     addElement(Name, Element);
   }
 

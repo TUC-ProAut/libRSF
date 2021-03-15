@@ -40,7 +40,6 @@
 #include "DataSet.h"
 #include "LocalParametrization.h"
 #include "Marginalization.h"
-#include "SensorData.h"
 #include "StateDataSet.h"
 #include "SensorDataSet.h"
 #include "Types.h"
@@ -101,11 +100,11 @@ namespace libRSF
       virtual ~FactorGraph() = default;
 
       /** access to single states */
-      void addState(string Name, StateType Type, double Timestamp);
-      void addState(string Name, StateData &Element);
+      void addState(string Name, DataType Type, double Timestamp);
+      void addState(string Name, Data &Element);
 
       /** add states only if they doesn't exist */
-      void addStateWithCheck(string Name, StateType Type, double Timestamp);
+      void addStateWithCheck(string Name, DataType Type, double Timestamp);
 
       /** access to complete state data */
       StateDataSet& getStateData();
@@ -184,12 +183,12 @@ namespace libRSF
                      ErrorType &NoiseModel,
                      ceres::LossFunction* RobustLoss = nullptr)
       {
-        addFactorBase<CurrentFactorType>(List, NoiseModel, SensorData(SensorType::Other, 0.0), RobustLoss);
+        addFactorBase<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), RobustLoss);
       }
       /** last level with measurement */
       template <FactorType CurrentFactorType, typename ErrorType>
       void addFactor(StateList List,
-                     const SensorData &Measurement,
+                     const Data &Measurement,
                      ErrorType &NoiseModel,
                      ceres::LossFunction* RobustLoss = nullptr)
       {
@@ -200,9 +199,9 @@ namespace libRSF
       void addIMUPreintegrationFactor(StateList List, PreintegratedIMUResult IMUState);
 
       /** for sliding window */
-      void removeFactor(FactorType CurrentFactorType, double Timestamp);
-      void removeFactorsOutsideWindow(FactorType CurrentFactorType, double TimeWindow, double CurrentTime);
-      void removeAllFactorsOutsideWindow(double TimeWindow, double CurrentTime);
+      void removeFactor(const FactorType CurrentFactorType, const double Timestamp);
+      void removeFactorsOutsideWindow(const FactorType CurrentFactorType, const double TimeWindow, const double CurrentTime);
+      void removeAllFactorsOutsideWindow(const double TimeWindow, const double CurrentTime);
 
       /** solve problem */
       void solve();
@@ -215,8 +214,8 @@ namespace libRSF
 
       /** marginalize factors */
       bool marginalizeState(const string Name, const double Timestamp, const int Number = 0);
-      bool marginalizeStates(std::vector<StateID> States);
-      bool marginalizeAllStatesOutsideWindow(double TimeWindow, double CurrentTime);
+      bool marginalizeStates(std::vector<StateID> States, const double Inflation = 1.0);
+      bool marginalizeAllStatesOutsideWindow(const double TimeWindow, const double CurrentTime, const double Inflation = 1.0);
 
       /** sample output state */
       void sampleCost1D(const string StateName,
@@ -314,7 +313,7 @@ namespace libRSF
                                                                               StatePointers);
 
         /** store state types */
-        std::vector<StateType> StateTypes;
+        std::vector<DataType> StateTypes;
         for(const StateID &State : StateList)
         {
           StateTypes.emplace_back(_StateData.getElement(State.ID , State.Timestamp, State.Number).getType());
@@ -331,7 +330,7 @@ namespace libRSF
       }
 
       template <FactorType CurrentFactorType, typename ErrorType>
-      void addFactorBase(StateList &States, ErrorType &NoiseModel, const SensorData &Measurement, ceres::LossFunction* RobustLoss)
+      void addFactorBase(StateList &States, ErrorType &NoiseModel, const Data &Measurement, ceres::LossFunction* RobustLoss)
       {
         /** get index timestamp */
         const double TimestampFirst = States._List.front().Timestamp;

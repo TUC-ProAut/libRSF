@@ -30,6 +30,7 @@
  */
 
 #include "../applications/ICRA19_GNSS.h"
+#include "TestUtils.h"
 #include "gtest/gtest.h"
 
 TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
@@ -52,13 +53,40 @@ TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
     libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", Gt);
 
     /** calculate RMSE */
-    double ate = libRSF::ATE(libRSF::SensorType::Point3, Gt, POSITION_STATE, Result);
+    double ATE = libRSF::ATE(libRSF::DataType::Point3, Gt, POSITION_STATE, Result);
 
-    std::cout << "ATE: " << ate << std::endl;
+    std::cout << "ATE: " << ATE << std::endl;
 
-    EXPECT_LT(ate,100.0);
+    EXPECT_LT(ATE, 70.0);
 }
 
-// main provided by linking to gtest_main
+TEST(ICRA19_GNSS, smartLoc_Berlin_Potsdamer_Platz_stsm)
+{
+    /** assign all arguments to string vector*/
+    std::vector<std::string> Arguments;
+    Arguments.push_back("datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt");
+    Arguments.push_back("Result_smartLoc_Berlin_Potsdamer_Platz_gauss.txt"); // shouldn't be neccesary, not writing
+    Arguments.push_back("error:");
+    Arguments.push_back("stsm");
+
+    /** calculate example */
+    libRSF::StateDataSet Result;
+    std::string OutputFile;
+
+    ASSERT_FALSE(CreateGraphAndSolve(Arguments, Result, OutputFile)) << "Error calculating example";
+
+    /** read gt */
+    libRSF::SensorDataSet Gt;
+    libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", Gt);
+
+    /** calculate RMSE */
+    double ATE = libRSF::ATE(libRSF::DataType::Point3, Gt, POSITION_STATE, Result);
+
+    std::cout << "ATE: " << ATE << std::endl;
+
+    EXPECT_LT(ATE,23.0);
+}
+
+/** main provided by linking to gtest_main */
 
 

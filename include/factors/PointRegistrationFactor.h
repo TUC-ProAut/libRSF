@@ -42,7 +42,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      Point2RegistrationFactor(ErrorType &Error, const SensorData &RelativePoint)
+      Point2RegistrationFactor(ErrorType &Error, const Data &RelativePoint)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(4);
@@ -86,7 +86,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      Point2RegistrationPoseFactor(ErrorType &Error, const SensorData &RelativePoint)
+      Point2RegistrationPoseFactor(ErrorType &Error, const Data &RelativePoint)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(4);

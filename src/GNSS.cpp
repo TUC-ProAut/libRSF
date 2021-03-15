@@ -146,18 +146,18 @@ namespace libRSF
   }
 
 
-  void TangentPlaneConverter::convertStateToLocal(StateData &State)
+  void TangentPlaneConverter::convertStateToLocal(Data &State)
   {
     /** check if the state has the right type */
-    if(State.getType() != StateType::Point3)
+    if(State.getType() != DataType::Point3)
     {
       PRINT_ERROR("Wrong state Type: ", State.getType());
       return;
     }
 
     /** extract values */
-    Vector3 MeanIn = State.getMean();
-    Matrix33 CovIn(State.getCovariance().data());
+    const Vector3 MeanIn = State.getMean();
+    const Matrix33 CovIn = State.getCovarianceMatrix();
 
     /** convert */
     Vector3 MeanOut;
@@ -167,21 +167,21 @@ namespace libRSF
     /** write back */
     Vector9 CovOutVect(CovOut.data());
     State.setMean(MeanOut);
-    State.setCovariance(CovOutVect);
+    State.setCovarianceMatrix(CovOutVect);
   }
 
-  void TangentPlaneConverter::convertStateToGlobal(StateData &State)
+  void TangentPlaneConverter::convertStateToGlobal(Data &State)
   {
     /** check if the state has the right type */
-    if(State.getType() != StateType::Point3)
+    if(State.getType() != DataType::Point3)
     {
       PRINT_ERROR("Wrong state Type: ", State.getType());
       return;
     }
 
     /** extract values */
-    Vector3 MeanIn = State.getMean();
-    Matrix33 CovIn(State.getCovariance().data());
+    const Vector3 MeanIn = State.getMean();
+    const Matrix33 CovIn = State.getCovarianceMatrix();
 
     /** convert */
     Vector3 MeanOut;
@@ -191,40 +191,40 @@ namespace libRSF
     /** write back */
     Vector9 CovOutVect(CovOut.data());
     State.setMean(MeanOut);
-    State.setCovariance(CovOutVect);
+    State.setCovarianceMatrix(CovOutVect);
   }
 
-  void TangentPlaneConverter::convertMeasurementToLocal(SensorData &Measurement)
+  void TangentPlaneConverter::convertMeasurementToLocal(Data &Measurement)
   {
     /** check if the measurement has the right type */
-    if(Measurement.getType() != SensorType::Pseudorange3)
+    if(Measurement.getType() != DataType::Pseudorange3)
     {
       PRINT_ERROR("Wrong sensor Type: ", Measurement.getType());
       return;
     }
 
     /** remove earth rotation effect */
-    Vector3 SatPosGlobal = Measurement.getValue(SensorElement::SatPos);
+    Vector3 SatPosGlobal = Measurement.getValue(DataElement::SatPos);
     Vector1 RelCor;
     RelCor(0) = RelativisticCorrection(_TangentPoint.data(), SatPosGlobal);
     Measurement.setMean(Measurement.getMean() - RelCor);
 
     /** convert sat pos */
-    Measurement.setValue(SensorElement::SatPos, convertToLocal(SatPosGlobal));
+    Measurement.setValue(DataElement::SatPos, convertToLocal(SatPosGlobal));
   }
 
-  void TangentPlaneConverter::convertMeasurementToGlobal(SensorData &Measurement)
+  void TangentPlaneConverter::convertMeasurementToGlobal(Data &Measurement)
   {
     /** check if the measurement has the right type */
-    if(Measurement.getType() != SensorType::Pseudorange3)
+    if(Measurement.getType() != DataType::Pseudorange3)
     {
       PRINT_ERROR("Wrong sensor Type: ", Measurement.getType());
       return;
     }
 
     /** convert sat pos */
-    Vector3 SatPosGlobal = convertToGlobal(Measurement.getValue(SensorElement::SatPos));
-    Measurement.setValue(SensorElement::SatPos, SatPosGlobal);
+    Vector3 SatPosGlobal = convertToGlobal(Measurement.getValue(DataElement::SatPos));
+    Measurement.setValue(DataElement::SatPos, SatPosGlobal);
 
     /** add earth rotation effect again*/
     Vector1 RelCor;
@@ -237,7 +237,7 @@ namespace libRSF
     double Timestamp;
 
     /** check if right measurements are available */
-    if(!Measurements.getTimeFirst(SensorType::Pseudorange3, Timestamp))
+    if(!Measurements.getTimeFirst(DataType::Pseudorange3, Timestamp))
     {
       PRINT_ERROR("There is no pseudorange measurement!");
       return;
@@ -246,13 +246,13 @@ namespace libRSF
     /** iterate over all measurements and convert them */
     do
     {
-      int N = Measurements.countElement(SensorType::Pseudorange3, Timestamp);
+      int N = Measurements.countElement(DataType::Pseudorange3, Timestamp);
       for (int n = 0; n < N; n++)
       {
-        convertMeasurementToLocal(Measurements.getElement(SensorType::Pseudorange3, Timestamp, n));
+        convertMeasurementToLocal(Measurements.getElement(DataType::Pseudorange3, Timestamp, n));
       }
     }
-    while (Measurements.getTimeNext(SensorType::Pseudorange3, Timestamp, Timestamp));
+    while (Measurements.getTimeNext(DataType::Pseudorange3, Timestamp, Timestamp));
   }
 
   void TangentPlaneConverter::convertAllStatesToLocal(StateDataSet &States, std::string ID)

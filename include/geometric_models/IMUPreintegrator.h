@@ -70,7 +70,7 @@ namespace libRSF
       double StartTime;
 
       /** all IMU measurements */
-      std::vector<libRSF::SensorData> Measurements;
+      std::vector<libRSF::Data> Measurements;
   };
 
   class IMUPreintegrator
@@ -87,7 +87,7 @@ namespace libRSF
 
       virtual ~IMUPreintegrator() = default;
 
-      void addMeasurement(const SensorData &IMUMeasurement);
+      void addMeasurement(const Data &IMUMeasurement);
       void integrateToTime(const double Timestamp);
       void updateBias(const Vector3 &BiasAcc, const Vector3 &BiasTR);
 
@@ -99,7 +99,7 @@ namespace libRSF
       void integrateFull(const double Timestamp);
 
       /** measurements */
-      std::vector<libRSF::SensorData> _Measurements;
+      std::vector<libRSF::Data> _Measurements;
 
       /** time stamp that marks the end of the integration */
       double _CurrentTime;

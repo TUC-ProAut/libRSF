@@ -27,7 +27,7 @@ namespace libRSF
 
   void Marginalize(const Vector &Residual, const Matrix &Jacobian,
                    Vector &ResidualMarg, Matrix &JacobianMarg,
-                   const int SizeMarginal)
+                   const int SizeMarginal, const double HessianInflation)
   {
     /** H = J^T * J */
     Matrix Hessian = Jacobian.transpose() * Jacobian;
@@ -74,8 +74,11 @@ namespace libRSF
     Matrix HessRRStar = HessRR - HessRM * HessMMInv * HessMR;
     const Vector BRStar = BR - HessRM * HessMMInv * BM;
 
-    /** add a small uncertainty to prevent accumulation of error (currently 1%)*/
-    HessRRStar *= 0.99;
+    /** add a small uncertainty to prevent accumulation of error (I recommend a value of 1.01)*/
+    if (HessianInflation != 1.0)
+    {
+      HessRRStar /= HessianInflation;
+    }
 
     /** convert to unsquared system system */
     ResidualMarg.resize(SizeRemain);

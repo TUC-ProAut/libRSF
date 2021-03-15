@@ -22,4 +22,130 @@
 
 #include "Data.h"
 
-namespace libRSF {}
+namespace libRSF
+{
+  /** contructors */
+  Data::Data()
+  {
+    this->_Config = &GlobalDataConfig;
+  }
+
+  Data::Data(std::string Input)
+  {
+    this->_Config = &GlobalDataConfig;
+    this->constructFromString(Input);
+  }
+
+  Data::Data(DataType Type, double Timestamp)
+  {
+    this->_Config = &GlobalDataConfig;
+    this->constructEmpty(Type, Timestamp);
+  }
+
+  double Data::getTimestamp() const
+  {
+    return this->getValue(DataElement::Timestamp)(0);
+  }
+
+  Vector Data::getMean() const
+  {
+    return this->getValue(DataElement::Mean);
+  }
+
+  Matrix Data::getCovarianceMatrix() const
+  {
+    if (this->checkElement(DataElement::Covariance))
+    {
+      /** map vector to matrix */
+      Vector CovVect = this->getValue(DataElement::Covariance);
+      MatrixRef<double, Dynamic, Dynamic> Cov(CovVect.data(), sqrt(CovVect.size()), sqrt(CovVect.size()));
+      return Cov;
+    }
+    else if (this->checkElement(DataElement::CovarianceDiagonal))
+    {
+      return this->getCovarianceDiagonal().asDiagonal();
+    }
+    else
+    {
+      PRINT_ERROR("Data has no covariance element!");
+      return Vector();
+    }
+  }
+
+  Vector Data::getCovarianceDiagonal() const
+  {
+    if (this->checkElement(DataElement::Covariance))
+    {
+      return this->getCovarianceMatrix().diagonal();
+    }
+    else if (this->checkElement(DataElement::CovarianceDiagonal))
+    {
+      return this->getValue(DataElement::CovarianceDiagonal);
+    }
+    else
+    {
+      PRINT_ERROR("Data has no covariance element!");
+      return Vector();
+    }
+  }
+
+  Vector Data::getStdDevDiagonal() const
+  {
+    if (this->checkElement(DataElement::Covariance))
+    {
+      return this->getCovarianceMatrix().diagonal().cwiseSqrt();
+    }
+    else if (this->checkElement(DataElement::CovarianceDiagonal))
+    {
+      return this->getCovarianceDiagonal().cwiseSqrt();
+    }
+    else
+    {
+      PRINT_ERROR("Data has no covariance element!");
+      return Vector();
+    }
+  }
+
+  double* Data::getMeanPointer()
+  {
+    return this->getDataPointer(DataElement::Mean);
+  }
+
+  double const* Data::getMeanPointerConst()
+  {
+    return this->getDataPointer(DataElement::Mean);
+  }
+
+  void Data::setMean(const Vector Mean)
+  {
+    this->setValue(DataElement::Mean, Mean);
+  }
+
+  void Data::setTimestamp(const double Timestamp)
+  {
+    this->setValueScalar(DataElement::Timestamp, Timestamp);
+  }
+
+  void Data::setCovarianceDiagonal(const Vector Cov)
+  {
+    this->setValue(DataElement::CovarianceDiagonal, Cov);
+  }
+
+  void Data::setCovarianceMatrix(const Vector Cov)
+  {
+    /** we expect a row-major vector representation of the actual matrix here */
+    this->setValue(DataElement::Covariance, Cov);
+  }
+
+  void Data::setStdDevDiagonal(const Vector StdDev)
+  {
+    if (this->checkElement(DataElement::Covariance) && this->getValue(DataElement::Covariance).size() == 1)
+    {
+      this->setValue(DataElement::Covariance, StdDev.array().square());
+    }
+    else
+    {
+      this->setValue(DataElement::CovarianceDiagonal, StdDev.array().square());
+    }
+  }
+}

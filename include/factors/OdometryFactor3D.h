@@ -43,7 +43,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      OdometryFactor3D4DOF_ECEF(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
+      OdometryFactor3D4DOF_ECEF(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
         this->_Error = Error;
 
@@ -100,7 +100,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      OdometryFactor3D4DOF(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
+      OdometryFactor3D4DOF(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(6);
@@ -155,7 +155,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      OdometryFactor3D6DOF(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
+      OdometryFactor3D6DOF(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(6);

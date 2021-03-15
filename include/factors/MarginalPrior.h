@@ -46,7 +46,7 @@ namespace libRSF
       MarginalPrior(const std::vector<int> &LocalSize,
                     const std::vector<int> &GlobalSize,
                     const std::vector<Vector> &LinearizationPoints,
-                    const std::vector<StateType> & StateTypes,
+                    const std::vector<DataType> & StateTypes,
                     const Matrix &J,
                     const Vector &R);
 
@@ -58,7 +58,7 @@ namespace libRSF
     private:
       std::vector<int> _LocalSize;
       std::vector<int> _GlobalSize;
-      std::vector<StateType> _StateTypes;
+      std::vector<DataType> _StateTypes;
       int _GlobalSizeSum;
       int _LocalSizeSum;
       Vector _LinearizationPoints;

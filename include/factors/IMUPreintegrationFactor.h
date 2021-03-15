@@ -122,7 +122,7 @@ namespace libRSF
 
         /** loop over measurements to predict incrementally */
         double OldTime = _Preintegration.StartTime;
-        for (const SensorData &Measurement : _Preintegration.Measurements)
+        for (const Data &Measurement : _Preintegration.Measurements)
         {
           IMUModel<double>::applyForward(P1.data(),
                                          Q1.coeffs().data(),

@@ -18,6 +18,12 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
+add_executable(App_Robust_Models_1D App_Robust_Models_1D.cpp)
+target_link_libraries(App_Robust_Models_1D libRSF)
+
+add_executable(App_Robust_Models_2D App_Robust_Models_2D.cpp)
+target_link_libraries(App_Robust_Models_2D libRSF)
+
 add_executable(ICRA19_Ranging ICRA19_Ranging.cpp)
 target_link_libraries(ICRA19_Ranging libRSF)
 

@@ -33,7 +33,7 @@
 #define BASEFACTOR_H
 
 #include "../Messages.h"
-#include "../SensorData.h"
+#include "../Data.h"
 #include "../Types.h"
 #include "../error_models/ErrorModel.h"
 

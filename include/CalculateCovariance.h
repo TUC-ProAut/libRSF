@@ -222,7 +222,7 @@ namespace libRSF
       const VectorRefConst<double, Dim* Dim> CovVect(Cov.data());
 
       /** overwrite state covariance */
-      States.getElement(StateName, StateTimestamp, StateNumber).setCovariance(CovVect);
+      States.getElement(StateName, StateTimestamp, StateNumber).setCovarianceMatrix(CovVect);
     }
 
     return Success;

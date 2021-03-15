@@ -42,12 +42,12 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      OdometryFactor2DDifferential(ErrorType &Error, const SensorData &OdometryMeasurement, double DeltaTime)
+      OdometryFactor2DDifferential(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(4);
         this->_MeasurementVector.head(3) = OdometryMeasurement.getMean();
-        this->_MeasurementVector.tail(1) = OdometryMeasurement.getValue(SensorElement::WheelBase);
+        this->_MeasurementVector.tail(1) = OdometryMeasurement.getValue(DataElement::WheelBase);
         this->_DeltaTime = DeltaTime;
       }
 

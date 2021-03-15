@@ -32,25 +32,25 @@
 #ifndef STATEDATASET_H
 #define STATEDATASET_H
 
-#include "StateData.h"
+#include "Data.h"
 #include "DataSet.h"
 
 namespace libRSF
 {
-  class StateDataSet : public DataSet<std::string, StateData>
+  class StateDataSet : public DataSet<std::string, Data>
   {
     public:
       StateDataSet() {};
       ~StateDataSet() {};
 
       /** add an element according to its internal type and timestamp*/
-      void addElement(StateData &Element);
+      void addElement(Data &Element);
       /** use external name */
-      void addElement(std::string Name, StateData &Element);
+      void addElement(std::string Name, Data &Element);
       /** add an empty element*/
-      void addElement(std::string Name, StateType Type, double Timestamp);
+      void addElement(std::string Name, DataType Type, double Timestamp);
 
-      using DataSet<std::string, StateData>::addElement;
+      using DataSet<std::string, Data>::addElement;
   };
 
   typedef StateDataSet::UniqueID StateID;

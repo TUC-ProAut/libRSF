@@ -42,44 +42,8 @@ namespace libRSF
     return Median((V.array() - Median(V)).abs().matrix());
   }
 
-  double RMSE(Vector V)
+  double RMSE(const Vector V)
   {
     return sqrt(V.squaredNorm() / V.size());
-  }
-
-  double ATE(SensorType TypeGT,
-             SensorDataSet GT,
-             std::string TypeEstiamte,
-             StateDataSet Estimate)
-  {
-    /** check length */
-    const int LengthGT = GT.countElements(TypeGT);
-    const int LengthEstimate = Estimate.countElements(TypeEstiamte);
-
-    /** return error if not equal */
-    if (LengthGT != LengthEstimate)
-    {
-      PRINT_ERROR("Length of GT and estimate is not identical!");
-      return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    /** vector to store errors */
-    Vector Error(LengthEstimate);
-
-    /** get first timestamp */
-    double Time;
-    GT.getTimeFirst(TypeGT, Time);
-
-    /** fill error vector */
-    int n = 0;
-    do
-    {
-      Error(n) = (Estimate.getElement(TypeEstiamte, Time).getMean() - GT.getElement(TypeGT, Time).getMean()).norm();
-      n++;
-    }
-    while(GT.getTimeNext(TypeGT, Time, Time));
-
-    /** apply RMSE */
-    return RMSE(Error);
   }
 }

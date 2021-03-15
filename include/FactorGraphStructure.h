@@ -55,7 +55,7 @@ namespace libRSF
         std::string Name;
         double Timestamp;
         int Number;
-        StateType Type;
+        DataType Type;
       };
 
       struct FactorInfo
@@ -75,7 +75,7 @@ namespace libRSF
                                   std::vector<int> &StateDims,
                                   std::vector<int> &StateDimsLocal,
                                   std::vector<StateID> &StateIDs,
-                                  std::vector<StateType> &StateTypes) const;
+                                  std::vector<DataType> &StateTypes) const;
 
 
       template <typename ErrorType>
@@ -85,7 +85,7 @@ namespace libRSF
                      ErrorType* const ErrorModel,
                      const std::vector<StateID> &States,
                      const std::vector<double*> &StatePointers,
-                     const std::vector<StateType> &StateTypes)
+                     const std::vector<DataType> &StateTypes)
       {
         /** add to time dependent representation */
         _FactorList.addElement(Type, Timestamp, CeresID);

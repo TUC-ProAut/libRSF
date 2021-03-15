@@ -24,9 +24,9 @@
 
 namespace libRSF
 {
-  std::vector<SensorData> SampleMeasurementsDown(const std::vector<SensorData> &Input, const double SampleTime)
+  std::vector<Data> SampleMeasurementsDown(const std::vector<Data> &Input, const double SampleTime)
   {
-    std::vector<SensorData> Output;
+    std::vector<Data> Output;
 
     if(Input.empty())
     {
@@ -38,8 +38,8 @@ namespace libRSF
     double TimeNext = Time + SampleTime;
     double TimeMax = Input.back().getTimestamp();
 
-    std::vector<SensorData> AveragingWindow;
-    for(const SensorData &Sensor : Input)
+    std::vector<Data> AveragingWindow;
+    for(const Data &Sensor : Input)
     {
       /** group measurements in periods of sample time length*/
       AveragingWindow.push_back(Sensor);
@@ -62,9 +62,9 @@ namespace libRSF
     return Output;
   }
 
-  SensorData AverageMeasurement(const std::vector<SensorData> &Input)
+  Data AverageMeasurement(const std::vector<Data> &Input)
   {
-    SensorData Output;
+    Data Output;
 
     /** catch empty vectors */
     if(Input.empty())
@@ -83,13 +83,13 @@ namespace libRSF
     double Time = 0;
     Vector Mean (Input.front().getMean().size());
     Mean.setZero();
-    Vector Info (Input.front().getCovariance().size());
+    Vector Info (Input.front().getCovarianceDiagonal().size());
     Info.setZero();
-    for (const SensorData & Measurement : Input)
+    for (const Data & Measurement : Input)
     {
       Time += Measurement.getTimestamp();
       Mean += Measurement.getMean();
-      Info += Measurement.getCovariance().cwiseInverse();
+      Info += Measurement.getCovarianceDiagonal().cwiseInverse();
     }
     Mean /= Input.size();
     Time /= Input.size();
@@ -97,7 +97,7 @@ namespace libRSF
     Output = Input.back();
     Output.setTimestamp(Time);
     Output.setMean(Mean);
-    Output.setCovariance(Info.cwiseInverse());
+    Output.setCovarianceDiagonal(Info.cwiseInverse());
 
     return Output;
   }

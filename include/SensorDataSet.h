@@ -33,21 +33,21 @@
 #define SENSORDATASET_H
 
 #include "DataSet.h"
-#include "SensorData.h"
+#include "Data.h"
 
 namespace libRSF
 {
 
-  class SensorDataSet : public DataSet<SensorType, SensorData>
+  class SensorDataSet : public DataSet<DataType, Data>
   {
     public:
       SensorDataSet() {};
       ~SensorDataSet() {};
 
       /** add an element according to its internal type and timestamp*/
-      void addElement(SensorData Element);
+      void addElement(Data Element);
 
-      using DataSet<SensorType, SensorData>::addElement;
+      using DataSet<DataType, Data>::addElement;
   };
 
   typedef SensorDataSet::UniqueID MeasurementID;

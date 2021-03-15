@@ -43,7 +43,7 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      BetweenPose3Factor(ErrorType &Error, const SensorData &PoseMeasurement)
+      BetweenPose3Factor(ErrorType &Error, const Data &PoseMeasurement)
       {
         this->_Error = Error;
         this->_MeasurementVector.resize(7);

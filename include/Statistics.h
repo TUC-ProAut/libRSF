@@ -67,13 +67,7 @@ namespace libRSF
   double MAD(Vector V);
 
   /** RMSE of a vector */
-  double RSME(Vector V);
-
-  /** absolute trajectory error (RMSE) */
-  double ATE(SensorType GTType,
-             SensorDataSet GT,
-             std::string EstimateType,
-             StateDataSet Estimate);
+  double RMSE(Vector V);
 }
 
 #endif // STATISTICS_H

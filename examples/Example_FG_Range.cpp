@@ -29,14 +29,7 @@
 *
 */
 
-#include "libRSF.h"
-
-/** use define to prevent typos*/
-#define POSITION_STATE "Position"
-#define RANGE_MEASUREMENT libRSF::SensorType::Range2
-
-#define STDDEV_RANGE  0.001
-#define STDDEV_CP     1.0
+#include "Example_FG_Range.h"
 
 void CreateData (libRSF::SensorDataSet &RangeMeasurements)
 {
@@ -65,16 +58,18 @@ void CreateData (libRSF::SensorDataSet &RangeMeasurements)
       Range[0] = (SatPositions.at(j) - EgoPositions.at(i)).norm() + Distribution(Generator);
       SatID << j;
 
-      libRSF::SensorData RangeMasurement(libRSF::SensorType::Range2, i);
+      libRSF::Data RangeMasurement(libRSF::DataType::Range2, i);
       RangeMasurement.setMean(Range);
-      RangeMasurement.setStdDev(StdDev);
-      RangeMasurement.setValue(libRSF::SensorElement::SatPos, SatPositions.at(j));
-      RangeMasurement.setValue(libRSF::SensorElement::SatID, SatID);
+      RangeMasurement.setStdDevDiagonal(StdDev);
+      RangeMasurement.setValue(libRSF::DataElement::SatPos, SatPositions.at(j));
+      RangeMasurement.setValue(libRSF::DataElement::SatID, SatID);
 
       RangeMeasurements.addElement(RangeMasurement);
     }
   }
 }
+
+#ifndef TESTMODE // only compile main if not used in test context
 
 int main(int ArgC, char** ArgV)
 {
@@ -100,9 +95,9 @@ int main(int ArgC, char** ArgV)
   CreateData(RangeMeasurements);
 
   /** add position variables to graph */
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 0);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 1);
-  SimpleGraph.addState(POSITION_STATE, libRSF::StateType::Point2, 2);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 0);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 1);
+  SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 2);
 
   /** loop over timestamps */
   double Time = 0.0;
@@ -136,3 +131,5 @@ int main(int ArgC, char** ArgV)
 
   return 0;
 }
+
+#endif // TESTMODE

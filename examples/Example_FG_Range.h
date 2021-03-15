@@ -20,50 +20,18 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-/**
- * @file SensorData.h
- * @author Tim Pfeifer
- * @date 18.09.2018
- * @brief A class that stores one sensor measurement.
- * @copyright GNU Public License.
- *
- */
+#ifndef EXAMPLE_FG_RANGE_H_INCLUDED
+#define EXAMPLE_FG_RANGE_H_INCLUDED
 
-#ifndef SENSORDATA_H
-#define SENSORDATA_H
+#include "libRSF.h"
 
-#include "Data.h"
-#include "Types.h"
-#include "VectorMath.h"
+/** use define to prevent typos*/
+#define POSITION_STATE "Position"
+#define RANGE_MEASUREMENT libRSF::DataType::Range2
 
-namespace libRSF
-{
-  typedef DataConfig<SensorType, SensorElement> SensorConfig;
+#define STDDEV_RANGE  0.001
+#define STDDEV_CP     1.0
 
-  /** global object that hold all sensor configs */
-  extern const SensorConfig Sensors;
+void CreateData (libRSF::SensorDataSet &RangeMeasurements);
 
-  class SensorData: public Data<SensorType, SensorElement>
-  {
-    public:
-      SensorData();
-      virtual ~SensorData() = default;
-
-      explicit SensorData(std::string Input);
-      SensorData(SensorType Type, double Timestamp);
-
-      Vector getStdDev() const
-      {
-        Vector StdDev = getValue(SensorElement::Covariance);
-        return StdDev.cwiseSqrt();
-      }
-
-      void setStdDev(Vector Value)
-      {
-        Vector Cov = Value.array().square();
-        setValue(SensorElement::Covariance, Cov);
-      }
-  };
-}
-
-#endif // SENSORDATA_H
+#endif // EXAMPLE_FG_RANGE_H_INCLUDED

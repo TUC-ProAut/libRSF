@@ -29,9 +29,3 @@ target_link_libraries(Example_FG_Pseudorange libRSF)
 
 add_executable(Example_Marginalization Example_Marginalization.cpp)
 target_link_libraries(Example_Marginalization libRSF)
-
-add_executable(Example_Robust_Models_1D Example_Robust_Models_1D.cpp)
-target_link_libraries(Example_Robust_Models_1D libRSF)
-
-add_executable(Example_Robust_Models_2D Example_Robust_Models_2D.cpp)
-target_link_libraries(Example_Robust_Models_2D libRSF)

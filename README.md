@@ -9,12 +9,12 @@ Main features are:
 - A set of predefined cost functions for various localization problems.
 - Several robust error models for non-Gaussian problems, including self-tuning Gaussian mixtures.
 
-## Build Status
+## Build and Test Status
 
-| Platform     | Build Status  |
-|:------------:|:-------------:|
-| Ubuntu 20.04 | ![Focal CI](https://github.com/tipf/libRSF/workflows/Focal%20CI/badge.svg) |
-| Ubuntu 18.04 | ![Bionic CI](https://github.com/tipf/libRSF/workflows/Bionic%20CI/badge.svg) |
+| Platform     | Build Status  | Test Status |
+|:------------:|:-------------:|:-----------:|
+| Ubuntu 20.04 | ![Focal Build](https://github.com/tipf/TUC-ProAut/workflows/Focal%20Build/badge.svg) | ![Focal Tests](https://github.com/TUC-ProAut/libRSF/workflows/Focal%20Tests/badge.svg) 
+| Ubuntu 18.04 | ![Bionic Build](https://github.com/tipf/TUC-ProAut/workflows/Bionic%20Build/badge.svg) | ![Bionic Tests](https://github.com/TUC-ProAut/libRSF/workflows/Bionic%20Tests/badge.svg) |
 
 ## Installation
 
@@ -117,7 +117,7 @@ The following pages give you an overview, how to use them or how to build a cust
 
 1. [How to use the robust GNSS localization from our ICRA 2019 or IV 2019 paper?](docs/GNSS.md)
 
-2. [How to use the robust Gaussian mixture models from our RA-L 2020 Paper?](docs/ROBUST.md)
+2. [How to use the robust Gaussian mixture models from our RA-L 2021 Paper?](docs/ROBUST.md)
 
 3. [How to build your own application on top of the libRSF? (under construction)](docs/CUSTOM.md)
 
@@ -141,7 +141,7 @@ This library also contains the implementation of [1-3]. Further references will 
 
 [2] *Tim Pfeifer and Peter Protzel*, Incrementally learned Mixture Models for GNSS Localization, Proc. of Intelligent Vehicles Symposium (IV), 2019, DOI: [10.1109/IVS.2019.8813847](https://doi.org/10.1109/IVS.2019.8813847)
 
-[3] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2020 (coming soon)
+[3] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021 (accepted), Preprint: [arXiv:2103.02472](https://arxiv.org/abs/2103.02472)
 
 ### License
 
