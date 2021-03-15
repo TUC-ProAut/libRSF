@@ -22,7 +22,7 @@ jobs:
       - name: Run CMake
         working-directory: build
         run: cmake -DLIBRSF_BUILD_TEST=on ..
-      - name: Make tests
+      - name: Build tests
         working-directory: build
         run: make all -j$(getconf _NPROCESSORS_ONLN)
       # run tests

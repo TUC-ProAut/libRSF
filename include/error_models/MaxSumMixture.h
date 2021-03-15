@@ -92,8 +92,23 @@ namespace libRSF
           VectorRef<T, Dim+1> ErrorMap(Error);
 
           ErrorMap.template head<Dim>() = LSE.template head<Dim>(); /**< linear */
-          /** to prevent numerical issues close to zero, we set a lower bound of the following term */
-          ErrorMap(Dim) = sqrt(ceres::fmax(-2.0 * (LSE(Dim) - log(_Normalization + DampingFactor)), T(1e-20))); /**< non-linear */
+
+          /** nonlinear part is not required if there is only one component */
+          if (NumberOfComponents > 1)
+          {
+            /** to prevent numerical issues close to zero, we set a lower bound of the following term */
+            ErrorMap(Dim) = sqrt(ceres::fmax(-2.0 * (LSE(Dim) - log(_Normalization + DampingFactor)), T(1e-20))); /**< non-linear */
+          }
+          else
+          {
+            ErrorMap(Dim) = T(0.0); /**< cancel non-linear */
+          }
+
+          /** catch bad numerical cases (extreme covariances in a unimportant component) */
+          if (ceres::isfinite(ErrorMap(Dim)) == false)
+          {
+            ErrorMap(Dim) = T(0.0); /**< cancel non-linear */
+          }
         }
         else
         {

@@ -605,24 +605,57 @@ namespace libRSF
 
   void FactorGraph::setConstantOutsideWindow(string Name, double TimeWindow, double CurrentTime)
   {
-    const double CutTime = CurrentTime - TimeWindow;
+    /** find start of the current state */
     double Timestamp;
-    bool TimestampExists;
+    bool TimestampExists = _StateData.getTimeFirst(Name, Timestamp);
 
-    /** loop over timestamps that are older than TimeWindow + 1 seconds */
-    TimestampExists = _StateData.getTimeBelow(Name, CurrentTime - TimeWindow + 1.0, Timestamp);
+    /** estimate end */
+    const double CutTime = CurrentTime - TimeWindow;
+
+    /** loop over timestamps that are older than CutTime */
     if (TimestampExists)
     {
       while ((Timestamp <= CutTime) && TimestampExists)
       {
-        double TimestampTemp = Timestamp;
+        setConstant(Name, Timestamp);
         TimestampExists = _StateData.getTimeNext(Name, Timestamp, Timestamp);
-        setConstant(Name, TimestampTemp);
       }
     }
     else if (!_StateData.checkID(Name))
     {
       PRINT_ERROR("State doesn't exist: ", Name);
+    }
+  }
+
+  void FactorGraph::setVariableInsideWindow(string Name, double TimeWindow, double CurrentTime)
+  {
+    /** find end of the current state */
+    double Timestamp;
+    bool TimestampExists = _StateData.getTimeLast(Name, Timestamp);
+
+    /** estimate end */
+    const double CutTime = CurrentTime - TimeWindow;
+
+    /** loop over timestamps that are newer than CutTime */
+    if (TimestampExists)
+    {
+      while ((Timestamp > CutTime) && TimestampExists)
+      {
+        setVariable(Name, Timestamp);
+        TimestampExists = _StateData.getTimePrev(Name, Timestamp, Timestamp);
+      }
+    }
+    else if (!_StateData.checkID(Name))
+    {
+      PRINT_ERROR("State doesn't exist: ", Name);
+    }
+  }
+
+  void FactorGraph::setAllVariableInsideWindow(double TimeWindow, double CurrentTime)
+  {
+    for (auto const &State : _StateData)
+    {
+      setVariableInsideWindow(State.first, TimeWindow, CurrentTime);
     }
   }
 
@@ -778,6 +811,31 @@ namespace libRSF
     }
   }
 
+  void FactorGraph::computeUnweightedErrorMatrix(const FactorType CurrentFactorType, Matrix &ErrorMatrix)
+  {
+    /** get the data */
+    std::vector<double> ErrorVector;
+    this->computeUnweightedError(CurrentFactorType, ErrorVector);
+
+    /** check for empty vector */
+    if (ErrorVector.size() == 0)
+    {
+      PRINT_WARNING("Factors of type ", CurrentFactorType, " are missing!");
+      return;
+    }
+
+    /** get the factor IDs */
+    std::vector<FactorID> FactorVector;
+    _Structure.getFactorIDs(CurrentFactorType, FactorVector);
+
+    /** get the dimensions */
+    const int Dim = ErrorVector.size() / FactorVector.size();
+    const int Length = FactorVector.size();
+
+    /** map std vector to matrix */
+    ErrorMatrix = Eigen::Map<Matrix, Eigen::Unaligned, Eigen::Stride<1, Dynamic>>(ErrorVector.data(), Dim, Length, Eigen::Stride<1,Dynamic>(1, Dim));
+  }
+
   void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, const string &Name, StateDataSet &ErrorData)
   {
     /** get the data */
@@ -791,7 +849,7 @@ namespace libRSF
       return;
     }
 
-    /** get the fector IDs */
+    /** get the factor IDs */
     std::vector<FactorID> FactorVector;
     _Structure.getFactorIDs(CurrentFactorType, FactorVector);
 

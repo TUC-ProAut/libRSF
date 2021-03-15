@@ -4,7 +4,7 @@ function [Config] = loadPlotConfig(Size)
 
 Config.Font.Size = 18;
 Config.Font.Latex = false;
-Config.Font.Name = 'Helvetica';
+Config.Font.Name = 'Roboto';
 
 Config.Line.Width = 3;
 
