@@ -38,15 +38,18 @@ jobs:
         run: ./InstallDependencies.bash
         shell: bash
         
-      # build & install libRSF
+      # build libRSF
+      - name: Run CMake
+        working-directory: build
+        run: cmake -DLIBRSF_BUILD_TEST=on ..
       - name: Build lib
-        run: ./Build.bash
-        shell: bash 
+        working-directory: build
+        run: make all -j$(getconf _NPROCESSORS_ONLN)
+        
+      # install & uninstall libRSF
       - name: Install lib
         working-directory: build
         run: sudo make install
-        
-      # uninstall libRSF
       - name: Uninstall lib
         working-directory: build
         run: sudo make uninstall
@@ -55,8 +58,10 @@ jobs:
       - uses: actions/cache@v2
         id: restore-build
         with:
-          path: ./*
-          key: ${{ github.sha }}
+          path: |
+            build
+            externals
+          key: ${{ runner.os }}-${{ github.sha }}-${{ env.cache-name }}
         
   Bionic-Test:
     name: Test libRSF
@@ -71,21 +76,15 @@ jobs:
       - uses: actions/cache@v2
         id: restore-build
         with:
-          path: ./*
-          key: ${{ github.sha }}
+          path: |
+            build
+            externals
+          key: ${{ runner.os }}-${{ github.sha }}-${{ env.cache-name }}
           
       # install dependencies
       - name: Install dependencies
         run: ./InstallDependencies.bash
         shell: bash
-        
-      # build libRSF tests
-      - name: Run CMake
-        working-directory: build
-        run: cmake -DLIBRSF_BUILD_TEST=on ..
-      - name: Build tests
-        working-directory: build
-        run: make all -j$(getconf _NPROCESSORS_ONLN)
         
       # run tests
       - name: Run tests
