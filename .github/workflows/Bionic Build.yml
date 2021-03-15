@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       # checkout repo
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
         
       # install dependencies
@@ -71,10 +71,12 @@ jobs:
     needs: [Bionic-Build]
     steps:
       # checkout repo
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
+      
+      # checkout ceres and eigen
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
         
       # get cached build
       - uses: actions/cache@v2
