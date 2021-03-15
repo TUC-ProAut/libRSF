@@ -73,8 +73,8 @@ jobs:
       # checkout repo
       - name: checkout
         uses: actions/checkout@v2
-          with:
-            submodules: recursive
+        with:
+          submodules: recursive
         
       # get cached build
       - uses: actions/cache@v2
