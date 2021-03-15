@@ -116,6 +116,20 @@ namespace libRSF
         /** map data to eigen vector */
         const ErrorMatType DataMatrix = Eigen::Map<const ErrorMatType, Eigen::Unaligned, Eigen::Stride<1, Dim>>(Data.data(), Dim, N);
 
+        return this->estimate(DataMatrix, Config);
+      }
+
+      bool estimate(const MatrixStatic<Dim, Dynamic> &DataMatrix, const EstimationConfig &Config)
+      {
+        const int N = DataMatrix.cols();
+
+        /** check size */
+        if (N < Config.MinimalSamples)
+        {
+          PRINT_WARNING("Sample Size to low: ", N);
+          return false;
+        }
+
         /** estimate a good covariance prior*/
         EstimationConfig ModifiedConfig = Config;
         if (Config.EstimationAlgorithm == ErrorModelTuningType::EM_MAP || Config.EstimationAlgorithm == ErrorModelTuningType::VBI)
@@ -247,12 +261,12 @@ namespace libRSF
         {
           if (_Mixture.at(m).checkParameters() == false)
           {
-            PRINT_ERROR("Check of GMM component ", m, " of ", _Mixture.size(), " failed!");
+            PRINT_ERROR("Check of GMM component ", m+1, " of ", _Mixture.size(), " failed!");
             GMMConsistency = false;
           }
         }
 
-        PRINT_LOGGING("GMM estimation started with ", Data.size(), " samples.");
+        PRINT_LOGGING("GMM estimation started with ", N, " samples.");
         PRINT_LOGGING("GMM estimation ended with ", _Mixture.size(), " components, after ", k - 1, " iterations.");
         this->printParameter();
 #endif
@@ -402,7 +416,7 @@ namespace libRSF
         for (int m = 0; m < GMMSize; ++m)
         {
           libRSF::GaussianComponent<Dim> Component;
-          Component.setParamsInformation(State.NuInfo.at(m)/State.VInfo.at(m)(0), -State.MeanMean.at(m), State.Weights.at(m));
+          Component.setParamsInformation(State.NuInfo.at(m)(0)*State.VInfo.at(m).inverse(), -State.MeanMean.at(m), State.Weights.at(m));
           this->addComponent(Component);
         }
       }
@@ -446,7 +460,7 @@ namespace libRSF
 
         /** pre-calculate some multi-use variables */
         Vector SumLike = Probability.rowwise().sum();
-        Vector SumLikeX = Probability * DataMatrix.transpose();
+        MatrixStatic<Dynamic, Dim> SumLikeX = Probability * DataMatrix.transpose();
 
         MatrixVectorSTL<Dim, Dim> XX;
         for (int n = 0; n < SampleSize; n++)
@@ -469,21 +483,21 @@ namespace libRSF
         for (int m = 0; m < GMMSize; ++m)
         {
           /** <T_i> */
-          MatrixStatic<Dim,Dim> InfoEx = VBIState.NuInfo.at(m) * VBIState.VInfo.at(m).inverse();
+          MatrixStatic<Dim,Dim> InfoEx = VBIState.NuInfo.at(m)(0) * Inverse(VBIState.VInfo.at(m));
 
           /** update mean posterior */
           VBIState.InfoMean.at(m) = Beta + InfoEx * SumLike(m);
 
           if (Config.EstimateMean == true)
           {
-            VBIState.MeanMean.at(m) = VBIState.InfoMean.at(m).inverse() * InfoEx * SumLikeX.row(m);
+            VBIState.MeanMean.at(m) = Inverse(VBIState.InfoMean.at(m)) * InfoEx * SumLikeX.row(m).transpose();
           }
 
           /** update variance posterior */
           VBIState.NuInfo.at(m)(0) = Nu + SumLike(m);
 
           /** <Mu_i*Mu_i^T> */
-          const MatrixStatic<Dim,Dim> MuMuEx = VBIState.InfoMean.at(m).inverse() + VBIState.MeanMean.at(m) * VBIState.MeanMean.at(m).transpose();
+          const MatrixStatic<Dim,Dim> MuMuEx = Inverse(VBIState.InfoMean.at(m)) + VBIState.MeanMean.at(m) * VBIState.MeanMean.at(m).transpose();
 
           MatrixStatic<Dim,Dim> SumXPMu = MatrixStatic<Dim,Dim>::Zero();
           for (int n = 0; n < SampleSize; n++)
@@ -494,7 +508,7 @@ namespace libRSF
           VBIState.VInfo.at(m) = V
                                + SumLikeXX.at(m)
                                - SumXPMu
-                               - VBIState.MeanMean.at(m) * SumLikeX.row(m).transpose()
+                               - VBIState.MeanMean.at(m) * SumLikeX.row(m)
                                + MuMuEx * SumLike(m);
 
           /** variational likelihood */
@@ -507,7 +521,7 @@ namespace libRSF
           LogInfoEx += Dim * log(2.0) - log(VBIState.VInfo.at(m).determinant());
 
           /** update <T_i> */
-          InfoEx = VBIState.NuInfo.at(m) * VBIState.VInfo.at(m).inverse();
+          InfoEx = VBIState.NuInfo.at(m)(0) * Inverse(VBIState.VInfo.at(m));
 
           /** <Mu_i> */
           const VectorStatic<Dim> MeanEx = VBIState.MeanMean.at(m);
@@ -543,10 +557,10 @@ namespace libRSF
           VBIState.Weights.at(m)(0) = Probability.row(m).sum() / Probability.cols();
         }
 
-        /** remove useless components */
+        /** remove useless or degenerated components */
         for (int m = GMMSize-1; m >=0 ; --m)
         {
-          if(VBIState.Weights.at(m)(0) < Config.MinSamplePerComponent / DataMatrix.cols() || std::isnan(VBIState.Weights.at(m)(0)))
+          if(!(VBIState.Weights.at(m)(0) >= (Config.MinSamplePerComponent / SampleSize / 2.0)) && VBIState.Weights.size() > 1)/**< catches NaN also */
           {
             /** remove component from posterior states */
             VBIState.NuInfo.erase(VBIState.NuInfo.begin() + m);

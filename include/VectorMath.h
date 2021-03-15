@@ -74,6 +74,22 @@ namespace libRSF
     return SAES.eigenvectors() * EigValInv.cwiseSqrt().asDiagonal() * SAES.eigenvectors().transpose();
   }
 
+  template <int Dim, typename T>
+  MatrixT<T, Dim, Dim> Inverse(MatrixT<T, Dim, Dim> A)
+  {
+    /** compute SVD */
+    Eigen::SelfAdjointEigenSolver<MatrixT<T, Dim, Dim>> SAES(A);
+
+    /** compute tolerance (idea from OKVIS) */
+    T Tolerance = std::numeric_limits<T>::epsilon() * A.cols() * SAES.eigenvalues().array().maxCoeff();
+
+    /** set small eigen values to zero */
+    VectorT<T, Dim> EigValInv = Vector((SAES.eigenvalues().array() > Tolerance).select(SAES.eigenvalues().array().inverse(), 0));
+
+    /** use modified eigen values to compute sqrt */
+    return SAES.eigenvectors() * EigValInv.asDiagonal() * SAES.eigenvectors().transpose();
+  }
+
   void RobustSqrtAndInvSqrt(const Matrix &Mat, Matrix &MatSqrt, Matrix &MatSqrtInv);
 
   /** vector math with raw pointers (compatible to ceres jet type) */

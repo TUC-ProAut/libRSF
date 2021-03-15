@@ -45,7 +45,7 @@ namespace libRSF
   enum class ErrorModelMixtureType {None, MaxMix, SumMix, SumMixSpecial, MaxSumMix};
   enum class ErrorModelTuningType {None, EM, EM_MAP, VBI};
 
-  enum class SolutionType {None, Batch, Smoother, Window, Filter};
+  enum class SolutionType {None, Batch, Smoother, SmootherRT, Window, Filter};
 
   /** types of used factors (Remember to add new types to FactorTypeDict below!) */
   enum class FactorType
@@ -230,6 +230,7 @@ namespace libRSF
   {
     {"batch",SolutionType::Batch},
     {"smoother",SolutionType::Smoother},
+    {"smoother_rt",SolutionType::SmootherRT},
     {"window",SolutionType::Window},
     {"filter",SolutionType::Filter},
     {"none",SolutionType::None}

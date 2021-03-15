@@ -224,6 +224,16 @@ namespace libRSF
         Solution.EstimateCov = YAMLConfig["solution"]["estimate_cov"].as<bool>();
         break;
 
+    case SolutionType::SmootherRT:
+        SolverConfig.minimizer_progress_to_stdout = false;
+
+        SolverConfig.max_num_iterations = YAMLConfig["solution"]["max_iterations"].as<double>();
+        SolverConfig.max_solver_time_in_seconds = YAMLConfig["solution"]["max_time"].as<double>();
+        Solution.WindowLength = YAMLConfig["solution"]["window_length"].as<double>();
+
+        Solution.EstimateCov = YAMLConfig["solution"]["estimate_cov"].as<bool>();
+        break;
+
     case SolutionType::Window:
         SolverConfig.minimizer_progress_to_stdout = false;
 

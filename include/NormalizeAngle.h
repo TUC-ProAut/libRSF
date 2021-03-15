@@ -41,8 +41,17 @@ namespace libRSF
   template <typename T>
   T NormalizeCustom(const T &Value, const double Limit)
   {
-    T TwoLim(2.0 * Limit);
-    return Value - TwoLim * floor((Value + Limit) / TwoLim);
+    T ValueWrapped = Value;
+    while (ValueWrapped > Limit)
+    {
+      ValueWrapped -= 2*Limit;
+    }
+    while (ValueWrapped < -Limit)
+    {
+      ValueWrapped += 2*Limit;
+    }
+
+    return ValueWrapped;
   }
 
   template <typename T, int Dim>

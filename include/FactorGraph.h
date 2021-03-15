@@ -245,7 +245,9 @@ namespace libRSF
       void setSubsetConstant(string Name, double Timestamp, int Number, const std::vector<int> &ConstantIndex);
 
       void setConstantOutsideWindow(string Name, double TimeWindow, double CurrentTime);
+      void setVariableInsideWindow(string Name, double TimeWindow, double CurrentTime);
       void setAllConstantOutsideWindow(double TimeWindow, double CurrentTime);
+      void setAllVariableInsideWindow(double TimeWindow, double CurrentTime);
 
       /** handle bound */
       void setUpperBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound);
@@ -257,6 +259,7 @@ namespace libRSF
 
       /** compute raw errors without error models */
       void computeUnweightedError(const FactorType CurrentFactorType, std::vector<double> &ErrorData);
+      void computeUnweightedErrorMatrix(const FactorType CurrentFactorType, Matrix &ErrorMatrix);
       void computeUnweightedError(const FactorType CurrentFactorType, const string &Name, StateDataSet &ErrorData);
       void computeUnweightedError(const FactorType CurrentFactorType, const double Time, const int Number, Vector &Error);
 
