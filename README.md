@@ -11,10 +11,10 @@ Main features are:
 
 ## Build and Test Status
 
-| Platform     | Build Status  | Test Status |
-|:------------:|:-------------:|:-----------:|
-| Ubuntu 20.04 | ![Focal Build](https://github.com/TUC-ProAut/libRSF/workflows/Focal%20Build/badge.svg) | ![Focal Tests](https://github.com/TUC-ProAut/libRSF/workflows/Focal%20Tests/badge.svg) 
-| Ubuntu 18.04 | ![Bionic Build](https://github.com/TUC-ProAut/libRSF/workflows/Bionic%20Build/badge.svg) | ![Bionic Tests](https://github.com/TUC-ProAut/libRSF/workflows/Bionic%20Tests/badge.svg) |
+| Platform     | Status  |
+|:------------:|:-------------:|
+| Ubuntu 20.04 | ![Focal Build](https://github.com/TUC-ProAut/libRSF/workflows/Focal-CI/badge.svg) |
+| Ubuntu 18.04 | ![Bionic Build](https://github.com/TUC-ProAut/libRSF/workflows/Bionic-CI/badge.svg) |
 
 ## Installation
 
