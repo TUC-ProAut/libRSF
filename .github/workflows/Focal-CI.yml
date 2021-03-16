@@ -28,6 +28,10 @@ jobs:
   Focal-Build:
     name: Build libRSF
     runs-on: ubuntu-20.04
+    
+    env:
+      CTEST_OUTPUT_ON_FAILURE: ON
+    
     steps:
       # checkout repo
       - name: Checkout

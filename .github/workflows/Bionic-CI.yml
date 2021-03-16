@@ -69,6 +69,10 @@ jobs:
     name: Test libRSF
     runs-on: ubuntu-18.04
     needs: [Bionic-Build]
+    
+    env:
+      CTEST_OUTPUT_ON_FAILURE: ON
+    
     steps:
       # checkout repo
       - name: Checkout
