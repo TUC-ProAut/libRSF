@@ -1,4 +1,4 @@
-name: Bionic Build
+name: Bionic CI
 on: 
   push:
     paths-ignore:
