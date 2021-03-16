@@ -26,6 +26,7 @@ on:
     
 jobs:
   Focal-Build:
+    name: Build libRSF
     runs-on: ubuntu-20.04
     steps:
       # checkout repo
@@ -67,7 +68,7 @@ jobs:
   Focal-Test:
     name: Test libRSF
     runs-on: ubuntu-20.04
-    needs: [Bionic-Build]
+    needs: [Focal-Build]
     steps:
       # checkout repo
       - name: Checkout
