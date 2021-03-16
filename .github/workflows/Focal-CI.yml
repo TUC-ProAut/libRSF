@@ -29,9 +29,6 @@ jobs:
     name: Build libRSF
     runs-on: ubuntu-20.04
     
-    env:
-      CTEST_OUTPUT_ON_FAILURE: ON
-    
     steps:
       # checkout repo
       - name: Checkout
@@ -73,6 +70,10 @@ jobs:
     name: Test libRSF
     runs-on: ubuntu-20.04
     needs: [Focal-Build]
+    
+    env:
+      CTEST_OUTPUT_ON_FAILURE: ON
+    
     steps:
       # checkout repo
       - name: Checkout
