@@ -28,6 +28,7 @@ jobs:
   Bionic-Build:
     name: Build libRSF
     runs-on: ubuntu-18.04
+    
     steps:
       # checkout repo
       - name: Checkout
@@ -63,7 +64,7 @@ jobs:
           path: |
             build
             externals
-          key: ${{ runner.os }}-${{ github.sha }}-${{ env.cache-name }}
+          key: ${{ github.workflow }}-${{ github.sha }}-${{ github.run_id }}-${{ env.cache-name }}-bionic
         
   Bionic-Test:
     name: Test libRSF
@@ -89,7 +90,7 @@ jobs:
           path: |
             build
             externals
-          key: ${{ runner.os }}-${{ github.sha }}-${{ env.cache-name }}
+          key: ${{ github.workflow }}-${{ github.sha }}-${{ github.run_id }}-${{ env.cache-name }}-bionic
           
       # install dependencies
       - name: Install dependencies
