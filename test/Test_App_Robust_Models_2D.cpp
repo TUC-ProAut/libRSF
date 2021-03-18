@@ -33,14 +33,13 @@
 #include "TestUtils.h"
 #include "gtest/gtest.h"
 
-TEST(App_Robust_Models_2D, MaxSumMix)
+void App_Robust_Models_2D_Testfunction(std::string model, const double mean, const double maxAllowedError)
 {
   /** configure arguments */
-  const double mean = 0;
   const std::string meanStr = std::to_string(mean);
   const int nPointsPerDim = 10;
   std::vector<std::string> Arguments{
-  "empty", "empty", "Data_1D_Output.txt", std::to_string(nPointsPerDim), "8", "MaxSumMix",
+  "empty", "empty", "Data_1D_Output.txt", std::to_string(nPointsPerDim), "8", model,
   meanStr, meanStr, meanStr, meanStr, "0.5", "0", "0", "1", "2", "0", "0", "5", "0.35", "0.65"};
   libRSF::FactorGraphConfig Config;
   Config.ReadYAMLOptions(Arguments.at(0));
@@ -74,38 +73,87 @@ TEST(App_Robust_Models_2D, MaxSumMix)
   MeanVect << mean, mean;
 
   double Time;
-  // iterate Result
 
-    /** initialize maximum error */
-    double maxAbsError = 0;
+  /** initialize maximum error */
+  double maxAbsError = 0;
 
-    /** get first timestamp */
-    PostOptimizationData.getTimeFirst(POSITION_STATE, Time);
+  /** get first timestamp */
+  PostOptimizationData.getTimeFirst(POSITION_STATE, Time);
 
-    do
+  do
+  {
+    int NumberOfStates = PostOptimizationData.countElement(POSITION_STATE,Time);
+    /** get data at this timestamp */
+    for (int nState = 0; nState < NumberOfStates; ++nState)
     {
-      int NumberOfStates = PostOptimizationData.countElement(POSITION_STATE,Time);
-      /** get data at this timestamp */
-      for (int nState = 0; nState < NumberOfStates; ++nState)
+      libRSF::Data DataResult;
+      PostOptimizationData.getElement(POSITION_STATE, Time, nState, DataResult);
+
+      /** get maximum difference */
+      const double maxAbsErrorTmp =  (DataResult.getValue(libRSF::DataElement::Mean)-MeanVect).cwiseAbs().maxCoeff();
+
+      /** store maximum of loop */
+      if(maxAbsErrorTmp > maxAbsError)
       {
-        libRSF::Data DataResult;
-        PostOptimizationData.getElement(POSITION_STATE, Time, nState, DataResult);
-
-        /** get maximum difference */
-        const double maxAbsErrorTmp =  (DataResult.getValue(libRSF::DataElement::Mean)-MeanVect).cwiseAbs().maxCoeff();
-
-        /** store maximum of loop */
-        if(maxAbsErrorTmp > maxAbsError)
-        {
-          maxAbsError = maxAbsErrorTmp;
-        }
+        maxAbsError = maxAbsErrorTmp;
       }
     }
-    while(PostOptimizationData.getTimeNext(POSITION_STATE, Time, Time));
+  }
+  while(PostOptimizationData.getTimeNext(POSITION_STATE, Time, Time));
 
-  std::cout << "MaxAbsError:" << maxAbsError << std::endl;
+  std::cout << "MaxAbsError: " << maxAbsError << std::endl;
 
-  EXPECT_LT(maxAbsError,0.01);
+  EXPECT_LT(maxAbsError,maxAllowedError);
+}
+
+TEST(App_Robust_Models_2D, MaxSumMix_0)
+{
+  App_Robust_Models_2D_Testfunction("MaxSumMix", 0.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, MaxSumMix_1)
+{
+  App_Robust_Models_2D_Testfunction("MaxSumMix", 1.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, Gaussian_0)
+{
+  App_Robust_Models_2D_Testfunction("Gaussian", 0.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, Gaussian_1)
+{
+  App_Robust_Models_2D_Testfunction("Gaussian", 1.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, MaxMix_0)
+{
+  App_Robust_Models_2D_Testfunction("MaxMix", 0.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, MaxMix_1)
+{
+  App_Robust_Models_2D_Testfunction("MaxMix", 1.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, SumMix_0)
+{
+  App_Robust_Models_2D_Testfunction("SumMix", 0.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, SumMix_1)
+{
+  App_Robust_Models_2D_Testfunction("SumMix", 1.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, DCS_0)
+{
+  App_Robust_Models_2D_Testfunction("DCS", 0.0, 0.01);
+}
+
+TEST(App_Robust_Models_2D, DCS_1)
+{
+  App_Robust_Models_2D_Testfunction("DCS", 1.0, 0.01);
 }
 
 // main provided by linking to gtest_main

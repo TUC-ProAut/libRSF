@@ -33,14 +33,13 @@
 #include "TestUtils.h"
 #include "gtest/gtest.h"
 
-TEST(App_Robust_Models_1D, MaxSumMix)
+void App_Robust_Models_1D_Testfunction(std::string model, const double mean, const double maxAllowedError)
 {
   /** configure arguments */
-  const double mean = 0;
   const std::string meanStr = std::to_string(mean);
   const int nPointsPerDim = 10;
   std::vector<std::string> Arguments{
-  "empty", "empty", "Data_1D_Output.txt", std::to_string(nPointsPerDim), "8", "MaxSumMix",
+  "empty", "empty", "Data_1D_Output.txt", std::to_string(nPointsPerDim), "8", model,
   meanStr, meanStr, "0.5", "2", "0.35", "0.65"};
   libRSF::FactorGraphConfig Config;
   Config.ReadYAMLOptions(Arguments.at(0));
@@ -104,7 +103,57 @@ TEST(App_Robust_Models_1D, MaxSumMix)
 
   std::cout << "MaxAbsError: " << maxAbsError << std::endl;
 
-  EXPECT_LT(maxAbsError,0.001);
+  EXPECT_LT(maxAbsError,maxAllowedError);
+}
+
+TEST(App_Robust_Models_1D, MaxSumMix_0)
+{
+  App_Robust_Models_1D_Testfunction("MaxSumMix", 0.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, MaxSumMix_1)
+{
+  App_Robust_Models_1D_Testfunction("MaxSumMix", 1.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, Gaussian_0)
+{
+  App_Robust_Models_1D_Testfunction("Gaussian", 0.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, Gaussian_1)
+{
+  App_Robust_Models_1D_Testfunction("Gaussian", 1.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, MaxMix_0)
+{
+  App_Robust_Models_1D_Testfunction("MaxMix", 0.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, MaxMix_1)
+{
+  App_Robust_Models_1D_Testfunction("MaxMix", 1.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, SumMix_0)
+{
+  App_Robust_Models_1D_Testfunction("SumMix", 0.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, SumMix_1)
+{
+  App_Robust_Models_1D_Testfunction("SumMix", 1.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, DCS_0)
+{
+  App_Robust_Models_1D_Testfunction("DCS", 0.0, 0.001);
+}
+
+TEST(App_Robust_Models_1D, DCS_1)
+{
+  App_Robust_Models_1D_Testfunction("DCS", 1.0, 0.001);
 }
 
 // main provided by linking to gtest_main
