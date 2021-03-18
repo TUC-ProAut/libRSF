@@ -29,23 +29,15 @@
 *
 */
 
-#include <string>
-#include "libRSF.h"
+#include "App_Robust_Models_2D.h"
 
-/** use define to prevent typos*/
-#define POSITION_STATE "Position"
-#define SOLVE_TIME_STATE "SolveTime"
-
-int main(int argc, char** argv)
+int CreateGraphAndSolve(std::vector<std::string> &Arguments,
+                       libRSF::FactorGraphConfig &Config,
+                       libRSF::StateDataSet &CostSurfaceData,
+                       libRSF::StateDataSet &PreOptimizationData,
+                       libRSF::StateDataSet &PostOptimizationData,
+                       libRSF::StateDataSet &SolverData)
 {
-  /** init google logging for ceres */
-  google::InitGoogleLogging(argv[0]);
-
-  /** get command line arguments */
-  std::vector<std::string> Arguments;
-  libRSF::FactorGraphConfig Config;
-  Config.ReadCommandLineOptions(argc, argv, &Arguments);
-
   /** parse testing parameter */
   const int NumberPoints = std::stoi(Arguments.at(3));
   const double Range = std::stod(Arguments.at(4));
@@ -71,12 +63,6 @@ int main(int argc, char** argv)
 
   /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
-
-  /** datasets that store results*/
-  libRSF::StateDataSet CostSurfaceData;
-  libRSF::StateDataSet PreOptimizationData;
-  libRSF::StateDataSet PostOptimizationData;
-  libRSF::StateDataSet SolverData;
 
   /** set the solver options for ceres */
   ceres::Solver::Options SolverOptions;
@@ -196,6 +182,32 @@ int main(int argc, char** argv)
     PostOptimizationData.getElement(POSITION_STATE, 0.0, nPoint).setTimestamp(1.0);
   }
 
+  return 0;
+}
+
+#ifndef TESTMODE // only compile main if not used in test context
+
+int main(int argc, char** argv)
+{
+  /** init google logging for ceres */
+  google::InitGoogleLogging(argv[0]);
+
+  /** get command line arguments */
+  std::vector<std::string> Arguments;
+  libRSF::FactorGraphConfig Config;
+  Config.ReadCommandLineOptions(argc, argv, &Arguments);
+
+  /** datasets that store results*/
+  libRSF::StateDataSet CostSurfaceData;
+  libRSF::StateDataSet PreOptimizationData;
+  libRSF::StateDataSet PostOptimizationData;
+  libRSF::StateDataSet SolverData;
+
+  if (CreateGraphAndSolve(Arguments,Config,CostSurfaceData,PreOptimizationData,PostOptimizationData,SolverData))
+  {
+    return 1;
+  }
+
   /** write everything to file */
   libRSF::WriteDataToFile(Config.OutputFile, "cost_gradient2", CostSurfaceData, false);
   libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, PreOptimizationData, true);
@@ -204,3 +216,5 @@ int main(int argc, char** argv)
 
   return 0;
 }
+
+#endif // TESTMODE
