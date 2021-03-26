@@ -94,18 +94,22 @@ namespace libRSF
     /** calculate overall maximum */
     do
     {
-      /** get data at this timestamp */
-      Data DataGT, DataEstimate;
-      Estimate.getElement(TypeEstimate, Time, 0, DataEstimate);
-      GT.getElement(TypeGT, Time, 0, DataGT);
-
-      /** get maximum difference */
-      const double maxAbsErrorMean = (DataEstimate.getValue(Element) - DataGT.getValue(Element)).cwiseAbs().maxCoeff();
-
-      /** store maximum of loop */
-      if(maxAbsErrorMean > maxAbsError)
+      int NumberOfStates = GT.countElement(TypeGT,Time);
+      for (int nState = 0; nState < NumberOfStates; ++nState)
       {
-        maxAbsError = maxAbsErrorMean;
+        /** get data at this timestamp */
+        Data DataGT, DataEstimate;
+        Estimate.getElement(TypeEstimate, Time, nState, DataEstimate);
+        GT.getElement(TypeGT, Time, nState, DataGT);
+
+        /** get maximum difference */
+        const double maxAbsErrorTmp = (DataEstimate.getValue(Element) - DataGT.getValue(Element)).cwiseAbs().maxCoeff();
+
+        /** store maximum of loop */
+        if(maxAbsErrorTmp > maxAbsError)
+        {
+          maxAbsError = maxAbsErrorTmp;
+        }
       }
     }
     while(GT.getTimeNext(TypeGT, Time, Time));
