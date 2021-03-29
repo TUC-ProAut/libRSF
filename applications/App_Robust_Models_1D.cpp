@@ -52,7 +52,7 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   Weight1 << std::stod(Arguments.at(10));
   Weight2 << std::stod(Arguments.at(11));
 
-  /** estimate DCS parameter */
+  /** DCS parameter is based on the second mean for some "randomness" */
   const double ScalingDCS = std::pow(10, Mean2(0));
 
   /** create our own graph object */

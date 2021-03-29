@@ -135,9 +135,40 @@ namespace libRSF
       }
     },
 
-    /** positions with ID and bounding box */
+    /** joint poses */
+    {
+      "pose_between2", DataType::PoseBetween2,
+      {
+        {DataElement::Timestamp, 1},
+        {DataElement::TimestampRef, 1},
+        {DataElement::Mean, 3}, /**< [x, y, yaw] */
+        {DataElement::Covariance, 9}
+      }
+    },
+    {
+      "pose_between3", DataType::PoseBetween3,
+      {
+        {DataElement::Timestamp, 1},
+        {DataElement::TimestampRef, 1},
+        {DataElement::Mean, 7}, /**< Trans[x, y, z], Quat[x, y, z, w] */
+        {DataElement::Covariance, 36} /**< in tangent space this is just 6x6 */
+      }
+    },
+
+    /** position with a specific ID */
     {
       "point_id2", DataType::PointID2,
+      {
+        {DataElement::Timestamp, 1},
+        {DataElement::Mean, 2},
+        {DataElement::ID, 1},
+        {DataElement::Covariance, 4}
+      }
+    },
+
+    /** position with ID and confidence for tracking*/
+    {
+      "point_conf_id2", DataType::PointConfID2,
       {
         {DataElement::Timestamp, 1},
         {DataElement::Mean, 2},
@@ -147,8 +178,10 @@ namespace libRSF
         {DataElement::Covariance, 4}
       }
     },
+
+    /** 3D bounding box for tracking */
     {
-      "point_id3", DataType::PointID3,
+      "bounding_box_3", DataType::BoundingBox3,
       {
         {DataElement::Timestamp, 1},
         {DataElement::Mean, 3},
@@ -376,6 +409,17 @@ namespace libRSF
         {DataElement::Timestamp, 1},
         {DataElement::Mean, 6},
         {DataElement::Covariance, 18}
+      }
+    },
+
+    /** relative bearing range */
+    {
+      "bearing_range_id_2", DataType::BearingRangeID2,
+      {
+        {DataElement::Timestamp, 1},
+        {DataElement::Mean, 2},
+        {DataElement::CovarianceDiagonal, 2},
+        {DataElement::ID, 1}
       }
     },
 

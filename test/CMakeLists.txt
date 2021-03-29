@@ -19,7 +19,9 @@
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
 # do not compile the main functions of the apps used for testing
-add_compile_definitions(TESTMODE)
+add_definitions(-DTESTMODE)
+# After migration to CMAKE to 3.12.4, we can use the following instead
+#add_compile_definitions(TESTMODE)
 
 # convenience macro to add tests
 macro(package_add_test TESTNAME)

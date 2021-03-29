@@ -51,19 +51,15 @@ for n = 1:size(ResultCell,1)
                 ResultStruct.PositionID2.X = [];
                 ResultStruct.PositionID2.Y = [];
                 ResultStruct.PositionID2.ID = [];
-                ResultStruct.PositionID2.Idx = [];
-                ResultStruct.PositionID2.Conf = [];
                 ResultStruct.PositionID2.Cov = [];
             end
             ResultStruct.PositionID2.Time(end+1,1) = cell2mat(ResultCell(n,2));
             ResultStruct.PositionID2.X(end+1,1) = cell2mat(ResultCell(n,3));
             ResultStruct.PositionID2.Y(end+1,1) = cell2mat(ResultCell(n,4));
             ResultStruct.PositionID2.ID(end+1,1) = cell2mat(ResultCell(n,5));
-            ResultStruct.PositionID2.Idx(end+1,1) = cell2mat(ResultCell(n,6));
-            ResultStruct.PositionID2.Conf(end+1,1) = cell2mat(ResultCell(n,7));
-            ResultStruct.PositionID2.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,8:11)),[],2,2);
+            ResultStruct.PositionID2.Cov(end+1,:,:) = reshape(cell2mat(ResultCell(n,6:9)),[],2,2);
             
-        case 'point_id3'
+        case 'bounding_box_3'
             if ~isfield(ResultStruct,'PositionID3')
                 ResultStruct.PositionID3 = [];
                 ResultStruct.PositionID3.Time = [];

@@ -1,7 +1,7 @@
 function [MeasurementCell, GTCell] = parseToCell(Data)
 %PARSETOCELL Convert structs with measurements to an unified cell format (preprocessing for csv export)
 
-MaxCellWidth = 25;
+MaxCellWidth = 30;
 
 %% initial conditions
 Pos3Cell = cell(0,MaxCellWidth);
@@ -30,30 +30,40 @@ if isfield(Data,'PositionID2')
     PosID2Cell(:,3)                          = num2cell(Data.PositionID2.X);
     PosID2Cell(:,4)                          = num2cell(Data.PositionID2.Y);
     PosID2Cell(:,5)                          = num2cell(Data.PositionID2.ID);
-    PosID2Cell(:,6)                          = num2cell(Data.PositionID2.Idx);
-    PosID2Cell(:,7)                          = num2cell(Data.PositionID2.Conf);
-    PosID2Cell(:,8:11)                       = num2cell(Data.PositionID2.Cov);
+    PosID2Cell(:,6:9)                        = num2cell(Data.PositionID2.Cov);
 end
 
-PosID3Cell = cell(0,MaxCellWidth);
-if isfield(Data,'PositionID3')
-    [PosID3Cell{1:length(Data.PositionID3.Time),1}]    = deal('point_id3');
-    PosID3Cell(:,2)                          = num2cell(Data.PositionID3.Time);
-    PosID3Cell(:,3)                          = num2cell(Data.PositionID3.X);
-    PosID3Cell(:,4)                          = num2cell(Data.PositionID3.Y);
-    PosID3Cell(:,5)                          = num2cell(Data.PositionID3.Z);
-    PosID3Cell(:,6)                          = num2cell(Data.PositionID3.Vx);
-    PosID3Cell(:,7)                          = num2cell(Data.PositionID3.Vy);
-    PosID3Cell(:,8)                          = num2cell(Data.PositionID3.Vz);
-    PosID3Cell(:,9)                          = num2cell(Data.PositionID3.ID);
-    PosID3Cell(:,10)                         = num2cell(Data.PositionID3.Idx);
-    PosID3Cell(:,11)                         = num2cell(Data.PositionID3.Conf);
-    PosID3Cell(:,12:20)                      = num2cell(Data.PositionID3.Cov);
-    PosID3Cell(:,21:23)                      = num2cell(Data.PositionID3.WLH);
-    PosID3Cell(:,24)                         = num2cell(Data.PositionID3.R);
-    PosID3Cell(:,25:28)                      = num2cell(Data.PositionID3.R_Quat);
-    PosID3Cell(:,29)                         = num2cell(Data.PositionID3.ClassNum);
-    PosID3Cell(:,30)                         = num2cell(Data.PositionID3.KeyNum);
+PosConfID2Cell = cell(0,MaxCellWidth);
+if isfield(Data,'PositionConfID2')
+    [PosConfID2Cell{1:length(Data.PositionConfID2.Time),1}]    = deal('point_conf_id2');
+    PosConfID2Cell(:,2)                          = num2cell(Data.PositionConfID2.Time);
+    PosConfID2Cell(:,3)                          = num2cell(Data.PositionConfID2.X);
+    PosConfID2Cell(:,4)                          = num2cell(Data.PositionConfID2.Y);
+    PosConfID2Cell(:,5)                          = num2cell(Data.PositionConfID2.ID);
+    PosConfID2Cell(:,6)                          = num2cell(Data.PositionConfID2.Idx);
+    PosConfID2Cell(:,7)                          = num2cell(Data.PositionConfID2.Conf);
+    PosConfID2Cell(:,8:11)                       = num2cell(Data.PositionConfID2.Cov);
+end
+
+BoundingBox3Cell = cell(0,MaxCellWidth);
+if isfield(Data,'BoundingBox3')
+    [BoundingBox3Cell{1:length(Data.BoundingBox3.Time),1}]    = deal('bounding_box_3');
+    BoundingBox3Cell(:,2)                          = num2cell(Data.BoundingBox3.Time);
+    BoundingBox3Cell(:,3)                          = num2cell(Data.BoundingBox3.X);
+    BoundingBox3Cell(:,4)                          = num2cell(Data.BoundingBox3.Y);
+    BoundingBox3Cell(:,5)                          = num2cell(Data.BoundingBox3.Z);
+    BoundingBox3Cell(:,6)                          = num2cell(Data.BoundingBox3.Vx);
+    BoundingBox3Cell(:,7)                          = num2cell(Data.BoundingBox3.Vy);
+    BoundingBox3Cell(:,8)                          = num2cell(Data.BoundingBox3.Vz);
+    BoundingBox3Cell(:,9)                          = num2cell(Data.BoundingBox3.ID);
+    BoundingBox3Cell(:,10)                         = num2cell(Data.BoundingBox3.Idx);
+    BoundingBox3Cell(:,11)                         = num2cell(Data.BoundingBox3.Conf);
+    BoundingBox3Cell(:,12:20)                      = num2cell(Data.BoundingBox3.Cov);
+    BoundingBox3Cell(:,21:23)                      = num2cell(Data.BoundingBox3.WLH);
+    BoundingBox3Cell(:,24)                         = num2cell(Data.BoundingBox3.R);
+    BoundingBox3Cell(:,25:28)                      = num2cell(Data.BoundingBox3.R_Quat);
+    BoundingBox3Cell(:,29)                         = num2cell(Data.BoundingBox3.ClassNum);
+    BoundingBox3Cell(:,30)                         = num2cell(Data.BoundingBox3.KeyNum);
 end
 
 QuatCell = cell(0,MaxCellWidth);
@@ -104,6 +114,9 @@ if isfield(Data,'Odom2')
 end
 
 Odom2DiffCell = cell(0,MaxCellWidth);
+if isfield(Data,'Odom2Diff')
+    error('todo');
+end
 
 Odom3Cell = cell(0,MaxCellWidth);
 if isfield(Data,'Odom3')
@@ -146,6 +159,23 @@ if isfield(Data,'Odom3VIO')
     Odom3VIOCell(:,12:14)                        = num2cell(Data.Odom3VIO.TRCov);
 end
 
+%% relative poses
+PoseBetween2Cell = cell(0,MaxCellWidth);
+if isfield(Data,'PoseBetween2')
+    [PoseBetween2Cell{1:length(Data.PoseBetween2.Time),1}]    = deal('pose_between2');
+    PoseBetween2Cell(:,2)                              = num2cell(Data.PoseBetween2.Time);
+    PoseBetween2Cell(:,3)                              = num2cell(Data.PoseBetween2.TimeRef);
+    PoseBetween2Cell(:,4)                              = num2cell(Data.PoseBetween2.X);
+    PoseBetween2Cell(:,5)                              = num2cell(Data.PoseBetween2.Y);
+    PoseBetween2Cell(:,6)                              = num2cell(Data.PoseBetween2.Yaw);
+    PoseBetween2Cell(:,7:15)                           = num2cell(Data.PoseBetween2.Cov);
+end
+
+PoseBetween3Cell = cell(0,MaxCellWidth);
+if isfield(Data,'PoseBetween3')
+    error('todo');
+end
+
 %% Ranging
 Range2Cell = cell(0,MaxCellWidth);
 if isfield(Data,'Range2')
@@ -171,6 +201,9 @@ end
 
 %% GNSS
 Pseudorange2Cell = cell(0,MaxCellWidth);
+if isfield(Data,'Pseudorange2')
+    error('todo');
+end
 
 Pseudorange3Cell = cell(0,MaxCellWidth);
 if isfield(Data,'Pseudorange3')
@@ -199,14 +232,22 @@ if isfield(Data,'Pressure')
     PressureCell(:,4)                          = num2cell(Data.Pressure.Cov);
 end
 
-%% Place recognition
+%% Place Recognition and SLAM
 LoopCell = cell(0,MaxCellWidth);
 if isfield(Data,'Loop')
     [LoopCell{1:length(Data.Loop.Time),1}]    = deal('loop');
-    LoopCell(:,2)                          = num2cell(Data.Loop.Time);
-    LoopCell(:,3)                          = num2cell(Data.Loop.TimeRef);
+    LoopCell(:,2)                             = num2cell(Data.Loop.Time);
+    LoopCell(:,3)                             = num2cell(Data.Loop.TimeRef);
 end
 
+BearingRangeID2Cell = cell(0,MaxCellWidth);
+if isfield(Data,'BearingRangeID2')
+    [BearingRangeID2Cell{1:length(Data.BearingRangeID2.Time),1}] = deal('bearing_range_id_2');
+    BearingRangeID2Cell(:,2)        = num2cell(Data.BearingRangeID2.Time);
+    BearingRangeID2Cell(:,3:4)      = num2cell(Data.BearingRangeID2.Mean);
+    BearingRangeID2Cell(:,5:6)      = num2cell(Data.BearingRangeID2.Cov);
+    BearingRangeID2Cell(:,7)        = num2cell(Data.BearingRangeID2.ID); 
+end
 
 %% GT
 GT2Cell = cell(0,MaxCellWidth);
@@ -215,7 +256,7 @@ if isfield(Data,'GT_Position2')
     GT2Cell(:,2)                            = num2cell(Data.GT_Position2.Time);
     GT2Cell(:,3)                            = num2cell(Data.GT_Position2.X);
     GT2Cell(:,4)                            = num2cell(Data.GT_Position2.Y);
-    GT2Cell(:,5:8)                         = num2cell(zeros(numel(Data.GT_Position2.Time),4));
+    GT2Cell(:,5:8)                          = num2cell(zeros(numel(Data.GT_Position2.Time),4));
 end
 
 GT3Cell = cell(0,MaxCellWidth);
@@ -229,14 +270,15 @@ if isfield(Data,'GT_Position3')
 end
 
 %% merge data
-MeasurementCell = [ Pos3Cell;Pos2Cell; PosID2Cell; PosID3Cell; QuatCell; Speed3Cell;...
+MeasurementCell = [ Pos3Cell;Pos2Cell; PosID2Cell; PosConfID2Cell; BoundingBox3Cell; QuatCell; Speed3Cell;...
+                    PoseBetween2Cell;PoseBetween3Cell;...
                     IMUCell;...
                     PressureCell;...
                     Odom2Cell; Odom2DiffCell; Odom3Cell;...
                     Odom3RadarCell; Odom3LaserCell; Odom3VIOCell;...
                     Range2Cell; Range3Cell;...
                     Pseudorange2Cell; Pseudorange3Cell;...
-                    LoopCell];
+                    LoopCell; BearingRangeID2Cell];
                 
 GTCell = [GT2Cell; GT3Cell];
 

@@ -24,6 +24,15 @@
 
 namespace libRSF
 {
+
+  /** \brief RMSE between two datasets (mean)
+   *
+   * \param TypeGT the type of the GT data
+   * \param GT a data set that holds the GT
+   * \param TypeEstimate type of the estimate
+   * \param Estimate data set that holds the estimation
+   * \return root mean square error between GT and estimate
+   */
   double ATE(const DataType TypeGT,
              const SensorDataSet &GT,
              const std::string &TypeEstimate,
@@ -44,7 +53,7 @@ namespace libRSF
     Vector Error(LengthEstimate);
 
     /** get first timestamp */
-    double Time;
+    double Time = 0.0;
     GT.getTimeFirst(TypeGT, Time);
 
     /** fill error vector */
@@ -66,7 +75,15 @@ namespace libRSF
     return RMSE(Error);
   }
 
-  // maximum componentwise absolute difference between two datasets (mean and covariance)
+
+  /** \brief maximum componentwise absolute difference between two datasets (mean and covariance)
+   *
+   * \param TypeGT the type of the GT data
+   * \param GT a data set that holds the GT
+   * \param TypeEstimate type of the estimate
+   * \param Estimate data set that holds the estimation
+   * \return maximum absolute error between GT and estimate
+   */
   double MaxAbsError(const DataType TypeGT,
                      const SensorDataSet &GT,
                      const std::string &TypeEstimate,
@@ -88,7 +105,7 @@ namespace libRSF
     double maxAbsError = 0;
 
     /** get first timestamp */
-    double Time;
+    double Time = 0.0;
     GT.getTimeFirst(TypeGT, Time);
 
     /** calculate overall maximum */

@@ -39,7 +39,7 @@
 namespace libRSF
 {
   template <typename ErrorType>
-  class BetweenPose2Factor : public BaseFactor<ErrorType, true, false, 2, 2, 1, 1>
+  class BetweenPose2Factor : public BaseFactor<ErrorType, true, false, 2, 1, 2, 1>
   {
     public:
       /** construct factor and store measurement */
@@ -54,19 +54,19 @@ namespace libRSF
       template <typename T>
       VectorT<T, 3> Evaluate(const T* const Pos1, const T* const Yaw1,
                              const T* const Pos2, const T* const Yaw2,
-                             const Vector3 &RelativePose)
+                             const Vector3 &RelativePose) const
       {
         /** estimate measurements*/
         VectorT<T,2> TransEst;
         Rotation2DT<T> RotEst;
-        RelativePose3Model<T>::applyBackward(Pos1, Yaw1,
+        RelativePose2Model<T>::applyBackward(Pos1, Yaw1,
                                              Pos2, Yaw2,
                                              TransEst, RotEst);
 
         /** error = estimated measurement - measurement */
         VectorT<T, 3> Error;
         Error.template head<2>() = TransEst - RelativePose.template head<2>().template cast<T>();
-        Error(2) = NormalizeAngle<T>(RotEst.smallestAngle() - RelativePose(2));
+        Error(2) = NormalizeAngle<T>(RotEst.angle() - RelativePose(2));
 
         return Error;
       }
@@ -82,6 +82,19 @@ namespace libRSF
                                                               Pos2, Yaw2,
                                                               this->_MeasurementVector),
                                                Params...);
+      }
+
+      /** predict the next state for initialization, order is the same as for Evaluate() */
+      void predict(const std::vector<double*> &StatePointers) const
+      {
+        /** split pose measurement */
+        const Vector2 Trans = this->_MeasurementVector.head(2);
+        const Rotation2D Rot(this->_MeasurementVector(2));
+
+        /** apply forward model */
+        RelativePose2Model<double>::applyForward(StatePointers.at(0), StatePointers.at(1),
+                                                 StatePointers.at(2), StatePointers.at(3),
+                                                 Trans, Rot);
       }
   };
 

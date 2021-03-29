@@ -33,77 +33,61 @@
 #include "TestUtils.h"
 #include "gtest/gtest.h"
 
-void App_Robust_Models_2D_Testfunction(std::string model, const double mean, const double maxAllowedError)
+void App_Robust_Models_2D_Testfunction(std::string Model, const double Mean, const double MaxAllowedError)
 {
-  /** configure arguments */
-  const std::string meanStr = std::to_string(mean);
-  const int nPointsPerDim = 10;
-  std::vector<std::string> Arguments{
-  "empty", "empty", "Data_1D_Output.txt", std::to_string(nPointsPerDim), "8", model,
-  meanStr, meanStr, meanStr, meanStr, "0.5", "0", "0", "1", "2", "0", "0", "5", "0.35", "0.65"};
-  libRSF::FactorGraphConfig Config;
-  Config.ReadYAMLOptions(Arguments.at(0));
+/** configure arguments */
+  const int NumPointsPerDim = 10;
 
-  /** datasets that store results*/
+  /** set command line arguments */
+  const std::vector<std::string> ArgumentsIn{"App_Test","empty", "empty", "Data_2D_Output.txt", std::to_string(NumPointsPerDim), "8", Model,
+                                             std::to_string(Mean), std::to_string(Mean), std::to_string(Mean), std::to_string(Mean),
+                                             "0.5", "0", "0", "1", "2", "0", "0", "5", "0.35", "0.65"};
+
+  /** convert to char pointers for a consistent interface */
+  std::vector<char*> ArgV;
+  for (const auto& arg : ArgumentsIn)
+  {
+    ArgV.push_back((char*)arg.data());
+  }
+  ArgV.push_back(nullptr);
+
+  /** pass through the config parser */
+  std::vector<std::string> Arguments;
+  libRSF::FactorGraphConfig Config;
+  Config.ReadCommandLineOptions(ArgV.size() - 1, ArgV.data(), &Arguments);
+
+  /** data sets that store results*/
   libRSF::StateDataSet CostSurfaceData;
   libRSF::StateDataSet PreOptimizationData;
   libRSF::StateDataSet PostOptimizationData;
   libRSF::StateDataSet SolverData;
 
-  ASSERT_FALSE(CreateGraphAndSolve(Arguments,Config,CostSurfaceData,PreOptimizationData,PostOptimizationData,SolverData)) << "Error calculating example";
+  ASSERT_FALSE(CreateGraphAndSolve(Arguments, Config,
+                                   CostSurfaceData, PreOptimizationData, PostOptimizationData,
+                                   SolverData)) << "Error calculating example";
 
-  /*
+  /** create expected result */
+  libRSF::Vector2 MeanVector;
+  MeanVector.fill(-Mean);
+
+  libRSF::Data GT(libRSF::DataType::Point2, 0.0);
+  GT.setMean(MeanVector);
+
   libRSF::SensorDataSet Expected;
-  for (int kPose = 0; kPose<nPointsPerDim*nPointsPerDim; kPose++)
+  for (int nPose = 0; nPose < NumPointsPerDim*NumPointsPerDim; nPose++)
   {
-      Expected.addElement(libRSF::Data("point2 1.0 " + mean + " " + mean + " 0.0 0.0 0.0 0.0"));
+      Expected.addElement(GT);
   }
 
-  double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::DataType::Point2,
+  const double MaxAbsErrorMean = libRSF::MaxAbsError(libRSF::DataType::Point2,
                                                      Expected,
                                                      POSITION_STATE,
                                                      PostOptimizationData,
                                                      libRSF::DataElement::Mean);
-  std::cout << "MaxAbsErrorMean:" << maxAbsErrorMean << std::endl;
+  std::cout << "Maximum absolute derivation: " << MaxAbsErrorMean << std::endl;
 
-  EXPECT_LT(maxAbsErrorMean,1e-3);
-  */
+  EXPECT_LT(MaxAbsErrorMean, MaxAllowedError);
 
-  libRSF::Vector2 MeanVect;
-  MeanVect << mean, mean;
-
-  double Time;
-
-  /** initialize maximum error */
-  double maxAbsError = 0;
-
-  /** get first timestamp */
-  PostOptimizationData.getTimeFirst(POSITION_STATE, Time);
-
-  do
-  {
-    int NumberOfStates = PostOptimizationData.countElement(POSITION_STATE,Time);
-    /** get data at this timestamp */
-    for (int nState = 0; nState < NumberOfStates; ++nState)
-    {
-      libRSF::Data DataResult;
-      PostOptimizationData.getElement(POSITION_STATE, Time, nState, DataResult);
-
-      /** get maximum difference */
-      const double maxAbsErrorTmp =  (DataResult.getValue(libRSF::DataElement::Mean)-(-MeanVect)).cwiseAbs().maxCoeff();
-
-      /** store maximum of loop */
-      if(maxAbsErrorTmp > maxAbsError)
-      {
-        maxAbsError = maxAbsErrorTmp;
-      }
-    }
-  }
-  while(PostOptimizationData.getTimeNext(POSITION_STATE, Time, Time));
-
-  std::cout << "MaxAbsError: " << maxAbsError << std::endl;
-
-  EXPECT_LT(maxAbsError,maxAllowedError);
 }
 
 TEST(App_Robust_Models_2D, MaxSumMix_0)

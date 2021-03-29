@@ -18,7 +18,7 @@ if (SizeInput(2) > SizeInput(1))...
     
     SizeInput = size(Estimate);
     
-    warning("Have to transpose inputs! Size is: " + num2str(Size));
+    warning("Have to transpose inputs! Size is: " + num2str(SizeInput));
 else
     Transpose = false;
 end
@@ -36,7 +36,7 @@ if Dim == 2
         AffineEstimate = geometry.affine2D(Estimate(:,1:2), Estimate(:,3));
         AffineGT = geometry.affine2D(GT(:,1:2), GT(:,3));
     else
-        error("Input dim is wrong: " + num3str(DOF));
+        error("Input dim is wrong: " + num2str(DOF));
     end
     
 elseif Dim == 3
@@ -48,11 +48,11 @@ elseif Dim == 3
         AffineEstimate = geometry.affine3D(Estimate(:,1:3), Estimate(:,4:7));
         AffineGT = geometry.affine3D(GT(:,1:3), GT(:,4:7));
     else
-        error("Input dim is wrong: " + num3str(DOF));
+        error("Input dim is wrong: " + num2str(DOF));
     end
     
 else
-    error("Dimension not available: " + num3str(Dim));
+    error("Dimension not available: " + num2str(Dim));
 end
 
 % evaluate Error
