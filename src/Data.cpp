@@ -128,7 +128,14 @@ namespace libRSF
 
   void Data::setCovarianceDiagonal(const Vector Cov)
   {
-    this->setValue(DataElement::CovarianceDiagonal, Cov);
+    if (this->checkElement(DataElement::Covariance) && this->getValue(DataElement::Covariance).size() == 1)
+    {
+      this->setValue(DataElement::Covariance, Cov);
+    }
+    else
+    {
+      this->setValue(DataElement::CovarianceDiagonal, Cov);
+    }
   }
 
   void Data::setCovarianceMatrix(const Vector Cov)
@@ -139,13 +146,6 @@ namespace libRSF
 
   void Data::setStdDevDiagonal(const Vector StdDev)
   {
-    if (this->checkElement(DataElement::Covariance) && this->getValue(DataElement::Covariance).size() == 1)
-    {
-      this->setValue(DataElement::Covariance, StdDev.array().square());
-    }
-    else
-    {
-      this->setValue(DataElement::CovarianceDiagonal, StdDev.array().square());
-    }
+    this->setCovarianceDiagonal(StdDev.array().square());
   }
 }

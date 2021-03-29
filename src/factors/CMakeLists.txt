@@ -40,6 +40,7 @@
   factors/TrackingDetectionFactor.cpp
   factors/MarginalPrior.cpp
   factors/PointRegistrationFactor.cpp
+  factors/BearingRangeFactor.cpp
   PARENT_SCOPE
   )
 

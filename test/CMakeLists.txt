@@ -19,7 +19,9 @@
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
 # do not compile the main functions of the apps used for testing
-add_compile_definitions(TESTMODE)
+add_definitions(-DTESTMODE)
+# After migration to CMAKE to 3.12.4, we can use the following instead
+#add_compile_definitions(TESTMODE)
 
 # convenience macro to add tests
 macro(package_add_test TESTNAME)
@@ -45,3 +47,7 @@ package_add_test(Test_Example_Marginalization Test_Example_Marginalization.cpp T
 package_add_test(Test_ICRA19_GNSS Test_ICRA19_GNSS.cpp TestUtils.cpp ../applications/ICRA19_GNSS.cpp)
 
 package_add_test(Test_IV19_GNSS Test_IV19_GNSS.cpp TestUtils.cpp ../applications/IV19_GNSS.cpp)
+
+package_add_test(Test_App_Robust_Models_1D Test_App_Robust_Models_1D.cpp TestUtils.cpp ../applications/App_Robust_Models_1D.cpp)
+
+package_add_test(Test_App_Robust_Models_2D Test_App_Robust_Models_2D.cpp TestUtils.cpp ../applications/App_Robust_Models_2D.cpp)

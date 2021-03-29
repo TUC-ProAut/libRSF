@@ -165,11 +165,12 @@ namespace libRSF
     /** add to factor graph */
     typedef typename FactorTypeTranslator<FactorType::IMUPretintegration, GaussianFull<15>>::Type FactorClassType;
     addFactorGeneric<GaussianFull<15>, FactorClassType> (IMUNoiseModel,
-        List._List,
-        FactorType::IMUPretintegration,
-        nullptr,
-        List._List.front().Timestamp,
-        IMUState);
+                                                          List._List,
+                                                          FactorType::IMUPretintegration,
+                                                          nullptr,
+                                                          true,
+                                                          List._List.front().Timestamp,
+                                                          IMUState);
   }
 
   void FactorGraph::printReport() const
@@ -182,7 +183,7 @@ namespace libRSF
     return _Report;
   }
 
-  void FactorGraph::setConstant(string Name, double Timestamp)
+  void FactorGraph::setConstant(const string Name, const double Timestamp)
   {
     for (int StateNumber = _StateData.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
     {
@@ -190,7 +191,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::setVariable(string Name, double Timestamp)
+  void FactorGraph::setVariable(const string Name, const double Timestamp)
   {
     for (int StateNumber = _StateData.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
     {
@@ -198,7 +199,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::setSubsetConstant(string Name, double Timestamp, int Number, const std::vector<int> &ConstantIndex)
+  void FactorGraph::setSubsetConstant(const string Name, const double Timestamp, const int Number, const std::vector<int> &ConstantIndex)
   {
     _Graph.SetParameterization(_StateData.getElement(Name, Timestamp, Number).getMeanPointer(),
                                new ceres::SubsetParameterization(_StateData.getElement(Name, Timestamp, Number).getMean().size(), ConstantIndex));
@@ -490,7 +491,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeState(string Name, double Timestamp)
+  void FactorGraph::removeState(const string Name, const double Timestamp)
   {
     if (_StateData.checkElement(Name, Timestamp))
     {
@@ -514,7 +515,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeStatesOutsideWindow(string Name, double TimeWindow, double CurrentTime)
+  void FactorGraph::removeStatesOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime)
   {
     const double CutTime = CurrentTime - TimeWindow;
     double Timestamp;
@@ -537,7 +538,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeAllStatesOutsideWindow(double TimeWindow, double CurrentTime)
+  void FactorGraph::removeAllStatesOutsideWindow(const double TimeWindow, const double CurrentTime)
   {
     for (auto const &State : _StateData)
     {
@@ -603,7 +604,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::setConstantOutsideWindow(string Name, double TimeWindow, double CurrentTime)
+  void FactorGraph::setConstantOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime)
   {
     /** find start of the current state */
     double Timestamp;
@@ -627,7 +628,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::setVariableInsideWindow(string Name, double TimeWindow, double CurrentTime)
+  void FactorGraph::setVariableInsideWindow(const string Name, const double TimeWindow, const double CurrentTime)
   {
     /** find end of the current state */
     double Timestamp;
@@ -651,7 +652,7 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::setAllVariableInsideWindow(double TimeWindow, double CurrentTime)
+  void FactorGraph::setAllVariableInsideWindow(const double TimeWindow, const double CurrentTime)
   {
     for (auto const &State : _StateData)
     {
@@ -659,11 +660,41 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::setAllConstantOutsideWindow(double TimeWindow, double CurrentTime)
+  void FactorGraph::setAllConstantOutsideWindow(const double TimeWindow, const double CurrentTime)
   {
     for (auto const &State : _StateData)
     {
       setConstantOutsideWindow(State.first, TimeWindow, CurrentTime);
+    }
+  }
+
+  void FactorGraph::setVariable(const string Name)
+  {
+    /** find end of the current state */
+    double Timestamp;
+    bool TimestampExists = _StateData.getTimeLast(Name, Timestamp);
+
+    /** loop over all timestamps */
+    if (TimestampExists)
+    {
+      while (TimestampExists)
+      {
+        setVariable(Name, Timestamp);
+        TimestampExists = _StateData.getTimePrev(Name, Timestamp, Timestamp);
+      }
+    }
+    else if (!_StateData.checkID(Name))
+    {
+      PRINT_ERROR("State doesn't exist: ", Name);
+    }
+  }
+
+  void FactorGraph::setAllVariable()
+  {
+    /** loop over all state names */
+    for (auto const &State : _StateData)
+    {
+      setVariable(State.first);
     }
   }
 

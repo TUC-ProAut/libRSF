@@ -211,11 +211,13 @@ TEST(Example, Marginalization)
   SensorPos0.setMean(PosVec0);
   libRSF::Data SensorPos1 (libRSF::DataType::Point3, 1.0);
   SensorPos1.setMean(PosVec1);
+  SensorPos1.setCovarianceMatrix(DataFGFull.getElement(POSITION_STATE, 1.0, 0).getCovarianceMatrix());
 
   libRSF::Data SensorRot0 (libRSF::DataType::Quaternion, 0.0);
   SensorRot0.setMean(RotVec0);
   libRSF::Data SensorRot1 (libRSF::DataType::Quaternion, 1.0);
   SensorRot1.setMean(RotVec1);
+  SensorRot1.setCovarianceMatrix(DataFGFull.getElement(ROTATION_STATE, 1.0, 0).getCovarianceMatrix());
 
   libRSF::SensorDataSet ExpectedFull;
 
@@ -261,6 +263,24 @@ TEST(Example, Marginalization)
   EXPECT_LT(maxAbsErrorFullRot,1e-3);
   EXPECT_LT(maxAbsErrorMargPos,1e-3);
   EXPECT_LT(maxAbsErrorMargRot,1e-3);
+
+  /* at least compare covariance between full and marginalized */
+  const double maxAbsErrorCovPos = libRSF::MaxAbsError(libRSF::DataType::Point3,
+                                                        ExpectedMarg,
+                                                        POSITION_STATE,
+                                                        DataFGMarg,
+                                                        libRSF::DataElement::Covariance);
+  const double maxAbsErrorCovRot = libRSF::MaxAbsError(libRSF::DataType::Quaternion,
+                                                        ExpectedMarg, 
+                                                        ROTATION_STATE,
+                                                        DataFGMarg,
+                                                        libRSF::DataElement::Covariance);
+
+  std::cout << "MaxAbsErrorCovPos:" << maxAbsErrorCovPos << std::endl;
+  std::cout << "MaxAbsErrorCovRot:" << maxAbsErrorCovRot << std::endl;   
+
+  EXPECT_LT(maxAbsErrorCovPos,1e-3);
+  EXPECT_LT(maxAbsErrorCovRot,1e-3);                                                   
 }
 
 /** main provided by linking to gtest_main */

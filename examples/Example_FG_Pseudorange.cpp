@@ -33,7 +33,7 @@
 
 void CreateData (libRSF::SensorDataSet &RangeMeasurements)
 {
-  std::default_random_engine Generator;
+  std::default_random_engine Generator(42);
   std::normal_distribution<double> Distribution(0.0, STDDEV_RANGE);
 
   libRSF::Vector1 Range, StdDev, SatID;

@@ -67,6 +67,7 @@
 #include "factors/BetweenPose2Factor.h"
 #include "factors/BetweenPose3Factor.h"
 #include "factors/BetweenQuaternionFactor.h"
+#include "factors/BearingRangeFactor.h"
 #include "factors/IMUPreintegrationFactor.h"
 #include "factors/IMUFactor.h"
 #include "factors/TrackingFactor.h"
@@ -157,7 +158,7 @@ namespace libRSF
       void addFactor( StateID ID1,
                       FactorParameters... Params)
       {
-        /** compile time error for IMU pre-tintegration */
+        /** compile time error for IMU pre-integration */
         static_assert(CurrentFactorType != FactorType::IMUPretintegration, "Do not use the default factor interface for IMU pre-integration factor! Use addIMUPreintegrationFactor() instead!");
 
         StateList List;
@@ -181,18 +182,35 @@ namespace libRSF
       template <FactorType CurrentFactorType, typename ErrorType>
       void addFactor(StateList List,
                      ErrorType &NoiseModel,
-                     ceres::LossFunction* RobustLoss = nullptr)
+                     ceres::LossFunction* RobustLoss,
+                     const bool DoPrediction = true)
       {
-        addFactorBase<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), RobustLoss);
+        addFactorBase<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), RobustLoss, DoPrediction);
+      }
+      template <FactorType CurrentFactorType, typename ErrorType>
+      void addFactor(StateList List,
+                     ErrorType &NoiseModel,
+                     const bool DoPrediction = true)
+      {
+        addFactorBase<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), nullptr, DoPrediction);
       }
       /** last level with measurement */
       template <FactorType CurrentFactorType, typename ErrorType>
       void addFactor(StateList List,
                      const Data &Measurement,
                      ErrorType &NoiseModel,
-                     ceres::LossFunction* RobustLoss = nullptr)
+                     ceres::LossFunction* RobustLoss,
+                     const bool DoPrediction = true)
       {
-        addFactorBase<CurrentFactorType>(List, NoiseModel, Measurement, RobustLoss);
+        addFactorBase<CurrentFactorType>(List, NoiseModel, Measurement, RobustLoss, DoPrediction);
+      }
+      template <FactorType CurrentFactorType, typename ErrorType>
+      void addFactor(StateList List,
+                     const Data &Measurement,
+                     ErrorType &NoiseModel,
+                     const bool DoPrediction = true)
+      {
+        addFactorBase<CurrentFactorType>(List, NoiseModel, Measurement, nullptr, DoPrediction);
       }
 
       /** special case for IMU pre-integration */
@@ -233,21 +251,23 @@ namespace libRSF
                         StateDataSet &Result);
 
       /** remove old states*/
-      void removeState(string Name, double Timestamp);
-      void removeState(string Name, double Timestamp, int Number);
-      void removeStatesOutsideWindow(string Name, double TimeWindow, double CurrentTime);
-      void removeAllStatesOutsideWindow(double TimeWindow, double CurrentTime);
+      void removeState(const string Name, const double Timestamp);
+      void removeState(const string Name, const double Timestamp, const int Number);
+      void removeStatesOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime);
+      void removeAllStatesOutsideWindow(const double TimeWindow, const double CurrentTime);
 
       /** handle constant states */
-      void setConstant(string Name, double Timestamp);
-      void setVariable(string Name, double Timestamp);
+      void setConstant(const string Name, const double Timestamp);
+      void setVariable(const string Name, const double Timestamp);
+      void setVariable(const string Name);
 
-      void setSubsetConstant(string Name, double Timestamp, int Number, const std::vector<int> &ConstantIndex);
+      void setSubsetConstant(const string Name, const double Timestamp, const int Number, const std::vector<int> &ConstantIndex);
 
-      void setConstantOutsideWindow(string Name, double TimeWindow, double CurrentTime);
-      void setVariableInsideWindow(string Name, double TimeWindow, double CurrentTime);
-      void setAllConstantOutsideWindow(double TimeWindow, double CurrentTime);
-      void setAllVariableInsideWindow(double TimeWindow, double CurrentTime);
+      void setConstantOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime);
+      void setVariableInsideWindow(const string Name, const double TimeWindow, const double CurrentTime);
+      void setAllConstantOutsideWindow(const double TimeWindow, const double CurrentTime);
+      void setAllVariableInsideWindow(const double TimeWindow, const double CurrentTime);
+      void setAllVariable();
 
       /** handle bound */
       void setUpperBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound);
@@ -265,7 +285,7 @@ namespace libRSF
 
       /** access solver options */
       void setSolverOptions(ceres::Solver::Options Options);
-      ceres::Solver::Options getSolverOptions();
+      ceres::Solver::Options getSolverOptions() const;
 
       /** access solver summary */
       void printReport() const;
@@ -286,10 +306,11 @@ namespace libRSF
       /** add and remove factors */
       template <typename ErrorType, typename FactorClass, typename... FactorParameters>
       void addFactorGeneric (ErrorType &NoiseModel,
-                             std::vector<StateID> &StateList,
-                             FactorType FactorTypeEnum,
+                             const std::vector<StateID> &StateList,
+                             const FactorType FactorTypeEnum,
                              ceres::LossFunction* RobustLoss,
-                             double Timestamp,
+                             const bool DoPrediction,
+                             const double Timestamp,
                              FactorParameters... Params)
       {
         /** build list of states */
@@ -303,7 +324,10 @@ namespace libRSF
         FactorClass* Factor = new FactorClass(NoiseModel, Params...);
 
         /** use the factor to predict */
-        Factor->predict(StatePointers);
+        if (DoPrediction)
+        {
+          Factor->predict(StatePointers);
+        }
 
         /** wrap it in ceres cost function */
         auto CostFunction = makeAutoDiffCostFunction<ErrorType::OutputDim, FactorClass> (Factor,
@@ -333,7 +357,7 @@ namespace libRSF
       }
 
       template <FactorType CurrentFactorType, typename ErrorType>
-      void addFactorBase(StateList &States, ErrorType &NoiseModel, const Data &Measurement, ceres::LossFunction* RobustLoss)
+      void addFactorBase(StateList &States, ErrorType &NoiseModel, const Data &Measurement, ceres::LossFunction* RobustLoss, const bool DoPrediction)
       {
         /** get index timestamp */
         const double TimestampFirst = States._List.front().Timestamp;
@@ -351,6 +375,7 @@ namespace libRSF
                                                         States._List,
                                                         CurrentFactorType,
                                                         RobustLoss,
+                                                        DoPrediction,
                                                         TimestampFirst,
                                                         Measurement,
                                                         DeltaTime);
@@ -361,6 +386,7 @@ namespace libRSF
                                                         States._List,
                                                         CurrentFactorType,
                                                         RobustLoss,
+                                                        DoPrediction,
                                                         TimestampFirst,
                                                         Measurement);
         }
@@ -373,6 +399,7 @@ namespace libRSF
                                                         States._List,
                                                         CurrentFactorType,
                                                         RobustLoss,
+                                                        DoPrediction,
                                                         TimestampFirst,
                                                         DeltaTime);
         }
@@ -382,6 +409,7 @@ namespace libRSF
                                                         States._List,
                                                         CurrentFactorType,
                                                         RobustLoss,
+                                                        DoPrediction,
                                                         TimestampFirst);
         }
       }

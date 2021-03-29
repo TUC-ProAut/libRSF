@@ -107,10 +107,6 @@ target_include_directories(libRSF
 # set target (libRSF) dependencies
 target_link_libraries(libRSF PUBLIC Threads::Threads Eigen3::Eigen Ceres::ceres yaml-cpp ${GeographicLib_LIBRARIES})
 
-if(OpenMP_CXX_FOUND)
-  target_link_libraries(libRSF PUBLIC OpenMP::OpenMP_CXX)
-endif()
-
 # enable all warnings for libRSF (this is just enabled from time to time to check the code quality)
 #target_compile_options(libRSF PUBLIC -Wextra -Wpedantic -Wall -fmax-errors=100 -Wno-unused-parameter)
 

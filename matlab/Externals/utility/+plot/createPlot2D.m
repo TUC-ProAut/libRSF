@@ -68,6 +68,15 @@ end
 if HasUWBModule
     hPlotUWB = plot(Bonus.Modules.Position(:,1),Bonus.Modules.Position(:,2),'x','Color',[0 0 0.5],'MarkerSize',15,'LineWidth',3);
     hPlotUWB.DisplayName = Bonus.Modules.Lable;
+    
+    % add ID as text
+    if isfield(Bonus.Modules,'ID')
+        for n = 1:numel(Bonus.Modules.ID)
+            text(Bonus.Modules.Position(n,1), Bonus.Modules.Position(n,2)+3,...
+                 num2str(Bonus.Modules.ID(n)),...
+                 'HorizontalAlignment','center', 'Color', [0 0 0.5], 'FontSize', PlotConfig.Font.Size);
+        end
+    end
 end
 
 if HasGNSSBase

@@ -24,6 +24,15 @@
 
 namespace libRSF
 {
+
+  /** \brief RMSE between two datasets (mean)
+   *
+   * \param TypeGT the type of the GT data
+   * \param GT a data set that holds the GT
+   * \param TypeEstimate type of the estimate
+   * \param Estimate data set that holds the estimation
+   * \return root mean square error between GT and estimate
+   */
   double ATE(const DataType TypeGT,
              const SensorDataSet &GT,
              const std::string &TypeEstimate,
@@ -44,7 +53,7 @@ namespace libRSF
     Vector Error(LengthEstimate);
 
     /** get first timestamp */
-    double Time;
+    double Time = 0.0;
     GT.getTimeFirst(TypeGT, Time);
 
     /** fill error vector */
@@ -66,7 +75,15 @@ namespace libRSF
     return RMSE(Error);
   }
 
-  // maximum componentwise absolute difference between two datasets (mean and covariance)
+
+  /** \brief maximum componentwise absolute difference between two datasets (mean and covariance)
+   *
+   * \param TypeGT the type of the GT data
+   * \param GT a data set that holds the GT
+   * \param TypeEstimate type of the estimate
+   * \param Estimate data set that holds the estimation
+   * \return maximum absolute error between GT and estimate
+   */
   double MaxAbsError(const DataType TypeGT,
                      const SensorDataSet &GT,
                      const std::string &TypeEstimate,
@@ -88,24 +105,28 @@ namespace libRSF
     double maxAbsError = 0;
 
     /** get first timestamp */
-    double Time;
+    double Time = 0.0;
     GT.getTimeFirst(TypeGT, Time);
 
     /** calculate overall maximum */
     do
     {
-      /** get data at this timestamp */
-      Data DataGT, DataEstimate;
-      Estimate.getElement(TypeEstimate, Time, 0, DataEstimate);
-      GT.getElement(TypeGT, Time, 0, DataGT);
-
-      /** get maximum difference */
-      const double maxAbsErrorMean = (DataEstimate.getValue(Element) - DataGT.getValue(Element)).cwiseAbs().maxCoeff();
-
-      /** store maximum of loop */
-      if(maxAbsErrorMean > maxAbsError)
+      int NumberOfStates = GT.countElement(TypeGT,Time);
+      for (int nState = 0; nState < NumberOfStates; ++nState)
       {
-        maxAbsError = maxAbsErrorMean;
+        /** get data at this timestamp */
+        Data DataGT, DataEstimate;
+        Estimate.getElement(TypeEstimate, Time, nState, DataEstimate);
+        GT.getElement(TypeGT, Time, nState, DataGT);
+
+        /** get maximum difference */
+        const double maxAbsErrorTmp = (DataEstimate.getValue(Element) - DataGT.getValue(Element)).cwiseAbs().maxCoeff();
+
+        /** store maximum of loop */
+        if(maxAbsErrorTmp > maxAbsError)
+        {
+          maxAbsError = maxAbsErrorTmp;
+        }
       }
     }
     while(GT.getTimeNext(TypeGT, Time, Time));

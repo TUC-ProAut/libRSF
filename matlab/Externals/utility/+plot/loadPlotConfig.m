@@ -4,7 +4,8 @@ function [Config] = loadPlotConfig(Size)
 
 Config.Font.Size = 18;
 Config.Font.Latex = false;
-Config.Font.Name = 'Roboto';
+%Config.Font.Name = 'Roboto';
+Config.Font.Name = 'Helvetica';
 
 Config.Line.Width = 3;
 
@@ -30,6 +31,9 @@ end
 
 Config.Line.Color = [Config.Line.Color; brighten(Config.Line.Color, 0.7)];
 Config.Line.ColorGrey = [0.35 0.35 0.35];
+Config.Line.ColorLightGrey = [0.75 0.75 0.75];
+Config.Line.ColorTUC = [0 94 79]/255;
+Config.Line.ColorETIT = [227 2 43]/255;
 Config.Line.Marker.Type = {'x', '+', 'o', '*','v', 's', 'd','p'};
 Config.Line.Marker.Size = 15;
 

@@ -55,6 +55,7 @@ namespace libRSF
     BetweenValue1, BetweenValue2, BetweenValue3,
     BetweenPose2, BetweenPose3,
     BetweenQuaternion,
+    BetweenBearingRange2,
     Point2Reg,
     Point2RegPose,
     Range2, Range3, Pseudorange2, Pseudorange3, Pseudorange3_ECEF,
@@ -82,7 +83,11 @@ namespace libRSF
     Point1, Point2, Point3,                               /**< translation */
     Quaternion, Angle, UnitCircle,                        /**< rotation */
     Pose2, Pose3,                                         /**< translation + rotation*/
-    PointID2, PointID3,                                   /**< bounding boxes */
+    PoseBetween2, PoseBetween3,                           /**< translation + rotation between two timestamps*/
+    BearingRangeID2,                                      /**< BR to a specific ID*/
+    PointID2,                                             /**< Point with a specific ID */
+    PointConfID2,                                         /**< Point with ID and confidence */
+    BoundingBox3,                                         /**< bounding boxes from object detection */
     ClockError, ClockDrift,                               /**< GNSS receiver clock error */
     IMUBias,                                              /**< IMU Speedbias [Vel, B_Acc, B_Gyr] */
     GMM, Switch, Covariance1,                             /**< dynamic error models */
@@ -157,6 +162,7 @@ namespace libRSF
     {"between_val3",FactorType::BetweenValue3},
     {"between_pose2",FactorType::BetweenPose2},
     {"between_pose3",FactorType::BetweenPose3},
+    {"between_bearing_range2",FactorType::BetweenBearingRange2},
     {"range2",FactorType::Range2},
     {"range3",FactorType::Range3},
     {"pseudorange2",FactorType::Pseudorange2},
