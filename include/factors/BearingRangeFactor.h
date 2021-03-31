@@ -89,7 +89,7 @@ namespace libRSF
       {
         /** pointer to eigen objects */
         VectorRefConst<double, 2> Point1(StatePointers.at(0));
-        const libRSF::Rotation2D Rot1(StatePointers.at(0)[0]);
+        const libRSF::Rotation2D Rot1(StatePointers.at(1)[0]);
         VectorRef<double, 2> Point2(StatePointers.at(2));
 
         /** seperate measurement */
