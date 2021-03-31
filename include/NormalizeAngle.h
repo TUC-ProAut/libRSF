@@ -33,6 +33,7 @@
 #define NORMALIZE_ANGLE_H_
 
 #include "VectorMath.h"
+#include "Messages.h"
 #include <cmath>
 
 namespace libRSF
