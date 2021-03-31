@@ -20,7 +20,7 @@ if isfield(SensorData, 'GT_Position3')
 end
 
 %% Write result
-if exist('+yaml/ReadYaml.m','file') 
+if exist(['+yaml' filesep 'ReadYaml.m'],'file') 
     yaml.WriteYaml(OutputPath, YAML, 0);
 end
 
