@@ -3,7 +3,8 @@ function [Dump] = parseCeresDump(Path)
 %   Detailed explanation goes here
 
 if nargin < 1
-    Path = "/mnt/DatenSSD/tipf/Workspace/libisf2/trunk/libRSF/build/examples/";
+    RelativePath = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+    Path = convertCharsToStrings(RelativePath) + filesep + "build" + filesep + "examples" + filesep;
 end
 
 % we delete files in this script, so we use the trash for safety

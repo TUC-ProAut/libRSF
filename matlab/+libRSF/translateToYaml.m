@@ -105,7 +105,7 @@ for nError = 1:numel(Config.ErrorModel)
             %% translate the config using the actual YAML file
             % create path
             RelativePath = fileparts(mfilename('fullpath'));
-            DefaultPath = [RelativePath '/../../config/' DefaultFile '.yaml'];
+            DefaultPath = [RelativePath filesep '..' filesep '..' filesep 'config' filesep DefaultFile '.yaml'];
             
             % read default file
             YamlDefault = yaml.ReadYaml(DefaultPath,1,1);

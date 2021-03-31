@@ -13,7 +13,8 @@ end
 %% find right build folder
 % folders relative to the script path
 RelativePath = fileparts(mfilename('fullpath'));
-PossibleDirs = {'/../../build', '/../../../build_ceres', '/../../../build'};
+PossibleDirs = {[filesep '..' filesep '..' filesep 'build'],...
+                [filesep '..' filesep '..' filesep '..' filesep 'build']};
 
 BuildDir = [];
 for n = 1:numel(PossibleDirs)
@@ -27,8 +28,8 @@ end
 
 
 %% find right binary subfolder
-PathToBinaryExample = '/examples/';
-PathToBinaryApplication = '/applications/';
+PathToBinaryExample = [filesep 'examples' filesep];
+PathToBinaryApplication = [filesep 'applications' filesep];
 
 if startsWith(ExecutableFile,'App') || startsWith(ExecutableFile,'I') 
     PathToBinary = [BuildDir PathToBinaryApplication];
@@ -75,12 +76,12 @@ end
 if isfield(Config, 'Custom')
     if startsWith(ExecutableFile,'IV')  || startsWith(ExecutableFile,'ICRA')
         % Legacy applications without config file
-        CeresCall = ['./' ExecutableFile ' ' DataFile ' ' OutputFile ' ' Config.Custom];
+        CeresCall = ['.' filesep ExecutableFile ' ' DataFile ' ' OutputFile ' ' Config.Custom];
     else
-        CeresCall = ['./' ExecutableFile ' ' ConfigFile ' ' DataFile ' ' OutputFile ' ' Config.Custom];
+        CeresCall = ['.' filesep ExecutableFile ' ' ConfigFile ' ' DataFile ' ' OutputFile ' ' Config.Custom];
     end
 else
-    CeresCall = ['./' ExecutableFile ' ' ConfigFile ' ' DataFile ' ' OutputFile];
+    CeresCall = ['.' filesep ExecutableFile ' ' ConfigFile ' ' DataFile ' ' OutputFile];
 end
 
 % change path and call binary

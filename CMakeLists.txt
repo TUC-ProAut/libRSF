@@ -53,9 +53,6 @@ find_package(Ceres 2.0 REQUIRED)
 # Eigen for vectorized calculations
 find_package(Eigen3 3.3.5 REQUIRED NO_MODULE)
 
-# optional OpenMP for multi-threading in Eigen
-find_package(OpenMP QUIET)
-
 # Simple multi-threading
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
