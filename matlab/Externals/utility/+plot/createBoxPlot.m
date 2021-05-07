@@ -29,12 +29,12 @@ set(b,{'linew'},{Config.Line.Width});
 
 
 %% set colors
-set(findobj(hBox,'tag','Median'), 'Color', Config.Line.Color(1,:));
-set(findobj(hBox,'tag','Box'), 'Color', Config.Line.Color(3,:));
+set(findobj(hBox,'tag','Median'), 'Color', Config.Color.Default(1,:));
+set(findobj(hBox,'tag','Box'), 'Color', Config.Color.Default(3,:));
 
 h = findobj(hBox,'tag','Outliers');
 for iH = 1:length(h)
-    h(iH).MarkerEdgeColor = Config.Line.Color(1,:);
+    h(iH).MarkerEdgeColor = Config.Color.Default(1,:);
 end
 
 end

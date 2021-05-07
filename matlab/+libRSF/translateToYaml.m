@@ -49,9 +49,9 @@ for nError = 1:numel(Config.ErrorModel)
                     case 'gnss'
                         Lables{end} = [Lables{end} 'GNSS'];
                     case 'cced'
-                        do nothing
+                        %do nothing
                     case 'cce'
-                        do nothing
+                        %do nothing
                     case 'loop'
                         Lables{end} = [Lables{end} 'Loop Closure 2D'];
                     case 'radar'

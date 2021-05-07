@@ -61,7 +61,7 @@ hPlotGT.DisplayName = 'Ground Truth';
 
 % plot trajectories
 for m = 1:M
-    hPlotTraj = plot(Trajectory(m,:,1),Trajectory(m,:,2),':','LineWidth',PlotConfig.Line.Width,'MarkerSize',15, 'Color',PlotConfig.Line.Color(m,:));
+    hPlotTraj = plot(Trajectory(m,:,1),Trajectory(m,:,2),':','LineWidth',PlotConfig.Line.Width,'MarkerSize',15, 'Color',PlotConfig.Color.Default(m,:));
     hPlotTraj.DisplayName = Metric(m).Lable;
 end
 
@@ -92,6 +92,16 @@ axis equal
 grid on
 box on
 
+% set boundary around GT
+MinX = min(GT(:,1));
+MaxX = max(GT(:,1));
+MinY = min(GT(:,2));
+MaxY = max(GT(:,2));
+RangeX = MaxX - MinX;
+RangeY = MaxY - MinY;
+xlim([MinX MaxX] + [-RangeX RangeX]*0.1 + [-10 10]);
+ylim([MinY MaxY] + [-RangeY RangeY]*0.1 + [-10 10]);
+
 % find equal ticks
 XT = xticks;
 YT = yticks;
@@ -102,8 +112,7 @@ xticks(unique(round(XT/ResMax))*ResMax)
 yticks(unique(round(YT/ResMax))*ResMax)
 
 % add legend
-legend('show')
-legend('Location','best')
+legend('show', 'Location', 'best');
 
 %% Boxplot
 BoxConfig = PlotConfig;
@@ -212,7 +221,7 @@ if Animation == true
         hold on
         % plot trajectories
         for m = 1:M
-            hPlotPints{idx,m} = plot(hAxe, Trajectory(m,idx*StepSize,1),Trajectory(m,idx*StepSize,2),'.','LineWidth',PlotConfig.Line.Width,'MarkerSize',15, 'Color',PlotConfig.Line.Color(m,:));
+            hPlotPints{idx,m} = plot(hAxe, Trajectory(m,idx*StepSize,1),Trajectory(m,idx*StepSize,2),'.','LineWidth',PlotConfig.Line.Width,'MarkerSize',15, 'Color',PlotConfig.Color.Default(m,:));
             hPlotPints{idx,m}.DisplayName = Metric(m).Lable;
         end
         

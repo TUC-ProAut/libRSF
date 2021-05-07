@@ -44,11 +44,11 @@ If you want to use our factors for your code, you have two options:
 
 1. You use them with our `FactorGraph` class that has an dedicated `addFactor()` interface.  For examples, just have a look to the examples in the "applications" folder.
 
-2. If you want to use them in a vanilla Ceres application you can create a cost function object with the following code snippet (example for a 2D range measurement). If you need more information about the required `SensorData`class, have a look at our [data structures](CUSTOM_IN_OUT.md).
+2. If you want to use them in a vanilla Ceres application you can create a cost function object with the following code snippet (example for a 2D range measurement). If you need more information about the required `Data`class, have a look at our [data structures](CUSTOM_IN_OUT.md).
 
    ```c++
    /** get a range measurement from somewhere */
-   libRSF::SensorData RangeMeasurement = ...
+   libRSF::Data RangeMeasurement = ...
    
    /** create error model */
    typedef libRSF::GaussianDiagonal<1> ErrorClass;

@@ -23,7 +23,7 @@ for n = 1:numel(Metric)
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
     hHist.LineStyle = 'none';
-    hHist.FaceColor = Config.Line.Color(n,:);
+    hHist.FaceColor = Config.Color.Default(n,:);
 end
 hold off
 
@@ -52,7 +52,7 @@ for n = 1:numel(Metric)
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
     hHist.LineStyle = 'none';
-    hHist.FaceColor = Config.Line.Color(n,:);
+    hHist.FaceColor = Config.Color.Default(n,:);
 end
 hold off
 

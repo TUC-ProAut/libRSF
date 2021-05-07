@@ -22,7 +22,7 @@ Axis.YLable3 = 'Hessian';
 hCost = figure;
 subplot(3,1,1)
 for n = 1:numel(ErrorModels)
-    hLine = plot(Result.Error(:,n), Result.Cost(:,n) - min(Result.Cost(:,n)), 'LineWidth', Config.Line.Width, 'Color', Config.Line.Color(n,:));
+    hLine = plot(Result.Error(:,n), Result.Cost(:,n) - min(Result.Cost(:,n)), 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:));
     set(hLine, 'DisplayName', ErrorModels{n});
     hold on
 end
@@ -36,7 +36,7 @@ ylim([0 5]);
 % gradient
 subplot(3,1,2)
 for n = 1:numel(ErrorModels)
-    h = plot(Result.Error(:,n), Result.Gradient(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Line.Color(n,:));
+    h = plot(Result.Error(:,n), Result.Gradient(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:));
     set(h, 'DisplayName', ErrorModels{n});
     hold on
 end
@@ -50,7 +50,7 @@ ylabel(Axis.YLable2);
 % Hessian
 subplot(3,1,3)
 for n = 1:numel(ErrorModels)
-    h = plot(Result.Error(:,n), Result.Hessian(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Line.Color(n,:));
+    h = plot(Result.Error(:,n), Result.Hessian(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:));
     set(h, 'DisplayName', ErrorModels{n});
     hold on
 end
@@ -72,7 +72,7 @@ end
 %% plot probability
 hProb = figure;
 for n = 1:numel(ErrorModels)
-    hLine = plot(Result.Error(:,n), Result.Prob(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Line.Color(n,:));
+    hLine = plot(Result.Error(:,n), Result.Prob(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:));
     set(hLine,'DisplayName',ErrorModels{n});
     hold on
 end
@@ -88,9 +88,9 @@ end
 hOpt = figure;
 hold on
 for n = 1:numel(ErrorModels)
-    hLine = plot(Result.Error(:,n), Result.Cost(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Line.Color(n,:));
+    hLine = plot(Result.Error(:,n), Result.Cost(:,n), 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:));
     set(hLine,'DisplayName',ErrorModels{n});
-    plot(-Result.PostOpt(:,n), ones(size(Result.PostOpt(:,n)))*n + min(Result.Cost,[],'all'), 'x', 'MarkerSize', Config.Line.Marker.Size, 'LineWidth', Config.Line.Width, 'Color', Config.Line.Color(n,:), 'HandleVisibility','off')
+    plot(-Result.PostOpt(:,n), ones(size(Result.PostOpt(:,n)))*n + min(Result.Cost,[],'all'), 'x', 'MarkerSize', Config.Line.Marker.Size, 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:), 'HandleVisibility','off')
 end
 hold off
 legend('show');
@@ -109,7 +109,7 @@ for n = 1:numel(ErrorModels)
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
     hHist.LineStyle = 'none';
-    hHist.FaceColor = Config.Line.Color(n,:);
+    hHist.FaceColor = Config.Color.Default(n,:);
 end
 hold off
 % Format
@@ -130,7 +130,7 @@ for n = 1:numel(ErrorModels)
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
     hHist.LineStyle = 'none';
-    hHist.FaceColor = Config.Line.Color(n,:);
+    hHist.FaceColor = Config.Color.Default(n,:);
 end
 hold off
 % Format

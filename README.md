@@ -119,7 +119,7 @@ The following pages give you an overview, how to use them or how to build a cust
 
 2. [How to use the robust Gaussian mixture models from our RA-L 2021 Paper?](docs/ROBUST.md)
 
-3. [How to build your own application on top of the libRSF? (under construction)](docs/CUSTOM.md)
+3. [How to build your own application on top of the libRSF?](docs/CUSTOM.md)
 
 ## Additional Information
 
@@ -141,7 +141,7 @@ This library also contains the implementation of [1-3]. Further references will 
 
 [2] *Tim Pfeifer and Peter Protzel*, Incrementally learned Mixture Models for GNSS Localization, Proc. of Intelligent Vehicles Symposium (IV), 2019, DOI: [10.1109/IVS.2019.8813847](https://doi.org/10.1109/IVS.2019.8813847)
 
-[3] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021 (accepted), Preprint: [arXiv:2103.02472](https://arxiv.org/abs/2103.02472)
+[3] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021, DOI: [10.1109/LRA.2021.3067307](https://dx.doi.org/10.1109/LRA.2021.3067307)
 
 ### License
 

@@ -81,7 +81,7 @@ for n = 1:NumberAlgo
     hScatter{n} = plot(-Result.PostOpt(InBound,1,n), -Result.PostOpt(InBound,2,n),'o', 'LineWidth', 1.25);
     hScatter{n}.MarkerSize = Config.Line.Marker.Size;
     hScatter{n}.MarkerEdgeColor = 'k';
-    hScatter{n}.MarkerFaceColor = Config.Line.Color(n,:);
+    hScatter{n}.MarkerFaceColor = Config.Color.Default(n,:);
     
     set(hScatter{n}, 'DisplayName', Lables(n));
 end
@@ -121,7 +121,7 @@ plot.formatPlot(hError, plot.loadPlotConfig([Width Width/1.5*2]));
 nexttile([1 2])
 hold on
 for n = 1:NumberAlgo
-    hCostSlice{n} = plot(LineX, LineCostAlgo(:,n),'-', 'LineWidth', Config.Line.Width, 'Color', Config.Line.Color(n,:));
+    hCostSlice{n} = plot(LineX, LineCostAlgo(:,n),'-', 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:));
     hCostSlice{n}.DisplayName = Lables(n);
 end
 hold off
@@ -158,7 +158,7 @@ for n = 1:numel(ErrorModels)
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
     hHist.LineStyle = 'none';
-    hHist.FaceColor = Config.Line.Color(n,:);
+    hHist.FaceColor = Config.Color.Default(n,:);
 end
 hold off
 % Format
@@ -179,7 +179,7 @@ for n = 1:numel(ErrorModels)
     hHist.Normalization = 'pdf';
     hHist.BinEdges = hHist.BinEdges - hHist.BinWidth/2.0;
     hHist.LineStyle = 'none';
-    hHist.FaceColor = Config.Line.Color(n,:);
+    hHist.FaceColor = Config.Color.Default(n,:);
 end
 hold off
 % Format
@@ -215,7 +215,7 @@ end
 %     hold on
 %     quiver(ErrorX, ErrorY, -GradientX, -GradientY);
 %     quiver(ErrorX, ErrorY, DY, DX);
-%     plot(Result.PostOpt(1,1,n), Result.PostOpt(1,2,n),'x', 'MarkerSize', Config.Line.Marker.Size, 'LineWidth', Config.Line.Width*2, 'Color', Config.Line.Color(1,:), 'HandleVisibility','off');
+%     plot(Result.PostOpt(1,1,n), Result.PostOpt(1,2,n),'x', 'MarkerSize', Config.Line.Marker.Size, 'LineWidth', Config.Line.Width*2, 'Color', Config.Color.Default(1,:), 'HandleVisibility','off');
 %     hold off
 %     
 %     legend({['Cost - ' ErrorModels{n}], ['Gradient - ' ErrorModels{n}], ['Gradient Numerical  - ' ErrorModels{n}]});
