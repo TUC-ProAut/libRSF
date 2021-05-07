@@ -119,7 +119,7 @@ The following pages give you an overview, how to use them or how to build a cust
 
 2. [How to use the robust Gaussian mixture models from our RA-L 2021 Paper?](docs/ROBUST.md)
 
-3. [How to build your own application on top of the libRSF? (under construction)](docs/CUSTOM.md)
+3. [How to build your own application on top of the libRSF?](docs/CUSTOM.md)
 
 ## Additional Information
 
