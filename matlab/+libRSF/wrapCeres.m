@@ -102,8 +102,8 @@ Result = libRSF.parseFromCell(ResultCell);
 Result.Runtime = Runtime;
 
 %% save time difference
-if isfield(Data, 'StartTime')
-    Result.StartTime = Data.StartTime;
+if isfield(Data, 'Info')
+    Result.StartTime = Data.Info.StartTime;
 else
     Result.StartTime = 0;
 end

@@ -11,8 +11,8 @@ hold on
 
 p = area(XData,YData);
 for nLable =1:length(Lables)
-    p(nLable).EdgeColor = Config.Line.Color(nLable,:);
-    p(nLable).FaceColor = Config.Line.Color(nLable,:);
+    p(nLable).EdgeColor = Config.Color.Default(nLable,:);
+    p(nLable).FaceColor = Config.Color.Default(nLable,:);
     p(nLable).DisplayName = Lables{nLable};
 end
 

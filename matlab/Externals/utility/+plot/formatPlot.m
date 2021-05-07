@@ -4,6 +4,7 @@ function [] = formatPlot(hFig, Config)
 
     %% find relevant handles
     hAxis = findall(hFig,'type','axes');
+    hLeg = findall(hFig,'type','legend');
     hColorbar = findobj(hFig, 'Type', 'Colorbar');
     hLine = findall(hFig,'type','line');
     hFontSize = findall(hFig,'-property','FontSize');
@@ -27,12 +28,16 @@ function [] = formatPlot(hFig, Config)
     set(hAxis,'LineWidth',Config.Axis.Width);
     set(hAxis,'GridLineStyle',Config.Axis.Grid.Style);
     set(hAxis,'layer','top');
+    set(hAxis, 'XColor', Config.Axis.Color, 'YColor', Config.Axis.Color)
 
     if isfield(Config.Axis,'YLimit')
         ylim(hAxis, Config.Axis.YLimit);
-    end    
+    end
+    
+    %% format legend
+    set(hLeg, 'EdgeColor', Config.Legend.Color);
 
-    %% reset legend for right box size
+    % reset legend for right box size
     legend toggle
     legend toggle
 
@@ -41,7 +46,7 @@ function [] = formatPlot(hFig, Config)
 
     %% set better colormap
     if Config.Overwrite.Colormap == true
-        colormap(hFig, Config.Colormap);
+        colormap(hFig, Config.Colormap.Default);
     end
 
     %% format overall plot

@@ -3,14 +3,22 @@ function [] = exportPlot(Handle, Path, Name)
     drawnow update
     pause(0.1);
     
+    % convert to string
+    if ischar(Path)
+        Path  = convertCharsToStrings(Path);
+    end
+    if ischar(Name)
+        Name  = convertCharsToStrings(Name);
+    end
+    
     % concat filname
-    FullFile = [Path Name];
-    FullFilePDF = [FullFile '.pdf'];
-    FullFilePNG = [FullFile '.png'];
-    FullFileFig = [FullFile '.fig'];
+    FullFile = Path + Name;
+    FullFilePDF = FullFile + ".pdf";
+    FullFilePNG = FullFile + ".png";
+    FullFileFig = FullFile + ".fig";
     
     % save as figure file
-    savefig(Handle,FullFileFig,'compact');
+    savefig(Handle, FullFileFig, 'compact');
     
     % save as graphics file
     if exist('exportgraphics', 'file')
