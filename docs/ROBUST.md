@@ -166,7 +166,7 @@ The point set registration example from [1] is currently not available for the C
 
 If you are interested in this work, feel free to have a look at our recent paper:
 
-[1] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021
+[1] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021, DOI: [10.1109/LRA.2021.3067307](https://dx.doi.org/10.1109/LRA.2021.3067307)
 
 BibTeX:
 

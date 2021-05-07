@@ -141,7 +141,7 @@ This library also contains the implementation of [1-3]. Further references will 
 
 [2] *Tim Pfeifer and Peter Protzel*, Incrementally learned Mixture Models for GNSS Localization, Proc. of Intelligent Vehicles Symposium (IV), 2019, DOI: [10.1109/IVS.2019.8813847](https://doi.org/10.1109/IVS.2019.8813847)
 
-[3] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021 (accepted), Preprint: [arXiv:2103.02472](https://arxiv.org/abs/2103.02472)
+[3] *Tim Pfeifer and Sven Lange and Peter Protzel*, Advancing Mixture Models for Least Squares Optimization, Robotics and Automation Letters (RA-L), 2021, DOI: [10.1109/LRA.2021.3067307](https://dx.doi.org/10.1109/LRA.2021.3067307)
 
 ### License
 
