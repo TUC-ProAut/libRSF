@@ -41,7 +41,7 @@ int main(int ArgC, char** ArgV)
   /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
 
-  /** set the solver options for ceres */
+  /** set the solver options for Ceres */
   ceres::Solver::Options SolverOptions;
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
