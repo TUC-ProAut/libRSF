@@ -51,8 +51,9 @@ namespace libRSF
     addDiagonal(Mean, StdDev, Weight);
   }
 
+  /** legacy version to reproduce the results of ICRA2019 and IV 2019 code */
   template<>
-  Vector1 GaussianMixture<1>::removeOffset()
+  Vector1 GaussianMixture<1>::removeOffsetLegacy()
   {
     int NumberOfComponents = this->getNumberOfComponents();
     Vector1 MeanLOS;
@@ -62,6 +63,33 @@ namespace libRSF
 
     /** remove offset of the first "LOS" component */
     this->sortComponentsByMean();
+    for(int i = 0; i < NumberOfComponents; ++i)
+    {
+      if(_Mixture.at(i).getWeight()(0) >= MinimumWeight)
+      {
+        MeanLOS = _Mixture.at(i).getMean();
+        break;
+      }
+    }
+
+    for(int i = 0; i < NumberOfComponents; ++i)
+    {
+      _Mixture.at(i).setMean(_Mixture.at(i).getMean() - MeanLOS);
+    }
+
+    return MeanLOS;
+  }
+
+  /** improved version */
+  template<>
+  Vector1 GaussianMixture<1>::removeOffset()
+  {
+    const int NumberOfComponents = this->getNumberOfComponents();
+    const double MinimumWeight = 1.0/_Mixture.size()*0.8;
+
+    /** remove offset of the first "LOS" component */
+    this->sortComponentsByMean();
+    Vector1 MeanLOS;
     for(int i = 0; i < NumberOfComponents; ++i)
     {
       if(_Mixture.at(i).getWeight()(0) >= MinimumWeight)

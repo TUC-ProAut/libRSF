@@ -36,6 +36,7 @@
 #include "../Messages.h"
 
 #include <cmath>
+#include <random>
 
 namespace libRSF
 {
@@ -281,10 +282,18 @@ namespace libRSF
       }
 
       /** compute negative log-likelihood of a sample vector */
-      Vector computeNegLogLikelihood (const ErrorMatType &Errors) const
+      Vector computeNegLogLikelihood (const ErrorMatType &Errors, const bool EvalAsError = true) const
       {
-        /** apply mean */
-        ErrorMatType WeightedError = (Errors.array().colwise() + _Mean.array()).matrix();
+        /** apply mean (sign depends on the interpretation of a sample) */
+        ErrorMatType WeightedError;
+        if (EvalAsError)
+        {
+          WeightedError = (Errors.array().colwise() + _Mean.array()).matrix();
+        }
+        else
+        {
+          WeightedError = (Errors.array().colwise() - _Mean.array()).matrix();
+        }
 
         /** multiply each row with square root information */
         for (int n = 0; n < WeightedError.cols(); ++n)
@@ -346,6 +355,41 @@ namespace libRSF
         }
 
         return Passed;
+      }
+
+      /** draw a sample */
+      VectorVectorSTL<Dim> DrawSamples(const int Number) const
+      {
+        /** prepare sample transformation */
+        Eigen::SelfAdjointEigenSolver<MatrixStatic<Dim,Dim>> Solver(this->getCovariance());
+        const MatrixStatic<Dim,Dim> Transform = Solver.eigenvectors() * Solver.eigenvalues().cwiseSqrt().asDiagonal();
+
+        /** set up Gaussian generator */
+        std::default_random_engine Generator;
+        std::normal_distribution<double> Gaussian(0, 1);
+
+        /** crate storage */
+        VectorVectorSTL<Dim> SampleVector;
+
+        /** create one [Dim x 1] sample per iteration */
+        for (int n = 0; n < Number; n++)
+        {
+          libRSF::VectorStatic<Dim> Sample;
+
+          /** draw samples */
+          for (int m = 0; m < Dim; m++)
+          {
+            Sample(m) = Gaussian(Generator);
+          }
+
+          /** transform according to distribution */
+          Sample = Transform * Sample + this->_Mean;
+
+          /** store them */
+          SampleVector.push_back(Sample);
+        }
+
+        return SampleVector;
       }
 
     private:

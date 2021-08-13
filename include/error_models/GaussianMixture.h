@@ -275,17 +275,21 @@ namespace libRSF
       }
 
       /** init with increasing uncertainties */
-      void initSpread(const int Components, const double BaseStdDev)
+      void initSpread(const int Components, const double BaseStdDev, const bool IsAssymetric = false)
       {
         libRSF::GaussianComponent<Dim> Component;
 
-        const MatrixStatic<Dim, 1> Mean = MatrixStatic<Dim, 1>::Zero();
+        MatrixStatic<Dim, 1> Mean = MatrixStatic<Dim, 1>::Zero();
         const MatrixStatic<1, 1> Weight = MatrixStatic<1, 1>::Ones() / Components;
         const MatrixStatic<Dim, Dim> SqrtInfo = MatrixStatic<Dim, Dim>::Identity() * (1.0 / BaseStdDev);
 
         this->clear();
         for (int nComponent = 0; nComponent < static_cast<int>(Components); ++nComponent)
         {
+          if(nComponent > 0 && IsAssymetric)
+          {
+            Mean = MatrixStatic<Dim, 1>::Ones() * BaseStdDev*BaseStdDev * std::pow(10, nComponent-1);
+          }
           Component.setParamsSqrtInformation(SqrtInfo * std::pow(0.1, nComponent), Mean, Weight);
           this->addComponent(Component);
         }
@@ -386,7 +390,7 @@ namespace libRSF
         return MaxIndexRow;
       }
 
-      double computeNegLogLikelihood(const ErrorMatType &DataVector, Matrix &NegLogLikelihood) const
+      double computeNegLogLikelihood(const ErrorMatType &DataVector, Matrix &NegLogLikelihood, const bool EvalAsError = true) const
       {
         const int M = _Mixture.size(); /**< number of components */
         const int N = DataVector.cols(); /**< number of data samples */
@@ -397,7 +401,7 @@ namespace libRSF
         /** loop over components*/
         for (int m = 0; m < M; ++m)
         {
-          NegLogLikelihood.row(m) = _Mixture.at(m).computeNegLogLikelihood(DataVector);
+          NegLogLikelihood.row(m) = _Mixture.at(m).computeNegLogLikelihood(DataVector, EvalAsError);
         }
 
         /** remove NaNs */
@@ -687,8 +691,67 @@ namespace libRSF
         return _Mixture.at(NumberOfComponent).getMaximum();
       }
 
+      /** sampling */
+      VectorVectorSTL<Dim> DrawSamples(const int Number) const
+      {
+        /** crate storage */
+        VectorVectorSTL<Dim> SampleVector;
+
+        /** loop over components and draw samples */
+        const int NumComp = this->getNumberOfComponents();
+        for (int n = 0; n < NumComp; n++)
+        {
+          /** use weight of components for number of samples*/
+          int CurrentNumber;
+          if (n < NumComp-1)
+          {
+            CurrentNumber = round(Number * this->_Mixture.at(n).getWeight()(0));
+          }
+          else
+          {
+            /** fill with last component to avoid rund-off */
+            CurrentNumber = Number - SampleVector.size();
+          }
+
+          /** draw */
+          const VectorVectorSTL<Dim> CurrentSamples = this->_Mixture.at(n).DrawSamples(CurrentNumber);
+
+          /** append */
+          SampleVector.insert(std::end(SampleVector), std::begin(CurrentSamples), std::end(CurrentSamples));
+        }
+
+        return SampleVector;
+      }
+
+      /** estimate mode of the GMM */
+      VectorStatic<Dim> EstimateMode() const
+      {
+        /** draw samples */
+        VectorVectorSTL<Dim> Samples = DrawSamples(1e4*Dim);
+
+        /** evaluate samples */
+        VectorStatic<Dim> BestSample = Samples.front();
+        Matrix TempStorage;
+        double BestNegLogLike = this->computeNegLogLikelihood(BestSample, TempStorage, false);
+        for (const VectorStatic<Dim> &Sample: Samples)
+        {
+          double NegLogLike = this->computeNegLogLikelihood(Sample, TempStorage, false);
+          if (NegLogLike < BestNegLogLike)
+          {
+            BestSample = Sample;
+            BestNegLogLike = NegLogLike;
+          }
+        }
+
+        /** TODO: optimize afterwards for better precision*/
+
+        return BestSample;
+      }
+
+
       /** special function for pseudo range stuff */
       VectorStatic<Dim> removeOffset();
+      VectorStatic<Dim> removeOffsetLegacy();
       void removeGivenOffset(const VectorStatic<Dim> &Offset);
 
       void removeMean()

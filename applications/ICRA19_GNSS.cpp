@@ -194,7 +194,7 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
     GMM.estimate(ErrorData, GMMConfig);
 
     /** remove offset of the first "LOS" component */
-    GMM.removeOffset();
+    GMM.removeOffsetLegacy();
 
     /** apply error model */
     if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
