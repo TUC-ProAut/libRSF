@@ -55,18 +55,9 @@ PlotConfig.Axis.YLable = 'Y [m]';
 Handles{1} = figure;
 hold on
 
-% plot ground truth
-hPlotGT = plot(GT(:,1),GT(:,2),'LineWidth',PlotConfig.Line.Width,'Color',[0.0 0.0 0.0]);
-hPlotGT.DisplayName = 'Ground Truth';
-
-% plot trajectories
-for m = 1:M
-    hPlotTraj = plot(Trajectory(m,:,1),Trajectory(m,:,2),':','LineWidth',PlotConfig.Line.Width,'MarkerSize',15, 'Color',PlotConfig.Color.Default(m,:));
-    hPlotTraj.DisplayName = Metric(m).Lable;
-end
-
+% plot UWB modules (if available)
 if HasUWBModule
-    hPlotUWB = plot(Bonus.Modules.Position(:,1),Bonus.Modules.Position(:,2),'x','Color',[0 0 0.5],'MarkerSize',15,'LineWidth',3);
+    hPlotUWB = plot(Bonus.Modules.Position(:,1),Bonus.Modules.Position(:,2),'x','Color',[0.05 0.05 0.5],'MarkerSize',15,'LineWidth',3);
     hPlotUWB.DisplayName = Bonus.Modules.Lable;
     
     % add ID as text
@@ -79,9 +70,20 @@ if HasUWBModule
     end
 end
 
+% plot GNSS base (if available)
 if HasGNSSBase
     hPlotBase = plot(Base.Position(:,1),Base.Position(:,2),'x','Color',[0 0 0],'MarkerSize',15,'LineWidth',3);
     hPlotBase.DisplayName = 'GNSS Base';
+end
+
+% plot ground truth
+hPlotGT = plot(GT(:,1),GT(:,2),'LineWidth',PlotConfig.Line.Width,'Color',[0.0 0.0 0.0]);
+hPlotGT.DisplayName = 'Ground Truth';
+
+% plot trajectories
+for m = 1:M
+    hPlotTraj = plot(Trajectory(m,:,1),Trajectory(m,:,2),':','LineWidth',PlotConfig.Line.Width,'MarkerSize',15, 'Color',PlotConfig.Color.Default(m,:));
+    hPlotTraj.DisplayName = Metric(m).Lable;
 end
 hold off
 
@@ -112,7 +114,7 @@ xticks(unique(round(XT/ResMax))*ResMax)
 yticks(unique(round(YT/ResMax))*ResMax)
 
 % add legend
-legend('show', 'Location', 'best');
+legend('show', 'Location', 'southoutside', 'NumColumns', 2);
 
 %% Boxplot
 BoxConfig = PlotConfig;
@@ -149,27 +151,51 @@ if isfield(Metric, 'DurationTotal')
         MaximumDuration = ceil(max([Metric.DurationTotal], [], 'all')*100)*10;
         
         % cobined plot with total duration
-        Handles{end+1} = plot.createPlotGeneric(TimestampsDuration', [Metric.DurationTotal]'.*1000, {Metric.Lable},'Time [s]','Iteration Duration [ms]');
+        Handles{end+1} = plot.createPlotGeneric(TimestampsDuration', [Metric.DurationTotal]'.*1000,...
+                                                {Metric.Lable}, 'Zeit [s]', 'Optimierungsdauer [ms]');                                    
         ylim([0 MaximumDuration]);
+        xlim([min(TimestampsDuration,[],'all'), max(TimestampsDuration,[],'all')]);
+        legend('Location','northwest')
+        
+        % find maximum iterations
+        MaximumIterations = ceil(max([Metric.IterationSolver], [], 'all')/10)*10;
+        
+        % plot with solver iterations
+        Handles{end+1} = plot.createPlotGeneric(TimestampsDuration', [Metric.IterationSolver]',...
+                                                {Metric.Lable}, 'Zeit [s]', 'Iterationen');   
+        xlim([min(TimestampsDuration,[],'all'), max(TimestampsDuration,[],'all')]);
+        ylim([0 MaximumIterations]);
+        legend('Location','northwest')
         
         % individual area plots
-        for m=1:M
+        for m = 1:M
             DurationTotal = Metric(m).DurationTotal;
             DurationSolver = Metric(m).DurationSolver;
+            DurationCovariance = Metric(m).DurationCovariance;
             DurationMarginal = Metric(m).DurationMarginal;
             DurationAdaptive = Metric(m).DurationAdaptive;
+            DurationOverhead = DurationTotal - (DurationSolver + DurationCovariance + DurationMarginal + DurationAdaptive);
             
-            DurrationArray =[DurationSolver,...
-                DurationMarginal,...
-                DurationAdaptive,...
-                DurationTotal - (DurationSolver + DurationMarginal + DurationAdaptive)];
+            DurrationArray =[DurationOverhead,...
+                             DurationAdaptive,...
+                             DurationMarginal,...
+                             DurationCovariance,...                             
+                             DurationSolver]*1000; % convert to ms
+
+            LableDuration = {'Overhead',...
+                             'Adaptive Error Model',...
+                             'Marginalization',...
+                             'Covariance Recovery',...
+                             'Solver'};
             
-            TimestampsArray = repmat(TimestampsDuration(:,m), [1 4]);
+            TimestampsArray = repmat(TimestampsDuration(:,m), [1 size(DurrationArray,2)]);
+                         
+            Handles{end+1} = plot.createAreaPlotGeneric(TimestampsArray, DurrationArray, LableDuration, 'Time [s]', 'Duration [ms]');
             
-            LableDuration = {'Solver', 'Marginalization', 'Adaptive Error Model', 'Overhead'};
-            
-            Handles{end+1} = plot.createAreaPlotGeneric(TimestampsArray, DurrationArray.*1000, LableDuration,'Time [s]','Duration [ms]');
+            % formate
             ylim([0 MaximumDuration]);
+            title(Lables{m});
+            legend('Location','northwest')
         end
         
     end
@@ -177,17 +203,21 @@ end
 
 %% covariance <-> Error plot
 if isfield(Metric, 'Cov')
+    
     if ~isempty(Metric(1).Cov)
         % prepare Data
         for m = M:-1:1
             for idx = 1:size(Metric(m).Cov,1)
-                CovTrace(m,idx) = trace(squeeze(Metric(m).Cov(idx,:,:)));
+                GeneralizedCovarince(m,idx) = det(squeeze(Metric(m).Cov(idx,:,:)));
             end
         end
+        
         %plot
-        Handles{end+1} = plot.createPlotGeneric(Timestamps', sqrt(CovTrace), {Metric.Lable},'Time [s]','StdDev [m]');
+        Handles{end+1} = plot.createPlotGeneric(Timestamps', sqrt(GeneralizedCovarince), {Metric.Lable},...
+                                                'Time [s]','Generalized StdDev [m]');
         set(gca, 'YScale', 'log');
     end
+    
 end
 
 %% animated plot --> GIF

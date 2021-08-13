@@ -527,6 +527,7 @@ namespace libRSF
         {DataElement::Timestamp, 1},
         {DataElement::DurationTotal, 1},
         {DataElement::DurationSolver, 1},
+        {DataElement::DurationCovariance, 1},
         {DataElement::DurationMarginal, 1},
         {DataElement::DurationAdaptive, 1},
         {DataElement::IterationSolver, 1},

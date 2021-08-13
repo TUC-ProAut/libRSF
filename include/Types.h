@@ -115,7 +115,7 @@ namespace libRSF
                            WheelBase, TF, Velocity,
                            Other,
                            ID, BoxConf, Idx, BoxWLH, BoxAngle, BoxQuat, BoxClass, Key,
-                           DurationSolver, DurationMarginal, DurationAdaptive, DurationTotal,
+                           DurationSolver, DurationCovariance, DurationMarginal, DurationAdaptive, DurationTotal,
                            IterationSolver, IterationAdaptive};
 
   /** store the configuration of each data type in a global variable */

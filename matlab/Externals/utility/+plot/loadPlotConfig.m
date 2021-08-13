@@ -12,13 +12,28 @@ end
 %font options
 Config.Font.Size = 18;
 Config.Font.Latex = false;
-Config.Font.Name = 'Verdana';
+
+% select font
+FontPriority = {'Verdana', 'TeXGyreHeros', 'Helvetica', 'Liberation Sans'};
+for n = 1:numel(FontPriority)
+    if any(strcmp(listfonts, FontPriority{n})) 
+        Config.Font.Name = FontPriority{n};
+        break
+    elseif any(strcmp(listTrueTypeFonts, FontPriority{n})) 
+        Config.Font.Name = FontPriority{n};
+        break
+    else
+        warning(['The font ' FontPriority{n} ' ist not available!']);
+    end
+end
+if isfield(Config.Font, 'Name') == false
+    Config.Font.Name = get(0,'defaultAxesFontName');
+end
 
 % overwrite options
 Config.Overwrite.Colormap = true;
 Config.Overwrite.Lines = false;
 Config.Overwrite.Fontsize = true;
-
 
 % set default colors
 if exist('brewermap','file') > 0
@@ -53,10 +68,10 @@ Config.Axis.Grid.Style = ':';
 Config.Axis.XLable = 'X';
 Config.Axis.YLable = 'Y';
 Config.Axis.Width = 2;
-Config.Axis.Color = [0 0 0];
+Config.Axis.Color = Config.Color.Grey;
 
 % legend options
-Config.Legend.Color = [0 0 0];
+Config.Legend.Color = Config.Color.Grey;
 
 end
 

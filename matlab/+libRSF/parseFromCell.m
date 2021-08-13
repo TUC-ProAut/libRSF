@@ -236,6 +236,7 @@ for n = 1:size(ResultCell,1)
                 ResultStruct.SolverSummary.Time = [];
                 ResultStruct.SolverSummary.DurationTotal = [];
                 ResultStruct.SolverSummary.DurationSolver = [];
+                ResultStruct.SolverSummary.DurationCovariance = [];
                 ResultStruct.SolverSummary.DurationMarginal = [];
                 ResultStruct.SolverSummary.DurationAdaptive = [];
                 ResultStruct.SolverSummary.IterationSolver = [];
@@ -244,10 +245,11 @@ for n = 1:size(ResultCell,1)
             ResultStruct.SolverSummary.Time(end+1,1) = cell2mat(ResultCell(n,2));
             ResultStruct.SolverSummary.DurationTotal(end+1,1) = cell2mat(ResultCell(n,3));
             ResultStruct.SolverSummary.DurationSolver(end+1,1) = cell2mat(ResultCell(n,4));
-            ResultStruct.SolverSummary.DurationMarginal(end+1,1) = cell2mat(ResultCell(n,5));
-            ResultStruct.SolverSummary.DurationAdaptive(end+1,1) = cell2mat(ResultCell(n,6));
-            ResultStruct.SolverSummary.IterationSolver(end+1,1) = cell2mat(ResultCell(n,7));
-            ResultStruct.SolverSummary.IterationAdaptive(end+1,1) = cell2mat(ResultCell(n,8));
+            ResultStruct.SolverSummary.DurationCovariance(end+1,1) = cell2mat(ResultCell(n,5));
+            ResultStruct.SolverSummary.DurationMarginal(end+1,1) = cell2mat(ResultCell(n,6));
+            ResultStruct.SolverSummary.DurationAdaptive(end+1,1) = cell2mat(ResultCell(n,7));
+            ResultStruct.SolverSummary.IterationSolver(end+1,1) = cell2mat(ResultCell(n,8));
+            ResultStruct.SolverSummary.IterationAdaptive(end+1,1) = cell2mat(ResultCell(n,9));
             
         otherwise
             error(['Wrong StateName: ' ResultCell{n,1}]);

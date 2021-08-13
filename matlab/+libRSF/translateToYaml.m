@@ -36,6 +36,8 @@ for nError = 1:numel(Config.ErrorModel)
                         Lables{end} = [Lables{end} 'Odom Int.'];
                     case 'odom_radar'
                         Lables{end} = [Lables{end} 'Radar-Odom'];
+                    case 'odom4_radar'
+                        Lables{end} = [Lables{end} 'Radar-Odom'];
                     case 'odom_lidar'
                         Lables{end} = [Lables{end} 'Lidar-Odom'];
                     case 'imu'

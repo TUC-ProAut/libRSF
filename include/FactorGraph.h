@@ -277,6 +277,9 @@ namespace libRSF
       void getFactorsOfState(const string Name, const double Timestamp, const int Number, std::vector<FactorID> &Factors) const;
       int countFactorsOfType(const FactorType CurrentFactorType) const;
 
+      /** compute overall error error models */
+      double getCost();
+
       /** compute raw errors without error models */
       void computeUnweightedError(const FactorType CurrentFactorType, std::vector<double> &ErrorData);
       void computeUnweightedErrorMatrix(const FactorType CurrentFactorType, Matrix &ErrorMatrix);
@@ -293,6 +296,7 @@ namespace libRSF
       int getSolverIterationsAndReset();
       double getSolverDurationAndReset();
       double getMarginalDurationAndReset();
+      double getCovarianceDurationAndReset();
 
     private:
 
@@ -435,6 +439,7 @@ namespace libRSF
       double _SolverDuration;
       int _SolverIterations;
       double _MarginalizationDuration;
+      double _CovarianceDuration;
   };
 }
 

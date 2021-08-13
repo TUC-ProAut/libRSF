@@ -41,8 +41,14 @@ function [] = formatPlot(hFig, Config)
     legend toggle
     legend toggle
 
-    %% format colorbar
-    set(hColorbar,'LineWidth',Config.Axis.Width);
+    %% format colorbars
+    for n = 1:numel(hColorbar)
+        set(hColorbar(n),'LineWidth',Config.Axis.Width);
+        set(hColorbar(n),'Color',Config.Axis.Color);
+        if isprop(hColorbar(n), 'Label')
+            hColorbar(n).Label.Color = Config.Axis.Color;
+        end
+    end
 
     %% set better colormap
     if Config.Overwrite.Colormap == true

@@ -119,6 +119,8 @@ if HasSolver
     Metric.DurationSolver = SolverSummary.DurationSolver;
     Metric.IterationSolver = SolverSummary.IterationSolver;
     
+    Metric.DurationCovariance = SolverSummary.DurationCovariance;
+    
     Metric.Duration_Mean = mean(Metric.DurationTotal);
     Metric.Duration_Mean_ms = Metric.Duration_Mean*1000;
 end

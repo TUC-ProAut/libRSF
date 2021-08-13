@@ -40,7 +40,7 @@ namespace libRSF
     _List.clear();
   }
 
-  FactorGraph::FactorGraph() : _Graph(this->_DefaultProblemOptions), _Structure(&_Graph, &_StateData), _SolverDuration(0.0), _SolverIterations(0), _MarginalizationDuration(0.0)
+  FactorGraph::FactorGraph() : _Graph(this->_DefaultProblemOptions), _Structure(&_Graph, &_StateData), _SolverDuration(0.0), _CovarianceDuration(0.0), _SolverIterations(0), _MarginalizationDuration(0.0)
   {}
 
   void FactorGraph::solve()
@@ -408,12 +408,26 @@ namespace libRSF
 
   bool FactorGraph::computeCovariance(const string Name, const double Timestamp)
   {
-    return CalculateCovariance(_Graph, _StateData, Name, Timestamp);
+    /** time measurement */
+    Timer CovTimer;
+
+    const bool Success = CalculateCovariance(_Graph, _StateData, Name, Timestamp);
+
+    _CovarianceDuration += CovTimer.getSeconds();
+
+    return Success;
   }
 
   bool FactorGraph::computeCovariance(const string Name)
   {
-    return CalculateCovariance(_Graph, _StateData, Name);
+    /** time measurement */
+    Timer CovTimer;
+
+    const bool Success = CalculateCovariance(_Graph, _StateData, Name);
+
+    _CovarianceDuration += CovTimer.getSeconds();
+
+    return Success;
   }
 
   bool FactorGraph::computeCovarianceSigmaPoints(const string Name, const double Timestamp, const int StateNumber)
@@ -706,6 +720,15 @@ namespace libRSF
     return Duration;
   }
 
+  double FactorGraph::getCovarianceDurationAndReset()
+  {
+    /** reset marginalization duration before value is returned */
+    const double Duration = _CovarianceDuration;
+    _CovarianceDuration = 0.0;
+    return Duration;
+  }
+
+
   double FactorGraph::getMarginalDurationAndReset()
   {
     /** reset marginalization duration before value is returned */
@@ -772,6 +795,13 @@ namespace libRSF
   int FactorGraph::countFactorsOfType(const FactorType CurrentFactorType) const
   {
     return _Structure.countFactorType(CurrentFactorType);
+  }
+
+  double FactorGraph::getCost()
+  {
+    double Cost = 0.0;
+    _Graph.Evaluate(ceres::Problem::EvaluateOptions(), &Cost, nullptr, nullptr, nullptr);
+    return Cost;
   }
 
   void FactorGraph::computeUnweightedError(const FactorType CurrentFactorType, std::vector<double> &ErrorData)

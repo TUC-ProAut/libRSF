@@ -5,24 +5,32 @@ function [hFig] = createPlotGeneric(XData, YData, Lables, XLable, YLable)
 %% config plot
 Config = plot.loadPlotConfig();
 
+% bigger text
+Config.Font.Size = 20;
+
+% thicker lines
+Config.Overwrite.Lines = true;
+Config.Line.Width = 3;
+Config.Axis.Width = 2;
+
+% grey color
+Config.Axis.Color = Config.Color.Grey;
+Config.Legend.Color = Config.Color.Grey;
+
 %% 2D plot
 hFig = figure;
-hold on
 
+hold on
 for nLable =1:length(Lables)
     p = plot(XData(nLable,:), YData(nLable,:),'LineWidth',Config.Line.Width,'Color',Config.Color.Default(nLable,:));
     p.DisplayName = Lables{nLable};
 end
-
 hold off
 
 xlabel(XLable);
 ylabel(YLable);
 
-%xlim([-0.1 2.5]);
-%ylim([-0.1 2.5]);
-%axis tight
-% axis equal
+xlim([min(XData,[],'all'), max(XData,[],'all')])
 grid on
 box on
 
