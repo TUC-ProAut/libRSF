@@ -254,7 +254,7 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       GMMAdaptive.estimate(ErrorData, GMMConfig);
 
       /** remove offset*/
-      GMMAdaptive.removeOffset();
+      GMMAdaptive.removeOffsetLegacy();
 
       /** apply error model */
       if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
