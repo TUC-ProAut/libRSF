@@ -33,6 +33,7 @@
 #define MARGINALIZATION_H
 
 #include "VectorMath.h"
+#include "Messages.h"
 
 namespace libRSF
 {

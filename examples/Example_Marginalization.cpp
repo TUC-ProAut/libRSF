@@ -31,97 +31,97 @@
 
 #include "Example_Marginalization.h"
 
-#ifndef TESTMODE // only compile main if not used in test context
-
-int main(int ArgC, char** ArgV)
+void CreateData(libRSF::StateDataSet &GT, libRSF::SensorDataSet &Measurements)
 {
-  (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  /** create ground truth */
+  libRSF::Vector3 TransVec0, TransVec1;
+  TransVec0 << 0, 0, 0;
+  TransVec1 << 1, -0.5, 0.25;
 
-  ceres::Solver::Options FGOptions;
-  FGOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
-  FGOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
+  libRSF::Quaternion Quat0, Quat1;
+  Quat0.setIdentity();
+  Quat1 = Quat0 * (Eigen::AngleAxisd(30, libRSF::Vector3::UnitX())
+                 * Eigen::AngleAxisd(-60, libRSF::Vector3::UnitY())
+                 * Eigen::AngleAxisd(100, libRSF::Vector3::UnitZ()));
 
+  libRSF::Vector4 RotVec0, RotVec1;
+  RotVec0 << Quat0.vec(), Quat0.w();
+  RotVec1 << Quat1.vec(), Quat1.w();
+
+  /** convert GT to state objects*/
+  libRSF::Data TransState0 (libRSF::DataType::Point3, 0.0);
+  TransState0.setMean(TransVec0);
+  libRSF::Data TransState1 (libRSF::DataType::Point3, 1.0);
+  TransState1.setMean(TransVec1);
+
+  libRSF::Data RotState0 (libRSF::DataType::Quaternion, 0.0);
+  RotState0.setMean(RotVec0);
+  libRSF::Data RotState1 (libRSF::DataType::Quaternion, 1.0);
+  RotState1.setMean(RotVec1);
+
+  /** add to ground truth data set */
+  GT.addElement(POSITION_STATE,TransState0);
+  GT.addElement(POSITION_STATE,TransState1);
+  GT.addElement(ROTATION_STATE,RotState0);
+  GT.addElement(ROTATION_STATE,RotState1);
+
+  /** create small error for relative translation */
+  const libRSF::Vector3 ErrorTrans = libRSF::Vector3::Ones()*0.1;
+  const libRSF::Quaternion ErrorQuat = Eigen::AngleAxisd(10, libRSF::Vector3::UnitX())
+                                     * Eigen::AngleAxisd(10, libRSF::Vector3::UnitY())
+                                     * Eigen::AngleAxisd(10, libRSF::Vector3::UnitZ());
+
+  /** calculate relative transformations */
+  const libRSF::Vector3 TransRelVec = TransVec1 - TransVec0 + ErrorTrans;
+  const libRSF::Quaternion QuatRel = Quat0.conjugate()*Quat1 * ErrorQuat;
+  libRSF::Vector4 RotRelVec;
+  RotRelVec << QuatRel.vec(), QuatRel.w();
+
+  /** create measurement objects */
+  libRSF::Data Trans0(libRSF::DataType::Point3, 0.0);
+  libRSF::Data Trans1(libRSF::DataType::Point3, 1.0);
+  libRSF::Data TransRel(libRSF::DataType::Point3, 0.5);
+
+  Trans0.setMean(TransVec0);
+  Trans1.setMean(TransVec1);
+  TransRel.setMean(TransRelVec);
+
+  libRSF::Data Rot0(libRSF::DataType::Quaternion, 0.0);
+  libRSF::Data Rot1(libRSF::DataType::Quaternion, 1.0);
+  libRSF::Data RotRel(libRSF::DataType::Quaternion, 0.5);
+
+  Rot0.setMean(RotVec0);
+  Rot1.setMean(RotVec1);
+  RotRel.setMean(RotRelVec);
+
+  /**< add measurement objects to dataset */
+  Measurements.addElement(Trans0);
+  Measurements.addElement(Trans1);
+  Measurements.addElement(TransRel);
+
+  Measurements.addElement(Rot0);
+  Measurements.addElement(Rot1);
+  Measurements.addElement(RotRel);
+}
+
+void CreateGraphs(libRSF::FactorGraph &TranslationGraph,
+                  libRSF::FactorGraph &RotationGraph,
+                  libRSF::FactorGraph &PoseGraph,
+                  libRSF::SensorDataSet &Measurements)
+{
   /** set uncertainty */
   libRSF::Vector3 NoisePosVec, NoiseRotVec;
   NoisePosVec.fill(STDDEV_POS);
   NoiseRotVec.fill(STDDEV_ROT);
-
-  libRSF::Vector6 NoisePoseVec;
-  NoisePoseVec << NoisePosVec , NoiseRotVec;
 
   /** create noise models */
   libRSF::GaussianDiagonal<3> GaussPos, GausRot;
   GaussPos.setStdDevSharedDiagonal(STDDEV_POS);
   GausRot.setStdDevSharedDiagonal(STDDEV_ROT);
 
-  libRSF::GaussianDiagonal<6> GaussPose;
-  GaussPose.setStdDevDiagonal(NoisePoseVec);
-
-  /** create desired states */
-  libRSF::Vector3 PosVec0, PosVec1;
-  PosVec0 << 0, 0, 0;
-  PosVec1 << 1, 0.5, 0.25;
-
-  libRSF::Quaternion Quat0, Quat1;
-  Quat0.setIdentity();
-  Quat1 = Quat0 * (Eigen::AngleAxisd(1, libRSF::Vector3::UnitX())
-                 * Eigen::AngleAxisd(0, libRSF::Vector3::UnitY())
-                 * Eigen::AngleAxisd(0, libRSF::Vector3::UnitZ()));
-
-  libRSF::Vector4 RotVec0, RotVec1;
-  RotVec0 << Quat0.vec(), Quat0.w();
-  RotVec1 << Quat1.vec(), Quat1.w();
-
-  libRSF::Vector7 PoseVec0, PoseVec1;
-  PoseVec0 << PosVec0, Quat0.vec(), Quat0.w();
-  PoseVec1 << PosVec1, Quat1.vec(), Quat1.w();
-
-  /** create state objects as GT */
-  libRSF::Data StatePos0 (libRSF::DataType::Point3, 0.0);
-  StatePos0.setMean(PosVec0);
-  libRSF::Data StatePos1 (libRSF::DataType::Point3, 1.0);
-  StatePos1.setMean(PosVec1);
-
-  libRSF::Data StateRot0 (libRSF::DataType::Quaternion, 0.0);
-  StateRot0.setMean(RotVec0);
-  libRSF::Data StateRot1 (libRSF::DataType::Quaternion, 1.0);
-  StateRot1.setMean(RotVec1);
-
-  /** calculate relative transformations */
-  libRSF::Vector3 PosVecRel = PosVec1 - PosVec0;
-  libRSF::Quaternion QuatRel = Quat0.conjugate()*Quat1;
-
-  libRSF::Vector7 PoseVecRel;
-  PoseVecRel << Quat0.conjugate()*PosVecRel, QuatRel.vec(), QuatRel.w();
-
-  /** create measurement objects */
-  libRSF::Data Pos0(libRSF::DataType::Point3, 0.0);
-  libRSF::Data PosRel(libRSF::DataType::Point3, 1.0);
-
-  Pos0.setMean(PosVec0);
-  PosRel.setMean(PosVecRel);
-
-  libRSF::Data Rot0(libRSF::DataType::Quaternion, 0.0);
-  libRSF::Data RotRel(libRSF::DataType::Quaternion, 1.0);
-
-  Rot0.setMean(RotVec0);
-  RotRel.setMean((libRSF::Vector4() << QuatRel.vec(), QuatRel.w()).finished());
-
-  libRSF::Data Pose0(libRSF::DataType::Pose3, 0.0);
-  libRSF::Data PoseRel(libRSF::DataType::Pose3, 1.0);
-
-  Pose0.setMean(PoseVec0);
-  PoseRel.setMean(PoseVecRel);
-
-  /** construct graph */
-  libRSF::FactorGraph PositionGraph;
-  libRSF::FactorGraph RotationGraph;
-  libRSF::FactorGraph PoseGraph;
-
   /** add states */
-  PositionGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 0.0);
-  PositionGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 1.0);
+  TranslationGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 0.0);
+  TranslationGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 1.0);
 
   RotationGraph.addState(ROTATION_STATE, libRSF::DataType::Quaternion, 0.0);
   RotationGraph.addState(ROTATION_STATE, libRSF::DataType::Quaternion, 1.0);
@@ -133,45 +133,64 @@ int main(int ArgC, char** ArgV)
   libRSF::StateID IDRot0(ROTATION_STATE, 0.0, 0);
   libRSF::StateID IDRot1(ROTATION_STATE, 1.0, 0);
 
-  PositionGraph.addFactor<libRSF::FactorType::Prior3>(IDPos0, Pos0, GaussPos);
-  PositionGraph.addFactor<libRSF::FactorType::BetweenValue3>(IDPos0, IDPos1, PosRel, GaussPos);
+  TranslationGraph.addFactor<libRSF::FactorType::Prior3>(IDPos0, Measurements.getElement(libRSF::DataType::Point3, 0.0), GaussPos);
+  TranslationGraph.addFactor<libRSF::FactorType::Prior3>(IDPos1, Measurements.getElement(libRSF::DataType::Point3, 1.0), GaussPos);
+  TranslationGraph.addFactor<libRSF::FactorType::BetweenValue3>(IDPos0, IDPos1, Measurements.getElement(libRSF::DataType::Point3, 0.5), GaussPos);
 
-  RotationGraph.addFactor<libRSF::FactorType::PriorQuat>(IDRot0, Rot0, GausRot);
-  RotationGraph.addFactor<libRSF::FactorType::BetweenQuaternion>(IDRot0, IDRot1, RotRel, GausRot);
+  RotationGraph.addFactor<libRSF::FactorType::PriorQuat>(IDRot0, Measurements.getElement(libRSF::DataType::Quaternion, 0.0), GausRot);
+  RotationGraph.addFactor<libRSF::FactorType::PriorQuat>(IDRot1, Measurements.getElement(libRSF::DataType::Quaternion, 1.0), GausRot);
+  RotationGraph.addFactor<libRSF::FactorType::BetweenQuaternion>(IDRot0, IDRot1, Measurements.getElement(libRSF::DataType::Quaternion, 0.5), GausRot);
+}
+
+#ifndef TESTMODE // only compile main if not used in test context
+
+int main(int ArgC, char** ArgV)
+{
+  (void)ArgC;
+  google::InitGoogleLogging(ArgV[0]);
+
+  /** create data */
+  libRSF::StateDataSet DataGT;
+  libRSF::SensorDataSet Measurements;
+  CreateData(DataGT, Measurements);
+
+  /** construct graph */
+  libRSF::FactorGraph TranslationGraph;
+  libRSF::FactorGraph RotationGraph;
+  libRSF::FactorGraph PoseGraph;
+  CreateGraphs(TranslationGraph, RotationGraph, PoseGraph, Measurements);
+
+  /** configure solver */
+  ceres::Solver::Options FGOptions;
+  FGOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
+  FGOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
+  FGOptions.linear_solver_type = ceres::LinearSolverType::DENSE_QR;
 
   /** optimize */
-  PositionGraph.solve(FGOptions);
-  PositionGraph.computeCovariance(POSITION_STATE);
+  TranslationGraph.solve(FGOptions);
+  TranslationGraph.computeCovariance(POSITION_STATE);
 
   RotationGraph.solve(FGOptions);
   RotationGraph.computeCovariance(ROTATION_STATE);
-//  RotationGraph.printReport();
 
   /** store results */
-  libRSF::StateDataSet DataGT;
   libRSF::StateDataSet DataFGFull;
   libRSF::StateDataSet DataFGMarg;
 
-  DataGT.addElement(POSITION_STATE,StatePos0);
-  DataGT.addElement(POSITION_STATE,StatePos1);
-
-  DataGT.addElement(ROTATION_STATE,StateRot0);
-  DataGT.addElement(ROTATION_STATE,StateRot1);
-
-  DataFGFull.addElement(POSITION_STATE, PositionGraph.getStateData().getElement(POSITION_STATE, 0.0, 0));
-  DataFGFull.addElement(POSITION_STATE, PositionGraph.getStateData().getElement(POSITION_STATE, 1.0, 0));
+  DataFGFull.addElement(POSITION_STATE, TranslationGraph.getStateData().getElement(POSITION_STATE, 0.0, 0));
+  DataFGFull.addElement(POSITION_STATE, TranslationGraph.getStateData().getElement(POSITION_STATE, 1.0, 0));
 
   DataFGFull.addElement(ROTATION_STATE, RotationGraph.getStateData().getElement(ROTATION_STATE, 0.0, 0));
   DataFGFull.addElement(ROTATION_STATE, RotationGraph.getStateData().getElement(ROTATION_STATE, 1.0, 0));
 
   /** marginalize */
-  PositionGraph.marginalizeState(POSITION_STATE, 0.0, 0);
+  TranslationGraph.marginalizeState(POSITION_STATE, 0.0, 0);
   RotationGraph.marginalizeState(ROTATION_STATE, 0.0, 0);
 
   /** check covariance again */
-  PositionGraph.solve(FGOptions);
-  PositionGraph.computeCovariance(POSITION_STATE);
-  DataFGMarg.addElement(POSITION_STATE, PositionGraph.getStateData().getElement(POSITION_STATE, 1.0, 0));
+  TranslationGraph.solve(FGOptions);
+  TranslationGraph.computeCovariance(POSITION_STATE);
+  DataFGMarg.addElement(POSITION_STATE, TranslationGraph.getStateData().getElement(POSITION_STATE, 1.0, 0));
 
   RotationGraph.solve(FGOptions);
   RotationGraph.computeCovariance(ROTATION_STATE);

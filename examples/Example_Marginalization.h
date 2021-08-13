@@ -33,4 +33,12 @@
 #define STDDEV_POS    0.5
 #define STDDEV_ROT    0.2
 
+void CreateData(libRSF::StateDataSet &GT,
+                libRSF::SensorDataSet &Measurements);
+
+void CreateGraphs(libRSF::FactorGraph &TranslationGraph,
+                  libRSF::FactorGraph &RotationGraph,
+                  libRSF::FactorGraph &PoseGraph,
+                  libRSF::SensorDataSet &Measurements);
+
 #endif // EXAMPLE_MARGINALIZATION_H_INCLUDED

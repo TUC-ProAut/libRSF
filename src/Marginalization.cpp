@@ -29,12 +29,20 @@ namespace libRSF
                    Vector &ResidualMarg, Matrix &JacobianMarg,
                    const int SizeMarginal, const double HessianInflation)
   {
+    /**
+    Construct a linear system:
+    H * x = b
+
+    Which is defined as:
+    J^T*J * x = -J^T * r
+    */
+
     /** H = J^T * J */
     Matrix Hessian = Jacobian.transpose() * Jacobian;
     Hessian = Matrix((Hessian.array().abs() > 1e-8).select(Hessian.array(), 0));/**< remove small non-zero entries for stability */
 
-    /** b = J^T * r */
-    const Vector B = Jacobian.transpose() * Residual;
+    /** b = -J^T * r */
+    const Vector B = -Jacobian.transpose() * Residual;
 
     /** calculate size of the linear system */
     const int SizeTotal = Hessian.cols();
@@ -47,7 +55,7 @@ namespace libRSF
         |H_RM H_RR|
 
     Residual vector:
-    r = |r_M r_R|'
+    b = |b_M b_R|'
     */
     const Matrix HessMM = Hessian.block(0, 0, SizeMarginal, SizeMarginal);
     const Matrix HessRR = Hessian.block(SizeMarginal, SizeMarginal, SizeRemain, SizeRemain);
@@ -60,10 +68,10 @@ namespace libRSF
     /** compute reduced linear system */
     /**
     New Hessian:
-    H* = H_RR - H_RM x H_MM^-1 x H_MR
+    H^* = H_RR - H_RM * H_MM^-1 x H_MR
 
     New residual vector:
-    r* = r_R - H_RM x H_MM^-1 x r_M
+    b^* = b_R - H_RM * H_MM^-1 * b_M
     */
 
     /** at first, invert the marginalized Hessian part */
@@ -80,13 +88,21 @@ namespace libRSF
       HessRRStar /= HessianInflation;
     }
 
-    /** convert to unsquared system system */
+    /** convert to linear constraint*/
     ResidualMarg.resize(SizeRemain);
     JacobianMarg.resize(SizeRemain, SizeRemain);
     Matrix JacobianMargInv(SizeRemain, SizeRemain);
 
+    /**
+    New linear factor:
+    |J^* x + r^*|^2
+
+    with:
+    J^* = sqrt(H^*)
+    r^* = -sqrt(H^*)^-T * b^*
+    */
     RobustSqrtAndInvSqrt(HessRRStar, JacobianMarg, JacobianMargInv);
-    ResidualMarg = JacobianMargInv * BRStar;
+    ResidualMarg = -JacobianMargInv.transpose() * BRStar;
   }
 
 }

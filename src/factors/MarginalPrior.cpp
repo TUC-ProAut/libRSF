@@ -130,13 +130,13 @@ namespace libRSF
         {
           /** tangent space error and jacobian */
           Matrix34 JacState;
-          DeltaState.segment(IndexError, LocalSize) = QuaternionError(QPrior, QState, nullptr, &JacState);
+          DeltaState.segment(IndexError, LocalSize) = QuaternionError(QState, QPrior, &JacState, nullptr);
           JacobianManifold.block(IndexError, IndexState, LocalSize, GlobalSize) = JacState;
         }
         else
         {
           /** tangent space error */
-          DeltaState.segment(IndexError, LocalSize) = QuaternionError<double>(QPrior, QState);
+          DeltaState.segment(IndexError, LocalSize) = QuaternionError<double>(QState, QPrior);
         }
       }
       else
@@ -167,7 +167,7 @@ namespace libRSF
     }
 
     /** apply linear jacobian and residual */
-    Error = _LinearResidual + _LinearJacobian * DeltaState;
+    Error = _LinearJacobian * DeltaState + _LinearResidual;
 
     /** jacobians are composed of linear jacobian and manifold jacobian */
     if(HasJacobian)
