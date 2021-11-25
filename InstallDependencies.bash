@@ -52,6 +52,7 @@ install_if_not_exist ()
 }
 
 # install libRSF dependencies
+install_if_not_exist build-essential
 install_if_not_exist cmake
 install_if_not_exist libgeographic-dev
 install_if_not_exist libyaml-cpp-dev
