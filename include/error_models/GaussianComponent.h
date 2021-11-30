@@ -238,36 +238,47 @@ namespace libRSF
                                   double DirichletConcentrationSum,
                                   double NormalInfoScaling,
                                   VectorStatic<Dim> NormalMean,
-                                  MatrixStatic<Dim,Dim> WishartScalingMatrix,
+                                  MatrixStatic<Dim,Dim> WishartScatterMatrix,
                                   double WishartDOF,
                                   bool EstimateMean)
       {
-        /** precalculate shared values */
+        /** Implementation based on:
+        * Kevin Murphy
+        * Machine learning: a probabilistic perspective, Section 11.4.2
+        * 2012
+        */
+
+        /** pre-calculate shared values */
         const double LikelihoodSum = Likelihoods.sum();
 
         /** estimate weight */
-        _Weight(0) = (DirichletConcentration - 1.0 + LikelihoodSum)
+        _Weight(0) = (LikelihoodSum + DirichletConcentration - 1.0)
                      /
                      (DirichletConcentrationSum + Likelihoods.rows());
 
         /** estimate mean */
+        const VectorStatic<Dim> MeanML = (Errors.array().rowwise() * Likelihoods.transpose().array()).rowwise().sum() / LikelihoodSum;
         if (EstimateMean == true)
         {
-          VectorStatic<Dim> WeightedError = (Errors.array().rowwise() * Likelihoods.transpose().array()).rowwise().sum();
-          _Mean = -((NormalMean*NormalInfoScaling) + WeightedError)
-                  /
-                  (NormalInfoScaling + LikelihoodSum);
+          _Mean = -(MeanML*LikelihoodSum + NormalMean*NormalInfoScaling) / (NormalInfoScaling + LikelihoodSum);
         }
 
         /** estimate covariance */
-        MatrixStatic<Dim,Dim> Covariance = WishartScalingMatrix + NormalInfoScaling * (NormalMean - _Mean)*(NormalMean - _Mean).transpose();
+        MatrixStatic<Dim,Dim> ScatterML = MatrixStatic<Dim,Dim>::Zero();
         for (Index n = 0; n < Errors.cols(); ++n)
         {
-          MatrixStatic<Dim, 1> Diff = Errors.col(n) + _Mean;
-          Covariance += Diff * Diff.transpose() * Likelihoods(n);
+          const MatrixStatic<Dim, 1> Diff = Errors.col(n) - MeanML;
+          ScatterML += Diff * Diff.transpose() * Likelihoods(n);
         }
-        Covariance.array() /= (WishartDOF - Dim + LikelihoodSum);
-        _SqrtInformation = InverseSquareRoot(Covariance);
+
+        const MatrixStatic<Dim,Dim> DenominatorInfo = WishartScatterMatrix
+                                                    + ScatterML
+                                                    + NormalInfoScaling*LikelihoodSum/(NormalInfoScaling + LikelihoodSum)
+                                                      *(MeanML - NormalMean)*(MeanML - NormalMean).transpose();
+
+        const double EnumeratorInfo = WishartDOF + LikelihoodSum + Dim + 2;
+
+        _SqrtInformation = SquareRoot<Dim,double>(EnumeratorInfo * Inverse<Dim,double>(DenominatorInfo));
 
         /** check for degenerated square root information matrix */
         if(_SqrtInformation.array().isFinite().all() == false)

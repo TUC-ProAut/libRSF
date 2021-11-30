@@ -164,12 +164,9 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config,
                     int NumberOfComponents)
 {
+  libRSF::GaussianMixture<1> GMM;
   if(Config.GNSS.ErrorModel.TuningType == libRSF::ErrorModelTuningType::EM)
   {
-    std::vector<double> ErrorData;
-
-    libRSF::GaussianMixture<1> GMM;
-
     /** fill empty GMM */
     if(GMM.getNumberOfComponents() == 0)
     {
@@ -186,7 +183,8 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       }
     }
 
-    Graph.computeUnweightedError(libRSF::FactorType::Pseudorange3_ECEF, ErrorData);
+    libRSF::Matrix ErrorData;
+    Graph.computeUnweightedErrorMatrix(libRSF::FactorType::Pseudorange3_ECEF, ErrorData);
 
     /** call the EM algorithm */
     libRSF::GaussianMixture<1>::EstimationConfig GMMConfig;

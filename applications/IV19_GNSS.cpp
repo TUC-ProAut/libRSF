@@ -171,8 +171,8 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
   if(Config.GNSS.ErrorModel.TuningType != libRSF::ErrorModelTuningType::None)
   {
     /** compute resudiuals of the factor graph */
-    std::vector<double> ErrorData;
-    Graph.computeUnweightedError(libRSF::FactorType::Pseudorange3_ECEF, ErrorData);
+    libRSF::Matrix ErrorData;
+    Graph.computeUnweightedErrorMatrix(libRSF::FactorType::Pseudorange3_ECEF, ErrorData);
 
     if(Config.GNSS.ErrorModel.TuningType == libRSF::ErrorModelTuningType::EM)
     {
@@ -219,17 +219,7 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       }
 
       /** calculate statistics for GMM initialization*/
-      std::vector<double> v = ErrorData;
-      double sum = std::accumulate(v.begin(), v.end(), 0.0);
-      double mean = sum / v.size();
-
-      std::vector<double> diff(v.size());
-      std::transform(v.begin(), v.end(), diff.begin(), [mean](double x)
-      {
-        return x - mean;
-      });
-      double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-      double stdev = std::sqrt(sq_sum / v.size());
+      const libRSF::Matrix11 Cov = libRSF::EstimateSampleCovariance<1>(ErrorData);
 
       /** add just one component per timestamp */
       if(GMMAdaptive.getNumberOfComponents() >= VBI_N_MAX)
@@ -238,10 +228,9 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
         GMMAdaptive.removeLastComponent();
       }
 
-      Component.setParamsStdDev((libRSF::Vector1() << stdev).finished(),
-                                (libRSF::Vector1() << 0.0).finished(),
-                                (libRSF::Vector1() << 1.0/GMMAdaptive.getNumberOfComponents()).finished());
-
+      Component.setParamsCovariance(Cov,
+                                    libRSF::Vector1::Zero(),
+                                    libRSF::Vector1::Ones()/GMMAdaptive.getNumberOfComponents());
 
       GMMAdaptive.addComponent(Component);
 

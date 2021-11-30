@@ -170,12 +170,9 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config,
                     int NumberOfComponents)
 {
+  libRSF::GaussianMixture<1> GMM;
   if(Config.Ranging.ErrorModel.TuningType == libRSF::ErrorModelTuningType::EM)
   {
-    std::vector<double> ErrorData;
-
-    libRSF::GaussianMixture<1> GMM;
-
     /** fill empty GMM */
     if(GMM.getNumberOfComponents() == 0)
     {
@@ -192,7 +189,8 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       }
     }
 
-    Graph.computeUnweightedError(libRSF::FactorType::Range2, ErrorData);
+    libRSF::Matrix ErrorData;
+    Graph.computeUnweightedErrorMatrix(libRSF::FactorType::Range2, ErrorData);
 
     /** call the EM algorithm */
     libRSF::GaussianMixture<1>::EstimationConfig GMMConfig;

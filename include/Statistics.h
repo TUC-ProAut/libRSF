@@ -42,7 +42,7 @@ namespace libRSF
 {
   /** calculate covariance from data */
   template <int Dim>
-  MatrixStatic<Dim, Dim> EstimateSampleCovariance(MatrixStatic<Dim, Dynamic> Data)
+  MatrixStatic<Dim, Dim> EstimateSampleCovariance(const MatrixStatic<Dim, Dynamic> &Data)
   {
     /** estimate mean */
     VectorStatic<Dim> Mean = Data.rowwise().mean();
@@ -60,14 +60,15 @@ namespace libRSF
   }
 
   /** median calculation */
-  double Median(std::vector<double> &V);
-  double Median(Vector V);
+  double Median(const std::vector<double> &V);
+  double Median(const Vector &V);
 
   /** median absolute deviation (robust variance estimator) */
-  double MAD(Vector V);
+  double MAD(const Vector &V);
+  double EstimateMADCovariance(const Vector &V);
 
   /** RMSE of a vector */
-  double RMSE(Vector V);
+  double RMSE(const Vector &V);
 }
 
 #endif // STATISTICS_H

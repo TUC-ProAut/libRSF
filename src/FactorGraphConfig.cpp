@@ -161,6 +161,15 @@ namespace libRSF
               Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
               break;
 
+            case ErrorModelTuningType::VBI_Full:
+              Model.Parameter.resize(3);
+              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
+              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
+              Model.Parameter(2) = ErrorModelNode["nu"].as<double>();
+
+              Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
+              break;
+
             default:
               PRINT_WARNING("Error model tuning type not handled: ", TuningString);
               break;

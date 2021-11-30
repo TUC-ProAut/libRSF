@@ -24,25 +24,31 @@
 
 namespace libRSF
 {
-  double Median(std::vector<double> &V)
+  double Median(const std::vector<double> &V)
   {
-    int n = V.size() / 2;
-    std::nth_element(V.begin(), V.begin() + n, V.end());
-    return V[n];
+    std::vector<double> VCopy = V;
+    int n = VCopy.size() / 2;
+    std::nth_element(VCopy.begin(), VCopy.begin() + n, VCopy.end());
+    return VCopy[n];
   }
 
-  double Median(Vector V)
+  double Median(const Vector &V)
   {
     std::vector<double> Vec(V.data(), V.data() + V.rows() * V.cols());
     return Median(Vec);
   }
 
-  double MAD(Vector V)
+  double MAD(const Vector &V)
   {
     return Median((V.array() - Median(V)).abs().matrix());
   }
 
-  double RMSE(const Vector V)
+  double EstimateMADCovariance(const Vector &V)
+  {
+    return MAD(V) * 1.4826;
+  }
+
+  double RMSE(const Vector &V)
   {
     return sqrt(V.squaredNorm() / V.size());
   }

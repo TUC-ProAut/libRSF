@@ -77,8 +77,8 @@ namespace libRSF
         double PriorNormalInfoScaling = 1e-6;
         VectorStatic<Dim> PriorNormalMean = VectorStatic<Dim>::Zero();
 
-        double PriorWishartDOF = Dim - 1 + 2;
-        MatrixStatic<Dim, Dim> PriorWishartScale = MatrixStatic<Dim, Dim>::Identity();
+        double PriorWishartDOF = Dim + 1;
+        MatrixStatic<Dim, Dim> PriorWishartScatter = MatrixStatic<Dim, Dim>::Identity();
 
         /** remove components if the number of assigned samples is too low */
         bool RemoveSmallComponents = false;
@@ -93,13 +93,17 @@ namespace libRSF
       /** Bayesian representation of the parameter estimation problem */
       struct BayesianState
       {
-        VectorVectorSTL<1> Weights;
+        std::vector<double> AlphaWeight;
+        std::vector<double> Weight;
 
         VectorVectorSTL<Dim> MeanMean;
+        std::vector<double> BetaMean;
         MatrixVectorSTL<Dim, Dim> InfoMean;
 
-        VectorVectorSTL<1> NuInfo;
-        MatrixVectorSTL<Dim, Dim> VInfo;
+        std::vector<double> NuInfo;
+        MatrixVectorSTL<Dim, Dim> WInfo;
+
+        Matrix Responsibilities;
       };
 
       bool estimate(const std::vector<double> &Data, const EstimationConfig &Config)
@@ -130,15 +134,15 @@ namespace libRSF
           return false;
         }
 
-        /** estimate a good covariance prior*/
+        /** set a good covariance prior, that represents the data's uncertainty*/
         EstimationConfig ModifiedConfig = Config;
-        if (Config.EstimationAlgorithm == ErrorModelTuningType::EM_MAP || Config.EstimationAlgorithm == ErrorModelTuningType::VBI)
+        if (Config.EstimationAlgorithm != ErrorModelTuningType::EM)
         {
-          ModifiedConfig.PriorWishartScale = EstimateSampleCovariance(DataMatrix) / Config.PriorWishartDOF;
+          ModifiedConfig.PriorWishartScatter = EstimateSampleCovariance(DataMatrix) * Config.PriorWishartDOF;
         }
 
         /** init*/
-        static BayesianState VBIState;
+        BayesianState VBIState;
         bool ReachedMaxIteration = false;
         bool Converged = false;
         bool Merged = false;
@@ -156,73 +160,83 @@ namespace libRSF
           switch (Config.EstimationAlgorithm)
           {
             case ErrorModelTuningType::EM:
-              {
-                /** E-step */
-                Matrix Probability(M, N);
-                LikelihoodSum = this->computeProbability(DataMatrix, Probability);
+            {
+              /** E-step */
+              Matrix Probability(M, N);
+              LikelihoodSum = this->computeProbability(DataMatrix, Probability);
 
-                /** M-Step maximum likelihood */
-                this->computeMixtureParameters(DataMatrix, Probability, ModifiedConfig);
-              }
-              break;
+              /** M-Step maximum likelihood */
+              this->computeMixtureParameters(DataMatrix, Probability, ModifiedConfig);
+            }
+            break;
 
             case ErrorModelTuningType::EM_MAP:
-              {
-                /** E-step */
-                Matrix Probability(M, N);
-                LikelihoodSum = this->computeProbability(DataMatrix, Probability);
+            {
+              /** E-step */
+              Matrix Probability(M, N);
+              LikelihoodSum = this->computeProbability(DataMatrix, Probability);
 
-                /** M-Step maximum-a-posteriori*/
-                this->computeMixtureParametersMAP(DataMatrix, Probability, ModifiedConfig);
-              }
-              break;
+              /** M-Step maximum-a-posteriori*/
+              this->computeMixtureParametersMAP(DataMatrix, Probability, ModifiedConfig);
+            }
+            break;
 
             case ErrorModelTuningType::VBI:
+            {
+              /** multivariate VBI, without Dirichlet prior*/
+              if (k == 1)
               {
-                /** multivariate VBI*/
-                static Matrix Probability(M, N);
-                if (k == 1)
-                {
-                  /** first likelihood is not variational */
-                  this->computeProbability(DataMatrix, Probability);
-
-                  /** reset state */
-                  VBIState = BayesianState();
-                }
-                LikelihoodSum = this->doVariationalStep(DataMatrix, Probability, VBIState, ModifiedConfig);
+                /** first likelihood is not variational */
+                this->computeProbability(DataMatrix, VBIState.Responsibilities);
               }
-              break;
+              LikelihoodSum = this->doVariationalStep(DataMatrix, VBIState, ModifiedConfig);
+            }
+            break;
+
+            case ErrorModelTuningType::VBI_Full:
+            {
+              /** multivariate VBI, with Dirichlet prior*/
+              if (k == 1)
+              {
+                /** first likelihood is not variational */
+                this->computeProbability(DataMatrix, VBIState.Responsibilities);
+              }
+              LikelihoodSum = this->doVariationalStepFull(DataMatrix, VBIState, ModifiedConfig);
+            }
+            break;
 
             default:
               PRINT_ERROR("Wrong mixture estimation algorithm type!");
               break;
           }
 
-          /** post-process mixture */
-          if (Config.RemoveSmallComponents &&
-              (Config.EstimationAlgorithm == ErrorModelTuningType::EM ||
-               Config.EstimationAlgorithm == ErrorModelTuningType::EM_MAP))
+          /** post-process mixture (only for EM, for VBI it is done internally)*/
+          if (Config.EstimationAlgorithm == ErrorModelTuningType::EM ||
+              Config.EstimationAlgorithm == ErrorModelTuningType::EM_MAP)
           {
-            Prunned = this->prunMixture(Config.MinSamplePerComponent / N);
-          }
-          else
-          {
-            Prunned = this->prunMixture(0.0);
-          }
+            /** remove components with a low weight */
+            if (Config.RemoveSmallComponents)
+            {
+              Prunned = this->prunMixture(std::min(Config.MinSamplePerComponent / N, 1.0));
+            }
+            else
+            {
+              Prunned = this->prunMixture(0.0);
+            }
 
-          if (Config.MergeSimiliarComponents &&
-              (Config.EstimationAlgorithm == ErrorModelTuningType::EM ||
-               Config.EstimationAlgorithm == ErrorModelTuningType::EM_MAP))
-          {
-            Merged = this->reduceMixture(Config.MergingThreshhold);
-          }
-          else
-          {
-            Merged = false;
+            /** merge components that are close to each other */
+            if (Config.MergeSimiliarComponents)
+            {
+              Merged = this->reduceMixture(Config.MergingThreshhold);
+            }
+            else
+            {
+              Merged = false;
+            }
           }
 
           /** check for convergence */
-          double LikelihoodChange = std::abs(LikelihoodSum - LikelihoodSumOld) / LikelihoodSum;
+          const double LikelihoodChange = std::abs(LikelihoodSum - LikelihoodSumOld) / LikelihoodSum;
           if (k > 1 && LikelihoodChange < Config.MinLikelihoodChange)
           {
             Converged = true;
@@ -249,7 +263,9 @@ namespace libRSF
           k++;
         }
 
-        if (Config.EstimationAlgorithm == ErrorModelTuningType::VBI)
+        /** take expectations from Bayesian results */
+        if (Config.EstimationAlgorithm == ErrorModelTuningType::VBI||
+            Config.EstimationAlgorithm == ErrorModelTuningType::VBI_Full)
         {
           this->extractParameterFromBayes(VBIState);
         }
@@ -332,7 +348,7 @@ namespace libRSF
         return _Mixture.size();
       }
 
-      void getMixture(std::vector<GaussianComponent<Dim>>& Mixture)
+      void getMixture(std::vector<GaussianComponent<Dim>> &Mixture)
       {
         Mixture = _Mixture;
       }
@@ -416,17 +432,18 @@ namespace libRSF
         _Mixture.clear();
 
         /** extract parameter component-wise */
-        const int GMMSize = State.Weights.size();
-        for (int m = 0; m < GMMSize; ++m)
+        const int GMMSize = State.Weight.size();
+        for (int k = 0; k < GMMSize; ++k)
         {
           libRSF::GaussianComponent<Dim> Component;
-          Component.setParamsInformation(State.NuInfo.at(m)(0)*State.VInfo.at(m).inverse(), -State.MeanMean.at(m), State.Weights.at(m));
+          Component.setParamsInformation(State.NuInfo.at(k)*State.WInfo.at(k),
+                                         -State.MeanMean.at(k),
+                                         (Vector1() << State.Weight.at(k)).finished());
           this->addComponent(Component);
         }
       }
 
       double doVariationalStep(const ErrorMatType &DataMatrix,
-                               Matrix &Probability,
                                BayesianState &VBIState,
                                const EstimationConfig &Config) const
       {
@@ -438,33 +455,32 @@ namespace libRSF
          * 2001
          */
 
-        /** set hyperpriors */
-        const MatrixStatic<Dim,Dim> V = Config.PriorWishartScale;
-        const MatrixStatic<Dim, Dim> Beta = Config.PriorNormalInfoScaling * MatrixStatic<Dim,Dim>::Identity();
-        const double Nu = Config.PriorWishartDOF;
+        /** rename hyperprior variables */
+        const MatrixStatic<Dim,Dim> V0 = Config.PriorWishartScatter;
+        const MatrixStatic<Dim,Dim> Beta0 = Config.PriorNormalInfoScaling * MatrixStatic<Dim,Dim>::Identity();
+        const VectorStatic<Dim> Mean0 = Config.PriorNormalMean;
+        const double Nu0 = Config.PriorWishartDOF;
 
         /** adapt to current size */
-        const int GMMSize = VBIState.Weights.size();
         const int SampleSize = DataMatrix.cols();
-        if (GMMSize < Probability.rows())
+        if (VBIState.Weight.size() < VBIState.Responsibilities.rows())
         {
-          for (int n = GMMSize; n < Probability.rows(); ++n)
+          for (int n = VBIState.Weight.size(); n < VBIState.Responsibilities.rows(); ++n)
           {
-            VBIState.Weights.push_back(this->_Mixture.at(n).getWeight());
-
-            VBIState.InfoMean.push_back(Beta); /**< will be overwritten */
-            VBIState.MeanMean.push_back(Config.PriorNormalMean); /**< will be overwritten */
-
-            VBIState.NuInfo.push_back((Vector1() << Nu).finished());
-            VBIState.VInfo.push_back(V);
+            VBIState.Weight.push_back(this->_Mixture.at(n).getWeight()(0));
+            VBIState.InfoMean.push_back(Beta0); /**< will be overwritten */
+            VBIState.MeanMean.push_back(Mean0); /**< will be overwritten */
+            VBIState.NuInfo.push_back(Nu0);
+            VBIState.WInfo.push_back(Inverse(V0));
           }
         }
+        const int GMMSize = VBIState.Weight.size();
 
         /** Expectation step */
 
         /** pre-calculate some multi-use variables */
-        Vector SumLike = Probability.rowwise().sum();
-        MatrixStatic<Dynamic, Dim> SumLikeX = Probability * DataMatrix.transpose();
+        const Vector SumLike = VBIState.Responsibilities.rowwise().sum();
+        const MatrixStatic<Dynamic, Dim> SumLikeX = VBIState.Responsibilities * DataMatrix.transpose();
 
         MatrixVectorSTL<Dim, Dim> XX;
         for (int n = 0; n < SampleSize; n++)
@@ -478,7 +494,7 @@ namespace libRSF
           MatrixStatic<Dim,Dim> SumLikeXXComp = MatrixStatic<Dim,Dim>::Zero();
           for (int n = 0; n < SampleSize; n++)
           {
-            SumLikeXXComp += XX.at(n) * Probability(m,n);
+            SumLikeXXComp += XX.at(n) * VBIState.Responsibilities(m,n);
           }
           SumLikeXX.push_back(SumLikeXXComp);
         }
@@ -487,10 +503,10 @@ namespace libRSF
         for (int m = 0; m < GMMSize; ++m)
         {
           /** <T_i> */
-          MatrixStatic<Dim,Dim> InfoEx = VBIState.NuInfo.at(m)(0) * Inverse(VBIState.VInfo.at(m));
+          MatrixStatic<Dim,Dim> InfoEx = VBIState.NuInfo.at(m) * VBIState.WInfo.at(m);
 
           /** update mean posterior */
-          VBIState.InfoMean.at(m) = Beta + InfoEx * SumLike(m);
+          VBIState.InfoMean.at(m) = Beta0 + InfoEx * SumLike(m);
 
           if (Config.EstimateMean == true)
           {
@@ -498,7 +514,7 @@ namespace libRSF
           }
 
           /** update variance posterior */
-          VBIState.NuInfo.at(m)(0) = Nu + SumLike(m);
+          VBIState.NuInfo.at(m) = Nu0 + SumLike(m);
 
           /** <Mu_i*Mu_i^T> */
           const MatrixStatic<Dim,Dim> MuMuEx = Inverse(VBIState.InfoMean.at(m)) + VBIState.MeanMean.at(m) * VBIState.MeanMean.at(m).transpose();
@@ -506,77 +522,224 @@ namespace libRSF
           MatrixStatic<Dim,Dim> SumXPMu = MatrixStatic<Dim,Dim>::Zero();
           for (int n = 0; n < SampleSize; n++)
           {
-            SumXPMu += DataMatrix.col(n) * Probability(m,n) * VBIState.MeanMean.at(m).transpose();
+            SumXPMu += DataMatrix.col(n) * VBIState.Responsibilities(m,n) * VBIState.MeanMean.at(m).transpose();
           }
 
-          VBIState.VInfo.at(m) = V
-                               + SumLikeXX.at(m)
-                               - SumXPMu
-                               - VBIState.MeanMean.at(m) * SumLikeX.row(m)
-                               + MuMuEx * SumLike(m);
+          VBIState.WInfo.at(m) = (V0
+                                 + SumLikeXX.at(m)
+                                 - SumXPMu
+                                 - VBIState.MeanMean.at(m) * SumLikeX.row(m)
+                                 + MuMuEx * SumLike(m)).inverse();
 
           /** variational likelihood */
           /** <ln|T_i|> */
           double LogInfoEx = 0;
           for (int d = 1; d <= Dim; d++)
           {
-            LogInfoEx += Eigen::numext::digamma(0.5 * (VBIState.NuInfo.at(m)(0) + 1 - d));
+            LogInfoEx += Eigen::numext::digamma(0.5 * (VBIState.NuInfo.at(m) + 1 - d));
           }
-          LogInfoEx += Dim * log(2.0) - log(VBIState.VInfo.at(m).determinant());
+          LogInfoEx += Dim*log(2.0) + log(VBIState.WInfo.at(m).determinant());
 
           /** update <T_i> */
-          InfoEx = VBIState.NuInfo.at(m)(0) * Inverse(VBIState.VInfo.at(m));
+          InfoEx = VBIState.NuInfo.at(m) * VBIState.WInfo.at(m);
 
           /** <Mu_i> */
           const VectorStatic<Dim> MeanEx = VBIState.MeanMean.at(m);
 
-          Probability.row(m).fill(0.5 * LogInfoEx + log(VBIState.Weights.at(m)(0)));
+          VBIState.Responsibilities.row(m).fill(0.5 * LogInfoEx + log(VBIState.Weight.at(m)));
           for (int n = 0; n < SampleSize; n++)
           {
-            Probability(m,n) -= 0.5 * ( InfoEx * (XX.at(n)
-                                      - MeanEx * DataMatrix.col(n).transpose()
-                                      - DataMatrix.col(n) * MeanEx.transpose()
-                                      + MuMuEx) ).trace();
+            VBIState.Responsibilities(m,n) -= 0.5 * (InfoEx * (XX.at(n)
+                                              - MeanEx * DataMatrix.col(n).transpose()
+                                              - DataMatrix.col(n) * MeanEx.transpose()
+                                              + MuMuEx) ).trace();
           }
-          Probability.row(m) = Probability.row(m).array().exp();
+          VBIState.Responsibilities.row(m) = VBIState.Responsibilities.row(m).array().exp();
         }
 
         /** "Maximization step" --> update probability */
         /** remove NaN */
-        Probability = (Probability.array().isFinite()).select(Probability, 0.0);
+        VBIState.Responsibilities = (VBIState.Responsibilities.array().isFinite()).select(VBIState.Responsibilities, 0.0);
 
         /** calculate relative likelihood  */
-        double LikelihoodSum = Probability.sum();
-        for (int n = 0; n < static_cast<int>(Probability.cols()); ++n)
+        double LikelihoodSum = VBIState.Responsibilities.sum();
+        for (int n = 0; n < static_cast<int>(VBIState.Responsibilities.cols()); ++n)
         {
-          Probability.col(n) /= Probability.col(n).sum();
+          VBIState.Responsibilities.col(n) /= VBIState.Responsibilities.col(n).sum();
         }
 
         /** remove NaN again (occur if sum of likelihoods is zero) */
-        Probability = (Probability.array().isFinite()).select(Probability, 1.0 / GMMSize);
+        VBIState.Responsibilities = (VBIState.Responsibilities.array().isFinite()).select(VBIState.Responsibilities, 1.0 / GMMSize);
 
         /** calculate weights */
         for (int m = 0; m < GMMSize; ++m)
         {
-          VBIState.Weights.at(m)(0) = Probability.row(m).sum() / Probability.cols();
+          VBIState.Weight.at(m) = VBIState.Responsibilities.row(m).sum() / VBIState.Responsibilities.cols();
         }
 
         /** remove useless or degenerated components */
         for (int m = GMMSize-1; m >=0 ; --m)
         {
-          if(!(VBIState.Weights.at(m)(0) >= (Config.MinSamplePerComponent / SampleSize / 2.0)) && VBIState.Weights.size() > 1)/**< catches NaN also */
+          if(!(VBIState.Weight.at(m) >= (Config.MinSamplePerComponent / SampleSize)) && VBIState.Weight.size() > 1)/**< catches NaN also */
           {
             /** remove component from posterior states */
             VBIState.NuInfo.erase(VBIState.NuInfo.begin() + m);
-            VBIState.VInfo.erase(VBIState.VInfo.begin() + m);
+            VBIState.WInfo.erase(VBIState.WInfo.begin() + m);
             VBIState.InfoMean.erase(VBIState.InfoMean.begin() + m);
             VBIState.MeanMean.erase(VBIState.MeanMean.begin() + m);
-            VBIState.Weights.erase(VBIState.Weights.begin() + m);
+            VBIState.Weight.erase(VBIState.Weight.begin() + m);
 
             /** remove row from probability matrix */
-            Matrix ProbTrans = Probability.transpose();
+            Matrix ProbTrans = VBIState.Responsibilities.transpose();
             RemoveColumn(ProbTrans,m);
-            Probability = ProbTrans.transpose();
+            VBIState.Responsibilities = ProbTrans.transpose();
+
+            /** enforce an additional iteration after removal by resetting likelihood */
+            LikelihoodSum = 1e40;
+          }
+        }
+
+        return LikelihoodSum;
+      }
+
+      double doVariationalStepFull(const ErrorMatType &DataMatrix,
+                                   BayesianState &VBIState,
+                                   const EstimationConfig &Config) const
+      {
+        /** Implementation based on:
+        * Christopher M. Bishop
+        * Pattern Recognition and Machine Learning, Section 10.2
+        * 2006
+        */
+
+        /** copy hyper-priors */
+        const MatrixStatic<Dim,Dim> W0Inv = Config.PriorWishartScatter;
+        const double Beta0 = Config.PriorNormalInfoScaling;
+        const double Nu0 = Config.PriorWishartDOF;
+        const double Alpha0 = Config.PriorDirichletConcentration;
+        const VectorStatic<Dim> Mean0 = Config.PriorNormalMean;
+
+        /** adapt state to current size */
+        const int SampleSize = DataMatrix.cols();
+        if (VBIState.AlphaWeight.size() < VBIState.Responsibilities.rows())
+        {
+          for (int n = VBIState.AlphaWeight.size(); n < VBIState.Responsibilities.rows(); ++n)
+          {
+            VBIState.AlphaWeight.push_back(Alpha0);
+            VBIState.MeanMean.push_back(Mean0);
+            VBIState.BetaMean.push_back(Beta0);
+            VBIState.NuInfo.push_back(Nu0);
+            VBIState.WInfo.push_back(Inverse(Config.PriorWishartScatter));
+            VBIState.Weight.push_back(this->_Mixture.at(n).getWeight()(0));
+          }
+        }
+        const int GMMSize = VBIState.AlphaWeight.size();
+
+        /** pre-calculate useful variables */
+        const Vector N = VBIState.Responsibilities.rowwise().sum();
+        const double NSum = N.sum();
+        const Vector NInv = (N.array().inverse().isFinite()).select(N.array().inverse(), 0.0); /**< catch NaN */
+        MatrixStatic<Dynamic, Dim> MeanX (GMMSize, Dim);
+        for (int k = 0; k < GMMSize; k++)
+        {
+          MeanX.row(k) = NInv(k) * (DataMatrix * VBIState.Responsibilities.row(k).asDiagonal()).rowwise().sum();
+        }
+
+        MatrixVectorSTL<Dim, Dim> S;
+        for (int k = 0; k < GMMSize; k++)
+        {
+          MatrixStatic<Dim,Dim> Sum = MatrixStatic<Dim,Dim>::Zero();
+          for (int n = 0; n < SampleSize; n++)
+          {
+            Sum += VBIState.Responsibilities(k,n)
+                   * ((DataMatrix.col(n) - MeanX.row(k).transpose())
+                      * (DataMatrix.col(n) - MeanX.row(k).transpose()).transpose());
+          }
+          S.push_back(NInv(k) * Sum);
+        }
+
+        /** update posteriors */
+        double SumAlpha = 0;
+        for (int k = 0; k < GMMSize; k++)
+        {
+          VBIState.AlphaWeight.at(k) = Alpha0 + N(k);
+          SumAlpha += VBIState.AlphaWeight.at(k);
+
+          VBIState.BetaMean.at(k) = Beta0 + N(k);
+          VBIState.MeanMean.at(k) = 1.0/VBIState.BetaMean.at(k) * (Beta0*Mean0 + N(k)*MeanX.row(k).transpose());
+
+          const MatrixStatic<Dim,Dim> WInfoInv = W0Inv
+                                               + N(k)*S.at(k)
+                                               + Beta0*N(k)/(Beta0 + N(k)) * (MeanX.row(k).transpose() - Mean0)*(MeanX.row(k).transpose() - Mean0).transpose();
+
+          VBIState.WInfo.at(k) = Inverse(WInfoInv);
+          VBIState.NuInfo.at(k) = Nu0 + N(k);
+
+          /** update expected weight */
+          VBIState.Weight.at(k) = (Alpha0 + N(k))/(GMMSize*Alpha0 + NSum);
+        }
+
+        /** evaluate expectations */
+        Vector ExpLnInfo(GMMSize);
+        Vector ExpLnWeight(GMMSize);
+        for (int k = 0; k < GMMSize; k++)
+        {
+          double Sum = 0;
+          for (int d = 1; d <= Dim; d++)
+          {
+            Sum += Eigen::numext::digamma(0.5 * (VBIState.NuInfo.at(k) + 1 - d));
+          }
+          ExpLnInfo(k) = Sum + Dim*log(2.0) + log(VBIState.WInfo.at(k).determinant());
+          ExpLnWeight(k) = Eigen::numext::digamma(VBIState.AlphaWeight.at(k))
+                           - Eigen::numext::digamma(SumAlpha);
+        }
+
+        /** evaluate responsibilities */
+        for (int k = 0; k < GMMSize; k++)
+        {
+          for (int n = 0; n < SampleSize; n++)
+          {
+            VBIState.Responsibilities(k,n) = exp(ExpLnWeight(k)
+                                                 + ExpLnInfo(k)/2.0
+                                                 - Dim/(2.0*VBIState.BetaMean.at(k))
+                                                 - VBIState.NuInfo.at(k)/2.0
+                                                 * ((DataMatrix.col(n) - VBIState.MeanMean.at(k)).transpose() * VBIState.WInfo.at(k)).dot(
+                                                   (DataMatrix.col(n) - VBIState.MeanMean.at(k))));
+          }
+        }
+
+        /** catch numerical issues with the exp() */
+        VBIState.Responsibilities = (VBIState.Responsibilities.array().isFinite()).select(VBIState.Responsibilities, 0.0);
+
+        /** save likelihood before(!) it is normalized as probability */
+        double LikelihoodSum = VBIState.Responsibilities.sum();
+
+        /** normalize */
+        for (int n = 0; n < static_cast<int>(VBIState.Responsibilities.cols()); ++n)
+        {
+          VBIState.Responsibilities.col(n) /= VBIState.Responsibilities.col(n).sum();
+        }
+
+        /** remove NaN (occur if sum of likelihoods is zero) */
+        VBIState.Responsibilities = (VBIState.Responsibilities.array().isFinite()).select(VBIState.Responsibilities, 1.0 / GMMSize);
+
+        /** remove useless or degenerated components */
+        for (int k = GMMSize-1; k >=0 ; --k)
+        {
+          if(!(VBIState.Weight.at(k) >= (Config.MinSamplePerComponent / SampleSize)) && VBIState.Weight.size() > 1)/**< catches NaN also */
+          {
+            /** remove component from posterior states */
+            VBIState.AlphaWeight.erase(VBIState.AlphaWeight.begin() + k);
+            VBIState.MeanMean.erase(VBIState.MeanMean.begin() + k);
+            VBIState.BetaMean.erase(VBIState.BetaMean.begin() + k);
+            VBIState.NuInfo.erase(VBIState.NuInfo.begin() + k);
+            VBIState.WInfo.erase(VBIState.WInfo.begin() + k);
+            VBIState.Weight.erase(VBIState.Weight.begin() + k);
+
+            /** remove row from probability matrix */
+            Matrix RespTrans = VBIState.Responsibilities.transpose();
+            RemoveColumn(RespTrans, k);
+            VBIState.Responsibilities = RespTrans.transpose();
 
             /** enforce an additional iteration after removal by resetting likelihood */
             LikelihoodSum = 1e40;
@@ -597,8 +760,9 @@ namespace libRSF
 
       void computeMixtureParametersMAP(const ErrorMatType &DataVector, const Matrix &Likelihood, const EstimationConfig &Config)
       {
-        const int M = _Mixture.size();
 
+        /** sum over components */
+        const int M = _Mixture.size();
         const double DirichletSum = (Config.PriorDirichletConcentration - 1) * M;
 
         for (int m = 0; m < M; m++)
@@ -609,7 +773,7 @@ namespace libRSF
                                                DirichletSum,
                                                Config.PriorNormalInfoScaling,
                                                Config.PriorNormalMean,
-                                               Config.PriorWishartScale,
+                                               Config.PriorWishartScatter,
                                                Config.PriorWishartDOF,
                                                Config.EstimateMean);
         }
@@ -622,7 +786,8 @@ namespace libRSF
 
         for (int m = _Mixture.size() - 1; m >= 0; m--)
         {
-          if (_Mixture.at(m).getWeight()(0) < MinWeight || _Mixture.at(m).getWeight()(0) == 0.0)
+          if ((_Mixture.at(m).getWeight()(0) < MinWeight || _Mixture.at(m).getWeight()(0) == 0.0)
+              && _Mixture.size() > 1)
           {
             _Mixture.erase(_Mixture.begin() + m);
             Prunned = true;
@@ -727,7 +892,7 @@ namespace libRSF
       VectorStatic<Dim> EstimateMode() const
       {
         /** draw samples */
-        VectorVectorSTL<Dim> Samples = DrawSamples(1e4*Dim);
+        const VectorVectorSTL<Dim> Samples = DrawSamples(1e4*Dim);
 
         /** evaluate samples */
         VectorStatic<Dim> BestSample = Samples.front();
@@ -748,11 +913,18 @@ namespace libRSF
         return BestSample;
       }
 
-
       /** special function for pseudo range stuff */
       VectorStatic<Dim> removeOffset();
       VectorStatic<Dim> removeOffsetLegacy();
-      void removeGivenOffset(const VectorStatic<Dim> &Offset);
+      void removeGivenOffset(const VectorStatic<Dim> &Offset)
+      {
+        /** remove offset from all components */
+        const int NumberOfComponents = this->getNumberOfComponents();
+        for(int i = 0; i < NumberOfComponents; ++i)
+        {
+          _Mixture.at(i).setMean(_Mixture.at(i).getMean() - Offset);
+        }
+      }
 
       void removeMean()
       {

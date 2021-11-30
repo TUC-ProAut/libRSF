@@ -55,7 +55,7 @@ namespace libRSF
   template<>
   Vector1 GaussianMixture<1>::removeOffsetLegacy()
   {
-    int NumberOfComponents = this->getNumberOfComponents();
+    const int NumberOfComponents = this->getNumberOfComponents();
     Vector1 MeanLOS;
 
     this->sortComponentsByWeight();
@@ -72,11 +72,7 @@ namespace libRSF
       }
     }
 
-    for(int i = 0; i < NumberOfComponents; ++i)
-    {
-      _Mixture.at(i).setMean(_Mixture.at(i).getMean() - MeanLOS);
-    }
-
+    this->removeGivenOffset(MeanLOS);
     return MeanLOS;
   }
 
@@ -99,30 +95,14 @@ namespace libRSF
       }
     }
 
-    for(int i = 0; i < NumberOfComponents; ++i)
-    {
-      _Mixture.at(i).setMean(_Mixture.at(i).getMean() - MeanLOS);
-    }
-
+    this->removeGivenOffset(MeanLOS);
     return MeanLOS;
-  }
-
-  template<>
-  void GaussianMixture<1>::removeGivenOffset(const Vector1 &Offset)
-  {
-    int NumberOfComponents = this->getNumberOfComponents();
-
-    /** remove offset of the given component */
-    for(int i = 0; i < NumberOfComponents; ++i)
-    {
-      _Mixture.at(i).setMean(_Mixture.at(i).getMean() - Offset);
-    }
   }
 
   template <>
   Data GaussianMixture<1>::exportToStateData(double Timestamp)
   {
-    int NumberOfComponents = this->getNumberOfComponents();
+    const int NumberOfComponents = this->getNumberOfComponents();
 
     /** save to vectors */
     Vector Means(NumberOfComponents);
