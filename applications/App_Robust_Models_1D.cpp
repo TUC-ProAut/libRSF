@@ -52,8 +52,8 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   Weight1 << std::stod(Arguments.at(10));
   Weight2 << std::stod(Arguments.at(11));
 
-  /** DCS parameter is based on the second mean for some "randomness" */
-  const double ScalingDCS = std::pow(10, Mean2(0));
+  /** parameter of M-Estimators is the 10^Mean2 to allow a broad spread */
+  const double MEstimatorParam = std::pow(10, Mean2(0));
 
   /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
@@ -72,7 +72,12 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   SolverOptions.function_tolerance = 1e-8;
   SolverOptions.gradient_tolerance = SolverOptions.function_tolerance * 1e-4;
 
-  /** additional debugging */
+  /** optional: check gradients */
+//  SolverOptions.check_gradients = true;
+//  SolverOptions.gradient_check_relative_precision = 1e-4;
+//  SolverOptions.gradient_check_numeric_derivative_relative_step_size = 1e-3;
+
+  /** optional: additional debugging */
 //  std::vector<int> Iterations(100);
 //  std::iota (std::begin(Iterations), std::end(Iterations), 1);
 //  SolverOptions.trust_region_minimizer_iterations_to_dump = Iterations;
@@ -134,11 +139,39 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   }
   else if (ErrorModel.compare("DCS") == 0)
   {
-    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(ScalingDCS));
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(MEstimatorParam));
   }
   else if (ErrorModel.compare("cDCE") == 0)
   {
     SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, NoiseIdentity, new libRSF::cDCELoss(StdDev1(0)));
+  }
+  else if (ErrorModel.compare("Student") == 0)
+  {
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::StudentLoss(MEstimatorParam, 1));
+  }
+  else if (ErrorModel.compare("Huber") == 0)
+  {
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::HuberLoss(MEstimatorParam));
+  }
+  else if (ErrorModel.compare("SoftLOne") == 0)
+  {
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::SoftLOneLoss(MEstimatorParam));
+  }
+  else if (ErrorModel.compare("CauchyLoss") == 0)
+  {
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::CauchyLoss(MEstimatorParam));
+  }
+  else if (ErrorModel.compare("CauchyPDFLoss") == 0)
+  {
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::CauchyPDFLoss(MEstimatorParam));
+  }
+  else if (ErrorModel.compare("TukeyLoss") == 0)
+  {
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::TukeyLoss(MEstimatorParam));
+  }
+  else if (ErrorModel.compare("GeneralAdaptiveLoss") == 0)
+  {
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::GeneralAdaptiveLoss(MEstimatorParam));
   }
   else
   {
