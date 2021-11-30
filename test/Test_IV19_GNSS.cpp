@@ -33,56 +33,108 @@
 #include "TestUtils.h"
 #include "gtest/gtest.h"
 
-TEST(IV19_GNSS, smartLoc_Berlin_Potsdamer_Platz_gauss)
+/** define paths */
+#define DATA_BPB "datasets/smartLoc/Berlin_Potsdamer_Platz"
+#define DATA_BGM "datasets/smartLoc/Berlin_Gendarmenmarkt"
+#define DATA_FMT "datasets/smartLoc/Frankfurt_Main_Tower"
+#define DATA_FWT "datasets/smartLoc/Frankfurt_Westend_Tower"
+
+bool RunGNSS(const std::string DataSet,
+             const std::string ErrorModel,
+             libRSF::StateDataSet &Result,
+             libRSF::SensorDataSet &GT)
 {
-    /** assign all arguments to string vector*/
-    std::vector<std::string> Arguments;
-    Arguments.push_back("datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt");
-    Arguments.push_back("Result_smartLoc_Berlin_Potsdamer_Platz_gauss.txt"); // shouldn't be neccesary, not writing
-    Arguments.push_back("error:");
-    Arguments.push_back("gauss");
+  /** load ground truth */
+  libRSF::ReadDataFromFile(std::string(DataSet) + std::string("_GT.txt"), GT);
 
-    /** calculate example */
-    libRSF::StateDataSet Result;
-    std::string OutputFile;
+  /** assign all arguments to string vector*/
+  std::vector<std::string> Arguments;
+  Arguments.push_back(std::string(DataSet) + std::string("_Input.txt"));
+  Arguments.push_back("Result.txt"); // shouldn't be neccesary, not writing
+  Arguments.push_back("error:");
+  Arguments.push_back(ErrorModel);
 
-    ASSERT_FALSE(CreateGraphAndSolve(Arguments, Result, OutputFile)) << "Error calculating example";
+  /** dummy argument */
+  std::string OutputFile;
 
-    /** read gt */
-    libRSF::SensorDataSet GT;
-    libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", GT);
-
-    /** calculate RMSE */
-    const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
-
-    std::cout << "ATE: " << ATE << std::endl;
-
-    EXPECT_LT(ATE, 70.0);
+  /** run optimization */
+  return CreateGraphAndSolve(Arguments, Result, OutputFile);
 }
 
-TEST(IV19_GNSS, smartLoc_Berlin_Potsdamer_Platz_stsm_vbi)
+TEST(IV19_GNSS, Berlin_Potsdamer_Platz_Gaussian)
 {
-    /** assign all arguments to string vector*/
-    std::vector<std::string> Arguments;
-    Arguments.push_back("datasets/smartLoc/Berlin_Potsdamer_Platz_Input.txt");
-    Arguments.push_back("Result_smartLoc_Berlin_Potsdamer_Platz_gauss.txt"); // shouldn't be neccesary, not writing
-    Arguments.push_back("error:");
-    Arguments.push_back("stsm_vbi");
+  /** calculate example */
+  libRSF::StateDataSet Result;
+  libRSF::SensorDataSet GT;
+  ASSERT_FALSE(RunGNSS(DATA_BPB, "gauss", Result, GT)) << "Error calculating example";
 
-    /** calculate example */
-    libRSF::StateDataSet Result;
-    std::string OutputFile;
+  /** calculate RMSE */
+  const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
+  PRINT_LOGGING("ATE: ", ATE, "m");
+  EXPECT_NEAR(ATE, 68, 1.0);
+}
 
-    ASSERT_FALSE(CreateGraphAndSolve(Arguments, Result, OutputFile)) << "Error calculating example";
+TEST(IV19_GNSS, Berlin_Potsdamer_Platz_VBI_SM)
+{
+  /** calculate example */
+  libRSF::StateDataSet Result;
+  libRSF::SensorDataSet GT;
+  ASSERT_FALSE(RunGNSS(DATA_BPB, "stsm_vbi", Result, GT)) << "Error calculating example";
 
-    /** read gt */
-    libRSF::SensorDataSet GT;
-    libRSF::ReadDataFromFile("datasets/smartLoc/Berlin_Potsdamer_Platz_GT.txt", GT);
+  /** calculate RMSE */
+  const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
+  PRINT_LOGGING("ATE: ", ATE, "m");
+  EXPECT_NEAR(ATE, 19, 1.0);
+}
 
-    /** calculate RMSE */
-    const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
+TEST(IV19_GNSS, Berlin_Potsdamer_Platz_VBI_MM)
+{
+  /** calculate example */
+  libRSF::StateDataSet Result;
+  libRSF::SensorDataSet GT;
+  ASSERT_FALSE(RunGNSS(DATA_BPB, "stmm_vbi", Result, GT)) << "Error calculating example";
 
-    std::cout << "ATE: " << ATE << std::endl;
+  /** calculate RMSE */
+  const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
+  PRINT_LOGGING("ATE: ", ATE, "m");
+  EXPECT_NEAR(ATE, 19, 1.0);
+}
 
-    EXPECT_LT(ATE, 20.0);
+TEST(IV19_GNSS, Berlin_Gendarmenmarkt_Gaussian)
+{
+  /** calculate example */
+  libRSF::StateDataSet Result;
+  libRSF::SensorDataSet GT;
+  ASSERT_FALSE(RunGNSS(DATA_BGM, "gauss", Result, GT)) << "Error calculating example";
+
+  /** calculate RMSE */
+  const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
+  PRINT_LOGGING("ATE: ", ATE, "m");
+  EXPECT_NEAR(ATE, 51, 1.0);
+}
+
+TEST(IV19_GNSS, Frankfurt_Main_Tower_EM_MM)
+{
+  /** calculate example */
+  libRSF::StateDataSet Result;
+  libRSF::SensorDataSet GT;
+  ASSERT_FALSE(RunGNSS(DATA_FMT, "stmm", Result, GT)) << "Error calculating example";
+
+  /** calculate RMSE */
+  const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
+  PRINT_LOGGING("ATE: ", ATE, "m");
+  EXPECT_NEAR(ATE, 40, 1.0);
+}
+
+TEST(IV19_GNSS, Frankfurt_Westend_Tower_EM_SM)
+{
+  /** calculate example */
+  libRSF::StateDataSet Result;
+  libRSF::SensorDataSet GT;
+  ASSERT_FALSE(RunGNSS(DATA_FWT, "stsm", Result, GT)) << "Error calculating example";
+
+  /** calculate RMSE */
+  const double ATE = libRSF::ATE(libRSF::DataType::Point3, GT, POSITION_STATE, Result);
+  PRINT_LOGGING("ATE: ", ATE, "m");
+  EXPECT_NEAR(ATE, 42, 1.0);
 }

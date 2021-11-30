@@ -27,5 +27,11 @@ target_link_libraries(Example_FG_Range libRSF)
 add_executable(Example_FG_Pseudorange Example_FG_Pseudorange.cpp)
 target_link_libraries(Example_FG_Pseudorange libRSF)
 
+add_executable(Example_GMM_Estimation_1D Example_GMM_Estimation_1D.cpp)
+target_link_libraries(Example_GMM_Estimation_1D libRSF)
+
+add_executable(Example_GMM_Estimation_2D Example_GMM_Estimation_2D.cpp)
+target_link_libraries(Example_GMM_Estimation_2D libRSF)
+
 add_executable(Example_Marginalization Example_Marginalization.cpp)
 target_link_libraries(Example_Marginalization libRSF)
