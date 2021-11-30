@@ -34,21 +34,25 @@
 
 #include <ceres/ceres.h>
 
-using ceres::LossFunction;
-
 namespace libRSF
 {
+  /** inherit existing loss functions */
+  using ceres::HuberLoss;
+  using ceres::TukeyLoss;
+  using ceres::CauchyLoss;
+  using ceres::SoftLOneLoss;
+
   /** \brief The robust Dynamic Covariance Scaling loss function
    * Based on:
    * P. Agarwal, G. D. Tipaldi, L. Spinello, C. Stachniss and W. Burgard
    * "Robust map optimization using dynamic covariance scaling"
-   * 2013 IEEE International Conference on Robotics and Automation, Karlsruhe, 2013
+   * IEEE International Conference on Robotics and Automation, Karlsruhe, 2013
    * DOI: 10.1109/ICRA.2013.6630557
    *
    * \param Phi Tuning parameter of DCS
    *
    */
-  class DCSLoss : public LossFunction
+  class DCSLoss : public ceres::LossFunction
   {
   public:
       explicit DCSLoss(double Phi) : Phi_(Phi) {};
@@ -64,13 +68,13 @@ namespace libRSF
    * Based on:
    * T. Pfeifer, S. Lange and P. Protzel
    * "Dynamic Covariance Estimation — A parameter free approach to robust Sensor Fusion"
-   * 2017 IEEE International Conference on Multisensor Fusion and Integration for Intelligent Systems (MFI), Daegu, 2017
+   * IEEE International Conference on Multisensor Fusion and Integration for Intelligent Systems (MFI), Daegu, 2017
    * DOI: 10.1109/MFI.2017.8170347
    *
    * \param Sigma Standard deviation without outliers
    *
    */
-  class cDCELoss : public LossFunction
+  class cDCELoss : public ceres::LossFunction
   {
   public:
       explicit cDCELoss(double Sigma) : Sigma_(Sigma) {};
@@ -82,7 +86,62 @@ namespace libRSF
     const double Sigma_;
   };
 
+  /** \brief M-estimator representing a Student's t-distribution
+   * \param Nu Degree of freedom parameter
+   * \param Dim Number of Dimensions
+   */
+  class StudentLoss : public ceres::LossFunction
+  {
+  public:
+      explicit StudentLoss(const double Nu, const double Dim) : Nu_(Nu), Dim_(Dim) {};
+      ~StudentLoss(){};
 
+      virtual void Evaluate(double, double*) const;
+
+  private:
+    const double Nu_;
+    const double Dim_;
+  };
+
+  /** \brief M-estimator exactly representing a Cauchy distribution
+   * Please note that the ceres::CauchyLoss is a heuristic function:
+   * https://groups.google.com/g/ceres-solver/c/RXyOqy_n0p8
+   * \param Scale Scale parameter of the distribution
+   */
+  class CauchyPDFLoss : public ceres::LossFunction
+  {
+  public:
+      explicit CauchyPDFLoss(const double Scale) : c_(Scale*Scale) {};
+      ~CauchyPDFLoss(){};
+
+      virtual void Evaluate(double, double*) const;
+
+  private:
+    const double c_;
+  };
+
+  /** \brief M-estimator representing a general adaptive loss function
+   * Based on:
+   * Jonathan T. Barron
+   * "A General and Adaptive Robust Loss Function"
+   * IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), Long Beach, 2019
+   * DOI: 10.1109/CVPR.2019.00446
+   *
+   * \param Alpha adapts the kernel shape
+   * \param C Scaling of the inliers, equivalent to a standard deviation
+   */
+  class GeneralAdaptiveLoss : public ceres::LossFunction
+  {
+  public:
+      explicit GeneralAdaptiveLoss(const double Alpha, const double C = 1.0) : Alpha_(Alpha), Cov_(C*C) {};
+      ~GeneralAdaptiveLoss(){};
+
+      virtual void Evaluate(double, double*) const;
+
+  private:
+    const double Alpha_;
+    const double Cov_;
+  };
 }
 
 #endif // LOSSFUNCTION_H

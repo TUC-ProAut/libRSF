@@ -43,7 +43,7 @@ namespace libRSF
   enum class ErrorModelType {Gaussian, DCE, cDCE, SC, DCS, GMM};
 
   enum class ErrorModelMixtureType {None, MaxMix, SumMix, SumMixSpecial, MaxSumMix};
-  enum class ErrorModelTuningType {None, EM, EM_MAP, VBI};
+  enum class ErrorModelTuningType {None, EM, EM_MAP, VBI, VBI_Full};
 
   enum class SolutionType {None, Batch, Smoother, SmootherRT, Window, Filter};
 
@@ -229,6 +229,7 @@ namespace libRSF
     {"em",ErrorModelTuningType::EM},
     {"em_map",ErrorModelTuningType::EM_MAP},
     {"vbi",ErrorModelTuningType::VBI},
+    {"vbi_full",ErrorModelTuningType::VBI_Full},
     {"none",ErrorModelTuningType::None}
   };
 
@@ -252,7 +253,7 @@ namespace libRSF
     catch (std::out_of_range& e)
     {
       /** Due to dependency cycle, we can not use PRINT_ERROR() here! */
-      std::cerr << "Error in Types.h | Line 217 | TranslateSafe(): Dictionary entry is missing: " << Original;
+      std::cerr << "Error in Types.h | Line 256 | TranslateSafe(): Dictionary entry is missing: " << Original;
       return false;
     }
     return true;
