@@ -51,3 +51,7 @@ package_add_test(Test_IV19_GNSS Test_IV19_GNSS.cpp TestUtils.cpp ../applications
 package_add_test(Test_App_Robust_Models_1D Test_App_Robust_Models_1D.cpp TestUtils.cpp ../applications/App_Robust_Models_1D.cpp)
 
 package_add_test(Test_App_Robust_Models_2D Test_App_Robust_Models_2D.cpp TestUtils.cpp ../applications/App_Robust_Models_2D.cpp)
+
+package_add_test(Test_GMM_Estimation_1D Test_GMM_Estimation_1D.cpp TestUtils.cpp)
+
+package_add_test(Test_GMM_Estimation_2D Test_GMM_Estimation_2D.cpp TestUtils.cpp)
