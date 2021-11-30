@@ -98,10 +98,10 @@ for n = numel(ErrorModels):-1:1
     Metric(n).Lable = ErrorModels{n};
     
     % accuracy
-    if strcmp(ErrorModels{n}, 'Gaussian') || strcmp(ErrorModels{n}, 'DCS') || strcmp(ErrorModels{n}, 'cDCE')
-        Metric(n).Error = Result.PostOpt(:,n);      
+    if strcmp(ErrorModels{n}, 'MaxMix') || strcmp(ErrorModels{n}, 'SumMix') || strcmp(ErrorModels{n}, 'MaxSumMix')
+        Metric(n).Error = Result.PostOpt(:,n) - GMM.GlobalMax;      
     else
-        Metric(n).Error = Result.PostOpt(:,n) - GMM.GlobalMax;
+        Metric(n).Error = Result.PostOpt(:,n);
     end
     Metric(n).Error_RMS = evaluation.calculateRMSE(Metric(n).Error);
     

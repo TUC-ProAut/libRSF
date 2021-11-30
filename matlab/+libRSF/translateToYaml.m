@@ -26,6 +26,8 @@ for nError = 1:numel(Config.ErrorModel)
                 switch Sensor
                     case 'odom'
                         Lables{end} = [Lables{end} 'Odom'];
+                    case 'odom_ecef'
+                        Lables{end} = [Lables{end} 'Odom'];
                     case 'odom2'
                         Lables{end} = [Lables{end} 'Odom 2D'];
                     case 'odom4'
@@ -49,6 +51,8 @@ for nError = 1:numel(Config.ErrorModel)
                     case 'range'
                         Lables{end} = [Lables{end} 'Ranging'];
                     case 'gnss'
+                        Lables{end} = [Lables{end} 'GNSS'];
+                    case 'gnss_ecef'
                         Lables{end} = [Lables{end} 'GNSS'];
                     case 'cced'
                         %do nothing
@@ -154,10 +158,11 @@ for nError = 1:numel(Config.ErrorModel)
                 
                 % overwrite with selected error model
                 if strcmp(Sensor, 'gnss') ||...
-                        strcmp(Sensor, 'uwb') ||...
-                        strcmp(Sensor, 'loop') ||...
-                        strcmp(Sensor, 'range') ||...
-                        strcmp(Sensor, 'radar')
+                    strcmp(Sensor, 'gnss_ecef') ||...
+                    strcmp(Sensor, 'uwb') ||...
+                    strcmp(Sensor, 'loop') ||...
+                    strcmp(Sensor, 'range') ||...
+                    strcmp(Sensor, 'radar')
                     try
                         YamlOut{end}.config.factors{end}.error = YamlDefault.errors.(ErrorModel);
                     catch

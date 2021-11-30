@@ -110,6 +110,11 @@ end
 
 %% load ceres dump if available
 Result.Dump = libRSF.parseCeresDump(PathToBinary);
+
+%% add empty solver summary if missing
+if ~isfield(Result, 'SolverSummary')
+    Result.SolverSummary = struct([]);
+end
 end
 
 %% 10 times faster than matlabs writecell

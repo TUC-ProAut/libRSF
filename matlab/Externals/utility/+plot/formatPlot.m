@@ -16,12 +16,15 @@ function [] = formatPlot(hFig, Config)
     end
     
     %% format text
-    set(hFontSize,'FontSize',Config.Font.Size);
-    set(hFontName,'FontName',Config.Font.Name);
+    if Config.Overwrite.Fontsize
+        set(hFontSize,'FontSize',Config.Font.Size);
+    end
+    
     if Config.Font.Latex == true
         set(hFig,'defaulttextinterpreter','latex')
     else
         set(hFig,'defaulttextinterpreter','none')
+        set(hFontName,'FontName',Config.Font.Name);
     end
 
     %% format axes
@@ -56,9 +59,13 @@ function [] = formatPlot(hFig, Config)
     end
 
     %% format overall plot
+    % white background
     if isprop(hFig, 'Color')
         set(hFig, 'Color', 'w');
     end
-    set(hFig, 'Position', [0 0 Config.Plot.Size]);
+    % force Matlab to apply all the changes
+    drawnow
+    % set size in pixels
+    set(hFig , 'units', 'pixels', 'position', [0 0 Config.Plot.Size]);
 end
 

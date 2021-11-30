@@ -50,9 +50,10 @@ else
     Config.Colormap.Default = parula(1024);
     Config.Colormap.Differential = turbo(1024);
 end
-Config.Color.Default = [Config.Color.Default; brighten(Config.Color.Default, 0.7)];
+Config.Color.Default = [Config.Color.Default; brighten(Config.Color.Default, 0.7); brighten(Config.Color.Default, -0.7)];
 
 % add some custom colors
+Config.Color.DarkGrey = [0.15 0.15 0.15];
 Config.Color.Grey = [0.35 0.35 0.35];
 Config.Color.LightGrey = [0.75 0.75 0.75];
 Config.Color.TUC = [0 94 79]/255;
@@ -68,10 +69,10 @@ Config.Axis.Grid.Style = ':';
 Config.Axis.XLable = 'X';
 Config.Axis.YLable = 'Y';
 Config.Axis.Width = 2;
-Config.Axis.Color = Config.Color.Grey;
+Config.Axis.Color = Config.Color.DarkGrey;
 
 % legend options
-Config.Legend.Color = Config.Color.Grey;
+Config.Legend.Color = Config.Axis.Color;
 
 end
 

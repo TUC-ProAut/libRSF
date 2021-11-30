@@ -18,6 +18,7 @@ switch NumDim
         [X,Y] = meshgrid(Samples1D, Samples1D);
         Samples = [X(:), Y(:)];
     otherwise
+        error(['No mode estimation for ' num2str(NumDim) 'D implemented!']);
 end
 
 % create distribution object
