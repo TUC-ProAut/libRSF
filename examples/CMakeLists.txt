@@ -35,3 +35,9 @@ target_link_libraries(Example_GMM_Estimation_2D libRSF)
 
 add_executable(Example_Marginalization Example_Marginalization.cpp)
 target_link_libraries(Example_Marginalization libRSF)
+
+add_executable(Example_IMU_Single Example_IMU_Single.cpp)
+target_link_libraries(Example_IMU_Single libRSF)
+
+add_executable(Example_Odometry Example_Odometry.cpp)
+target_link_libraries(Example_Odometry libRSF)
