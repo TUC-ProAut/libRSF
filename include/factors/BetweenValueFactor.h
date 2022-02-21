@@ -44,9 +44,9 @@ namespace libRSF
       /** construct factor and store measurement */
       BetweenValueFactorBase(ErrorType &Error, const Data &Measurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(Dim);
-        this->_MeasurementVector = Measurement.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(Dim);
+        this->MeasurementVector_ = Measurement.getMean();
       }
 
       /** deterministic error model */
@@ -57,7 +57,7 @@ namespace libRSF
         VectorRefConst<T, Dim> V1(Value1);
         VectorRefConst<T, Dim> V2(Value2);
 
-        return V2 - V1 - this->_MeasurementVector;
+        return V2 - V1 - this->MeasurementVector_;
       }
 
       /** combine probabilistic and deterministic model */
@@ -66,7 +66,7 @@ namespace libRSF
                       const T* const Value2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Value1, Value2),
+        return this->Error_.template weight<T>(this->Evaluate(Value1, Value2),
                                                Params...);
       }
 
@@ -77,7 +77,7 @@ namespace libRSF
         VectorRefConst<double, Dim> State1(StatePointers.at(0));
         VectorRef<double, Dim> State2(StatePointers.at(1));
 
-        State2 = State1 + this->_MeasurementVector;
+        State2 = State1 + this->MeasurementVector_;
       }
   };
 

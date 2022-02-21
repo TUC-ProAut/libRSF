@@ -24,6 +24,9 @@ target_link_libraries(App_Robust_Models_1D libRSF)
 add_executable(App_Robust_Models_2D App_Robust_Models_2D.cpp)
 target_link_libraries(App_Robust_Models_2D libRSF)
 
+add_executable(App_Robust_Models_3D App_Robust_Models_3D.cpp)
+target_link_libraries(App_Robust_Models_3D libRSF)
+
 add_executable(ICRA19_Ranging ICRA19_Ranging.cpp)
 target_link_libraries(ICRA19_Ranging libRSF)
 

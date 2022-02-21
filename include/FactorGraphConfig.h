@@ -32,15 +32,14 @@
 #ifndef FACTORGRAPHCONFIG_H
 #define FACTORGRAPHCONFIG_H
 
-#include "FactorGraph.h"
 #include "Messages.h"
 #include "Types.h"
 
 #include <ceres/ceres.h>
 #include <yaml-cpp/yaml.h>
 
-#include <stdio.h>
-
+#include <cstdio>
+#include <thread>
 #include <iostream>
 #include <string>
 #include <initializer_list>
@@ -56,27 +55,46 @@ namespace libRSF
     virtual ~FactorGraphConfig() = default;
 
     /** parse the command line Options */
-    bool ReadCommandLineOptions(const int argc, char** argv, std::vector<std::string> * const Arguments = nullptr);
+    bool ReadCommandLineOptions(int argc, char** argv, std::vector<std::string> * Arguments = nullptr);
 
     /** parse the YAML config file with yaml-cpp */
-    bool ReadYAMLOptions(const string YAMLFile);
+    bool ReadYAMLOptions(const std::string& YAMLFile);
 
     /** interface to the outer world are a set of files*/
-    string InputFile;
-    string OutputFile;
-    string ConfigFile;
+    std::string InputFile;
+    std::string OutputFile;
+    std::string ConfigFile;
 
     /** noise model */
+    struct GaussianMixtureConfig
+    {
+      GaussianMixtureConfig():MixtureType(ErrorModelMixtureType::None), TuningType(ErrorModelTuningType::None) {};
+
+      ErrorModelMixtureType MixtureType;
+      ErrorModelTuningType TuningType;
+
+      /** parameters for the fixed model */
+      Vector Mean;
+      Vector StdDev;
+      Vector Weight;
+
+      /** parameters for the adaptive model */
+      int NumberComponents = 1;
+      double BaseStandardDeviation = 1.0;
+      bool IncrementalTuning = false;
+
+      /** some of the prior parameters for adaptive estimation*/
+      double PriorDirichletConcentration = 0.1;
+      double PriorNormalInfoScaling = 1e-6;
+      double PriorWishartDOF = 2;
+    };
+
     struct ErrorModelConfig
     {
-      ErrorModelConfig():MixtureType(ErrorModelMixtureType::None), TuningType(ErrorModelTuningType::None) {};
-
       ErrorModelType Type;
-      Vector Parameter;
+      double Parameter;
 
-      ErrorModelMixtureType MixtureType; /**< only if a GMM is used */
-      ErrorModelTuningType TuningType; /**< only if a GMM is used */
-      bool IncrementalTuning = false;
+      GaussianMixtureConfig GMM; /**< only if a GMM is used */
     };
 
     /** factor configuration */
@@ -111,13 +129,13 @@ namespace libRSF
       /**only for sliding window */
       bool Marginalize;
       double WindowLength;
-    } Solution;
+    } Solution{};
 
     ceres::Solver::Options SolverConfig;
 
   private:
-    bool ParseErrorModelFromYAML(YAML::Node ErrorModelNode, ErrorModelConfig &Model);
-    Vector ParseVectorFromYAML(YAML::Node VectorNode);
+    static bool ParseErrorModelFromYAML_(YAML::Node ErrorModelNode, ErrorModelConfig &Model);
+    static Vector ParseVectorFromYAML_(const YAML::Node &VectorNode);
   };
 }
 

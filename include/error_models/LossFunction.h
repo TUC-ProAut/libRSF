@@ -56,9 +56,9 @@ namespace libRSF
   {
   public:
       explicit DCSLoss(double Phi) : Phi_(Phi) {};
-      ~DCSLoss(){};
+      ~DCSLoss() override = default;
 
-      virtual void Evaluate(double, double*) const;
+      void Evaluate(double, double*) const override;
 
   private:
     const double Phi_;
@@ -78,9 +78,9 @@ namespace libRSF
   {
   public:
       explicit cDCELoss(double Sigma) : Sigma_(Sigma) {};
-      ~cDCELoss(){};
+      ~cDCELoss() override = default;
 
-      virtual void Evaluate(double, double*) const;
+      void Evaluate(double, double*) const override;
 
   private:
     const double Sigma_;
@@ -94,9 +94,9 @@ namespace libRSF
   {
   public:
       explicit StudentLoss(const double Nu, const double Dim) : Nu_(Nu), Dim_(Dim) {};
-      ~StudentLoss(){};
+      ~StudentLoss() override = default;
 
-      virtual void Evaluate(double, double*) const;
+      void Evaluate(double, double*) const override;
 
   private:
     const double Nu_;
@@ -112,9 +112,9 @@ namespace libRSF
   {
   public:
       explicit CauchyPDFLoss(const double Scale) : c_(Scale*Scale) {};
-      ~CauchyPDFLoss(){};
+      ~CauchyPDFLoss() override = default;
 
-      virtual void Evaluate(double, double*) const;
+      void Evaluate(double, double*) const override;
 
   private:
     const double c_;
@@ -134,9 +134,9 @@ namespace libRSF
   {
   public:
       explicit GeneralAdaptiveLoss(const double Alpha, const double C = 1.0) : Alpha_(Alpha), Cov_(C*C) {};
-      ~GeneralAdaptiveLoss(){};
+      ~GeneralAdaptiveLoss() override = default;
 
-      virtual void Evaluate(double, double*) const;
+      void Evaluate(double, double*) const override;
 
   private:
     const double Alpha_;

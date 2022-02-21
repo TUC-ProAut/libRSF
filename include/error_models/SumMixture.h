@@ -53,21 +53,20 @@ namespace libRSF
   {
   public:
     SumMixture()
-    {
-      _Normalization = 0;
+    { Normalization_ = 0;
     }
 
     virtual ~SumMixture() = default;
 
-    explicit SumMixture(const MixtureType &Mixture)
+    explicit SumMixture(const MixtureType &Mixture): Normalization_(0)
     {
-      this->addMixture(Mixture);
+      this->addMixture_(Mixture);
     }
 
     void clear()
     {
-      _Normalization = 0;
-      _Mixture.clear();
+      Normalization_ = 0;
+      Mixture_.clear();
     }
 
     template <typename T>
@@ -76,9 +75,9 @@ namespace libRSF
       /** map error to eigen matrix for easier access */
       VectorRef<T, Dim> ErrorMap(Error);
 
-      if(this->_Enable)
+      if(this->Enable_)
       {
-        const int NumberOfComponents = _Mixture.getNumberOfComponents();
+        const int NumberOfComponents = Mixture_.getNumberOfComponents();
 
         MatrixT<T, Dynamic, 1> Scalings(NumberOfComponents);
         MatrixT<T, Dynamic, 1> Exponents(NumberOfComponents);
@@ -86,17 +85,16 @@ namespace libRSF
         /** calculate all exponents and scalings */
         for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
         {
-          Exponents(nComponent) = - 0.5 * (_Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm() + 1e-10);
-          Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError));
+          Exponents(nComponent) = - 0.5 * (Mixture_.template getExponentialPartOfComponent<T>(nComponent, RawError).squaredNorm() + 1e-10);
+          Scalings(nComponent) = T(Mixture_.template getLinearPartOfComponent<T>(nComponent, RawError));
         }
 
         /** combine them numerically robust and distribute the error equally over all dimensions */
-        ErrorMap.fill(sqrt(-2.0* (ScaledLogSumExp(Exponents, Scalings) - log(_Normalization + 1e-10))) / sqrt(Dim));
+        ErrorMap.fill(sqrt(-2.0* (ScaledLogSumExp(Exponents, Scalings) - log(Normalization_ + 1e-10))) / sqrt(Dim));
       }
       else
       {
         /** pass raw error trough */
-        VectorRef<T, Dim> ErrorMap(Error);
         ErrorMap = RawError;
       }
 
@@ -105,44 +103,44 @@ namespace libRSF
 
   private:
 
-    void addMixture(const MixtureType &Mixture)
+    void addMixture_(const MixtureType &Mixture)
     {
-      _Mixture = Mixture;
+      Mixture_ = Mixture;
 
-      const int NumberOfComponents = _Mixture.getNumberOfComponents();
+      const int NumberOfComponents = Mixture.getNumberOfComponents();
 
-      if constexpr(SpecialNormalization == false)
+      if constexpr(!SpecialNormalization)
       {
         /** original version */
-        _Normalization = 0;
+        Normalization_ = 0;
         for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
         {
-          _Normalization += _Mixture.getMaximumOfComponent(nComponent);
+          Normalization_ += Mixture.getMaximumOfComponent(nComponent);
         }
       }
       else
       {
         /** version for Reviewer 3 */
-        _Normalization = _Mixture.getMaximumOfComponent(0);
+        Normalization_ = Mixture.getMaximumOfComponent(0);
         for(int nComponent = 1; nComponent < NumberOfComponents; ++nComponent)
         {
-          _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
+          Normalization_ = std::max(Normalization_, Mixture.getMaximumOfComponent(nComponent));
         }
-        _Normalization = _Normalization*NumberOfComponents + 10;
+        Normalization_ = Normalization_ *NumberOfComponents + 10;
       }
     }
 
-    MixtureType _Mixture;
-    double _Normalization;
+    MixtureType Mixture_;
+    double Normalization_;
   };
 
-  typedef SumMixture<1, GaussianMixture<1>, false> SumMix1;
-  typedef SumMixture<2, GaussianMixture<2>, false> SumMix2;
-  typedef SumMixture<3, GaussianMixture<3>, false> SumMix3;
+  using SumMix1 = SumMixture<1, GaussianMixture<1>, false>;
+  using SumMix2 = SumMixture<2, GaussianMixture<2>, false>;
+  using SumMix3 = SumMixture<3, GaussianMixture<3>, false>;
 
-  typedef SumMixture<1, GaussianMixture<1>, true> SumMix1Special;
-  typedef SumMixture<2, GaussianMixture<2>, true> SumMix2Special;
-  typedef SumMixture<3, GaussianMixture<3>, true> SumMix3Special;
+  using SumMix1Special = SumMixture<1, GaussianMixture<1>, true>;
+  using SumMix2Special = SumMixture<2, GaussianMixture<2>, true>;
+  using SumMix3Special = SumMixture<3, GaussianMixture<3>, true>;
 }
 
 #endif // SUMMIXTURE_H

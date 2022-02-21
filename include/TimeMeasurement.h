@@ -50,8 +50,8 @@ namespace libRSF
       double getMilliseconds();
 
   private:
-    typedef std::chrono::high_resolution_clock::time_point TimestampType;
-    TimestampType _Start;
+    using TimestampType = std::chrono::high_resolution_clock::time_point;
+    TimestampType Start_;
   };
 
 

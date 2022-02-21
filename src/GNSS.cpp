@@ -24,12 +24,12 @@
 
 namespace libRSF
 {
-  TangentPlaneConverter::TangentPlaneConverter(): _LocalProjection()
+  TangentPlaneConverter::TangentPlaneConverter()
   {
-    _isInitialized = false;
+    isInitialized_ = false;
   }
 
-  TangentPlaneConverter::TangentPlaneConverter(Vector3 TangentPoint): _LocalProjection()
+  TangentPlaneConverter::TangentPlaneConverter(const Vector3 &TangentPoint)
   {
     setTangentPoint(TangentPoint);
   }
@@ -38,19 +38,19 @@ namespace libRSF
   {
     /** convert to LLA */
     double Lat0, Lon0, H0;
-    _Earth.Reverse(TangentPoint(0), TangentPoint(1), TangentPoint(2), Lat0, Lon0, H0);
+    Earth_.Reverse(TangentPoint(0), TangentPoint(1), TangentPoint(2), Lat0, Lon0, H0);
 
     /** init converter */
-    _LocalProjection.Reset(Lat0, Lon0, H0);
+    LocalProjection_.Reset(Lat0, Lon0, H0);
 
-    _TangentPoint = TangentPoint;
-    _isInitialized = true;
+    TangentPoint_ = TangentPoint;
+    isInitialized_ = true;
   }
 
-  Vector3 TangentPlaneConverter::convertToLocal(const Vector3 &GlobalPoint) const
+  Vector3 TangentPlaneConverter::convertToLocal_(const Vector3 &GlobalPoint) const
   {
     /** check for initialization*/
-    if(!_isInitialized)
+    if(!isInitialized_)
     {
       PRINT_WARNING("Converter is not initialized!");
       return GlobalPoint;
@@ -59,17 +59,17 @@ namespace libRSF
     double Lat, Lon, H;
     double X,Y,Z;
     Vector3 LocalPoint;
-    _Earth.Reverse(GlobalPoint(0), GlobalPoint(1), GlobalPoint(2), Lat, Lon, H);
-    _LocalProjection.Forward(Lat, Lon, H, X, Y, Z);
+    Earth_.Reverse(GlobalPoint(0), GlobalPoint(1), GlobalPoint(2), Lat, Lon, H);
+    LocalProjection_.Forward(Lat, Lon, H, X, Y, Z);
     LocalPoint << X, Y, Z;
 
     return LocalPoint;
   }
 
-  Vector3 TangentPlaneConverter::convertToGlobal(const Vector3 &LocalPoint) const
+  Vector3 TangentPlaneConverter::convertToGlobal_(const Vector3 &LocalPoint) const
   {
     /** check for initialization*/
-    if(!_isInitialized)
+    if(!isInitialized_)
     {
       PRINT_WARNING("Converter is not initialized!");
       return LocalPoint;
@@ -79,20 +79,20 @@ namespace libRSF
     double X,Y,Z;
     Vector3 GlobalPoint;
 
-    _LocalProjection.Reverse(LocalPoint(0), LocalPoint(1), LocalPoint(2), Lat, Lon, H);
-    _Earth.Forward(Lat, Lon, H, X, Y, Z);
+    LocalProjection_.Reverse(LocalPoint(0), LocalPoint(1), LocalPoint(2), Lat, Lon, H);
+    Earth_.Forward(Lat, Lon, H, X, Y, Z);
     GlobalPoint << X, Y, Z;
 
     return GlobalPoint;
   }
 
-  void TangentPlaneConverter::convertToLocal(const Vector3   &GlobalPoint,
+  void TangentPlaneConverter::convertToLocal_(const Vector3   &GlobalPoint,
                                              const Matrix33  &GlobalCov,
                                                    Vector3   &LocalPoint,
                                                    Matrix33  &LocalCov) const
   {
     /** check for initialization*/
-    if(!_isInitialized)
+    if(!isInitialized_)
     {
       PRINT_WARNING("Converter is not initialized!");
       return;
@@ -103,9 +103,9 @@ namespace libRSF
     std::vector<double> R1(9);
     std::vector<double> R2(9);
 
-    /** calculate trasformation */
-    _Earth.Reverse(GlobalPoint(0), GlobalPoint(1), GlobalPoint(2), Lat, Lon, H, R1);
-    _LocalProjection.Forward(Lat, Lon, H, X, Y, Z, R2);
+    /** calculate transformation */
+    Earth_.Reverse(GlobalPoint(0), GlobalPoint(1), GlobalPoint(2), Lat, Lon, H, R1);
+    LocalProjection_.Forward(Lat, Lon, H, X, Y, Z, R2);
 
     /** convert to eigen */
     Matrix33 R1e(R1.data());
@@ -115,13 +115,13 @@ namespace libRSF
     LocalCov = R2e*R1e*GlobalCov*(R2e*R1e).transpose();
   }
 
-  void TangentPlaneConverter::convertToGlobal(const Vector3   &LocalPoint,
+  void TangentPlaneConverter::convertToGlobal_(const Vector3   &LocalPoint,
                                               const Matrix33  &LocalCov,
                                                     Vector3   &GlobalPoint,
                                                     Matrix33  &GlobalCov) const
   {
     /** check for initialization*/
-    if(!_isInitialized)
+    if(!isInitialized_)
     {
       PRINT_WARNING("Converter is not initialized!");
       return;
@@ -132,9 +132,9 @@ namespace libRSF
     std::vector<double> R1(9);
     std::vector<double> R2(9);
 
-    /** calculate trasformation */
-    _LocalProjection.Reverse(LocalPoint(0), LocalPoint(1), LocalPoint(2), Lat, Lon, H, R1);
-    _Earth.Forward(Lat, Lon, H, X, Y, Z, R2);
+    /** calculate transformation */
+    LocalProjection_.Reverse(LocalPoint(0), LocalPoint(1), LocalPoint(2), Lat, Lon, H, R1);
+    Earth_.Forward(Lat, Lon, H, X, Y, Z, R2);
 
 
     /** convert to eigen */
@@ -162,7 +162,7 @@ namespace libRSF
     /** convert */
     Vector3 MeanOut;
     Matrix33 CovOut;
-    this->convertToLocal(MeanIn, CovIn, MeanOut, CovOut);
+    this->convertToLocal_(MeanIn, CovIn, MeanOut, CovOut);
 
     /** write back */
     Vector9 CovOutVect(CovOut.data());
@@ -186,7 +186,7 @@ namespace libRSF
     /** convert */
     Vector3 MeanOut;
     Matrix33 CovOut;
-    this->convertToGlobal(MeanIn, CovIn, MeanOut, CovOut);
+    this->convertToGlobal_(MeanIn, CovIn, MeanOut, CovOut);
 
     /** write back */
     Vector9 CovOutVect(CovOut.data());
@@ -206,11 +206,11 @@ namespace libRSF
     /** remove earth rotation effect */
     Vector3 SatPosGlobal = Measurement.getValue(DataElement::SatPos);
     Vector1 RelCor;
-    RelCor(0) = RelativisticCorrection(_TangentPoint.data(), SatPosGlobal);
+    RelCor(0) = RelativisticCorrection(TangentPoint_.data(), SatPosGlobal);
     Measurement.setMean(Measurement.getMean() - RelCor);
 
     /** convert sat pos */
-    Measurement.setValue(DataElement::SatPos, convertToLocal(SatPosGlobal));
+    Measurement.setValue(DataElement::SatPos, convertToLocal_(SatPosGlobal));
   }
 
   void TangentPlaneConverter::convertMeasurementToGlobal(Data &Measurement)
@@ -223,12 +223,12 @@ namespace libRSF
     }
 
     /** convert sat pos */
-    Vector3 SatPosGlobal = convertToGlobal(Measurement.getValue(DataElement::SatPos));
+    Vector3 SatPosGlobal = convertToGlobal_(Measurement.getValue(DataElement::SatPos));
     Measurement.setValue(DataElement::SatPos, SatPosGlobal);
 
     /** add earth rotation effect again*/
     Vector1 RelCor;
-    RelCor(0) = RelativisticCorrection(_TangentPoint.data(), SatPosGlobal);
+    RelCor(0) = RelativisticCorrection(TangentPoint_.data(), SatPosGlobal);
     Measurement.setMean(Measurement.getMean() + RelCor);
   }
 
@@ -255,7 +255,7 @@ namespace libRSF
     while (Measurements.getTimeNext(DataType::Pseudorange3, Timestamp, Timestamp));
   }
 
-  void TangentPlaneConverter::convertAllStatesToLocal(StateDataSet &States, std::string ID)
+  void TangentPlaneConverter::convertAllStatesToLocal(StateDataSet &States, const std::string& ID)
   {
     double Timestamp;
 
@@ -278,7 +278,7 @@ namespace libRSF
     while (States.getTimeNext(ID, Timestamp, Timestamp));
   }
 
-  void TangentPlaneConverter::convertAllStatesToGlobal(StateDataSet &States, std::string ID)
+  void TangentPlaneConverter::convertAllStatesToGlobal(StateDataSet &States, const std::string& ID)
   {
     double Timestamp;
 
@@ -301,9 +301,9 @@ namespace libRSF
     while (States.getTimeNext(ID, Timestamp, Timestamp));
   }
 
-  bool TangentPlaneConverter::isInitialized()
+  bool TangentPlaneConverter::isInitialized() const
   {
-    return _isInitialized;
+    return isInitialized_;
   }
 
 }

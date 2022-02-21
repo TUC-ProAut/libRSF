@@ -91,8 +91,8 @@ namespace libRSF
       Mean += Measurement.getMean();
       Info += Measurement.getCovarianceDiagonal().cwiseInverse();
     }
-    Mean /= Input.size();
-    Time /= Input.size();
+    Mean /= static_cast<double>(Input.size());
+    Time /= static_cast<double>(Input.size());
 
     Output = Input.back();
     Output.setTimestamp(Time);

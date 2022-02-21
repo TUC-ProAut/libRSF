@@ -24,7 +24,7 @@
 
 namespace libRSF
 {
-  FactorGraphStructure::FactorGraphStructure(ceres::Problem *GraphPointer, StateDataSet * Data): _Data(Data), _Graph(GraphPointer)
+  FactorGraphStructure::FactorGraphStructure(ceres::Problem *GraphPointer, StateDataSet * Data): Data_(Data), Graph_(GraphPointer)
   {}
 
   void FactorGraphStructure::getMarginalizationInfo(const std::vector<double*> &BaseStates,
@@ -43,7 +43,7 @@ namespace libRSF
     for (double* const State : BaseStates)
     {
       /** safety check */
-      if(_Graph->HasParameterBlock(State) == false)
+      if(!Graph_->HasParameterBlock(State))
       {
         PRINT_ERROR("State is not part of graph!");
         return;
@@ -59,7 +59,7 @@ namespace libRSF
 
       /** query residual IDs */
       std::vector<ceres::ResidualBlockId> Factors;
-      _Graph->GetResidualBlocksForParameterBlock(State, &Factors);
+      Graph_->GetResidualBlocksForParameterBlock(State, &Factors);
       for(ceres::ResidualBlockId Factor : Factors)
       {
         /** add only new factors */
@@ -77,7 +77,7 @@ namespace libRSF
       std::vector<double*> CurrentStatePointers;
 
       /** query states that are connected with a certain factor */
-      _Graph->GetParameterBlocksForResidualBlock(Factor, &CurrentStatePointers);
+      Graph_->GetParameterBlocksForResidualBlock(Factor, &CurrentStatePointers);
 
       /** add only unique states */
       for (double* StatePointer : CurrentStatePointers)
@@ -96,11 +96,11 @@ namespace libRSF
     for (double* const State : ConnectedStatePointers)
     {
       ConnectedStates.emplace_back(State);
-      StateDims.emplace_back(_Graph->ParameterBlockSize(State));
-      StateDimsLocal.emplace_back(_Graph->ParameterBlockLocalSize(State));
+      StateDims.emplace_back(Graph_->ParameterBlockSize(State));
+      StateDimsLocal.emplace_back(Graph_->ParameterBlockLocalSize(State));
 
       /** find state info */
-      StateInfo Info = _States.at(State);
+      StateInfo Info = States_.at(State);
       StateIDs.emplace_back(StateID(Info.Name, Info.Timestamp, Info.Number));
       StateTypes.emplace_back(Info.Type);
     }
@@ -108,7 +108,7 @@ namespace libRSF
 
   void FactorGraphStructure::getFactorsOfState(const StateID &State, std::vector<FactorID> &Factors) const
   {
-    if (_Data->checkElement(State.ID, State.Timestamp, State.Number) == false)
+    if (!Data_->checkElement(State.ID, State.Timestamp, State.Number))
     {
       PRINT_ERROR("State does not exist: ", State.ID, " ", State.Timestamp, " ", State.Number);
       return;
@@ -116,17 +116,17 @@ namespace libRSF
 
     /** get state pointer */
     double* StatePointer;
-    StatePointer = _Data->getElement(State.ID, State.Timestamp, State.Number).getMeanPointer();
+    StatePointer = Data_->getElement(State.ID, State.Timestamp, State.Number).getMeanPointer();
 
     /** get connected residual IDs */
     std::vector<ceres::ResidualBlockId> Residuals;
-    _Graph->GetResidualBlocksForParameterBlock(StatePointer, &Residuals);
+    Graph_->GetResidualBlocksForParameterBlock(StatePointer, &Residuals);
 
     /** translate to factor IDs */
     Factors.clear();
     for(const ceres::ResidualBlockId Res: Residuals)
     {
-      FactorID Factor(_Factors.at(Res).Type, _Factors.at(Res).Timestamp, _Factors.at(Res).Number);
+      FactorID Factor(Factors_.at(Res).Type, Factors_.at(Res).Timestamp, Factors_.at(Res).Number);
       Factors.push_back(Factor);
     }
 
@@ -135,17 +135,17 @@ namespace libRSF
   void FactorGraphStructure::removeState(const StateID &State)
   {
     /** get raw pointer*/
-    double* StatePointer = _Data->getElement(State.ID, State.Timestamp, State.Number).getMeanPointer();
+    double* StatePointer = Data_->getElement(State.ID, State.Timestamp, State.Number).getMeanPointer();
 
     /** remove state info */
-    _States.erase(StatePointer);
+    States_.erase(StatePointer);
 
     /** get connected factors */
     std::vector<ceres::ResidualBlockId> Factors;
-    _Graph->GetResidualBlocksForParameterBlock(StatePointer, &Factors);
+    Graph_->GetResidualBlocksForParameterBlock(StatePointer, &Factors);
 
     /** remove connected factors */
-    for (auto Factor: Factors)
+    for (auto *Factor: Factors)
     {
       this->removeFactor(Factor);
     }
@@ -154,53 +154,53 @@ namespace libRSF
   void FactorGraphStructure::removeFactor(const ceres::ResidualBlockId Factor)
   {
     /** clear mapping libRSF --> ceres */
-    FactorInfo Info = _Factors.at(Factor);
-    _FactorList.removeElement(Info.Type, Info.Timestamp, Info.Number);
+    FactorInfo Info = Factors_.at(Factor);
+    FactorList_.removeElement(Info.Type, Info.Timestamp, Info.Number);
 
     /** clear mapping ceres --> libRSF */
-    _Factors.erase(Factor);
+    Factors_.erase(Factor);
 
     /** decrement index in factor info to correct the number of the elements above the deleted one*/
-    for (int n = Info.Number; n < _FactorList.countElement(Info.Type, Info.Timestamp); n++)
+    for (int n = Info.Number; n < FactorList_.countElement(Info.Type, Info.Timestamp); n++)
     {
-      _Factors.at(_FactorList.getElement(Info.Type, Info.Timestamp, n)).Number--;
+      Factors_.at(FactorList_.getElement(Info.Type, Info.Timestamp, n)).Number--;
     }
   }
 
   void FactorGraphStructure::removeFactor(const FactorID &Factor)
   {
-    this->removeFactor(_FactorList.getElement(Factor.ID, Factor.Timestamp, Factor.Number));
+    this->removeFactor(FactorList_.getElement(Factor.ID, Factor.Timestamp, Factor.Number));
   }
 
   void FactorGraphStructure::getResidualID(const FactorID &Factor, ceres::ResidualBlockId &Residual) const
   {
-    _FactorList.getElement(Factor.ID, Factor.Timestamp, Factor.Number, Residual);
+    FactorList_.getElement(Factor.ID, Factor.Timestamp, Factor.Number, Residual);
   }
 
-  void FactorGraphStructure::getErrorModel(const FactorID &Factor, ErrorModelBase* &ErroModel) const
+  void FactorGraphStructure::getErrorModel(const FactorID &Factor, ErrorModelBase* &ErrorModel) const
   {
     ceres::ResidualBlockId ID;
     this->getResidualID(Factor, ID);
-    ErroModel = _Factors.at(ID).ErrorModel;
+    ErrorModel = Factors_.at(ID).ErrorModel;
   }
 
   void FactorGraphStructure::getErrorInputSize(const FactorID &Factor, int &ResidualSize) const
   {
     ceres::ResidualBlockId ID;
     this->getResidualID(Factor, ID);
-    ResidualSize = _Factors.at(ID).ErrorInputSize;
+    ResidualSize = Factors_.at(ID).ErrorInputSize;
   }
 
   void FactorGraphStructure::getErrorOutputSize(const FactorID &Factor, int &ResidualSize) const
   {
     ceres::ResidualBlockId ID;
     this->getResidualID(Factor, ID);
-    ResidualSize = _Factors.at(ID).ErrorOutputSize;
+    ResidualSize = Factors_.at(ID).ErrorOutputSize;
   }
 
   void FactorGraphStructure::getFactorIDs(const FactorType Type, std::vector<FactorID> &Factors) const
   {
-    _FactorList.getUniqueIDs(Type, Factors);
+    FactorList_.getUniqueIDs(Type, Factors);
   }
 
   void FactorGraphStructure::getErrorModels(const FactorType Type, std::vector<ErrorModelBase*> &Models) const
@@ -220,18 +220,18 @@ namespace libRSF
 
   void FactorGraphStructure::getResidualIDs(const FactorType Type, std::vector<ceres::ResidualBlockId> &Blocks) const
   {
-    Blocks = _FactorList.getElementsOfID(Type);
+    Blocks = FactorList_.getElementsOfID(Type);
   }
 
   void FactorGraphStructure::getTimesBetween(const FactorType Type, const double StartTime, const double EndTime, std::vector<double> &Times) const
   {
-    _FactorList.getTimesBetween(Type, StartTime, EndTime, Times);
+    FactorList_.getTimesBetween(Type, StartTime, EndTime, Times);
   }
 
   void FactorGraphStructure::getTimesBelow(const FactorType Type, const double EndTime, std::vector<double> &Times) const
   {
     double StartTime;
-    if(_FactorList.getTimeFirst(Type, StartTime))
+    if(FactorList_.getTimeFirst(Type, StartTime))
     {
       if(StartTime <= EndTime)
       {
@@ -246,36 +246,36 @@ namespace libRSF
 
   bool FactorGraphStructure::getTimeFirst(const FactorType Type, double& FirstTime) const
   {
-    return _FactorList.getTimeFirst(Type, FirstTime);
+    return FactorList_.getTimeFirst(Type, FirstTime);
   }
 
   bool FactorGraphStructure::getTimeLast(const FactorType Type, double& LastTime) const
   {
-    return _FactorList.getTimeLast(Type, LastTime);
+    return FactorList_.getTimeLast(Type, LastTime);
   }
 
   void FactorGraphStructure::getFactorTypes(std::vector<FactorType> &Factors) const
   {
-    Factors = _FactorList.getKeysAll();
+    Factors = FactorList_.getKeysAll();
   }
 
   int FactorGraphStructure::countFactor(const FactorType Type, const double Timestamp) const
   {
-    return _FactorList.countElement(Type, Timestamp);
+    return FactorList_.countElement(Type, Timestamp);
   }
 
   int FactorGraphStructure::countFactorType(const FactorType Type) const
   {
-    return _FactorList.countElements(Type);
+    return FactorList_.countElements(Type);
   }
 
-  bool FactorGraphStructure::checkFactor(const FactorType Type, const double Timestamp, const double Number) const
+  bool FactorGraphStructure::checkFactor(const FactorType Type, const double Timestamp, const int Number) const
   {
-    return _FactorList.checkElement(Type, Timestamp, Number);
+    return FactorList_.checkElement(Type, Timestamp, Number);
   }
 
   bool FactorGraphStructure::checkFactor(const FactorType Type) const
   {
-    return _FactorList.checkID(Type);
+    return FactorList_.checkID(Type);
   }
 }

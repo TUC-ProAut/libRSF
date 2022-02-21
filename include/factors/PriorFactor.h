@@ -44,9 +44,9 @@ namespace libRSF
       /** construct factor and store measurement */
       PriorFactorBase(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(Dim);
-        this->_MeasurementVector = PriorMeasurement.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(Dim);
+        this->MeasurementVector_ = PriorMeasurement.getMean();
       }
 
       /** geometric error model */
@@ -55,14 +55,14 @@ namespace libRSF
       {
         VectorRefConst<T, Dim> State(StatePointer);
 
-        return State - this->_MeasurementVector;
+        return State - this->MeasurementVector_;
       }
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
       bool operator()(const T* const State, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(State),
+        return this->Error_.template weight<T>(this->Evaluate(State),
                                                Params...);
       }
 
@@ -72,7 +72,7 @@ namespace libRSF
         /** map pointer to vectors */
         VectorRef<double, Dim> State(StatePointers.at(0));
 
-        State = this->_MeasurementVector;
+        State = this->MeasurementVector_;
       }
   };
 
@@ -84,9 +84,9 @@ namespace libRSF
       /** construct factor and store measurement */
       PriorFactorAngle(ErrorType &Error, const Data &PriorAngle)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(1);
-        this->_MeasurementVector = PriorAngle.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(1);
+        this->MeasurementVector_ = PriorAngle.getMean();
       }
 
       /** geometric error model */
@@ -95,14 +95,14 @@ namespace libRSF
       {
         VectorRefConst<T, 1> AngleVector(Angle);
 
-        return NormalizeAngleVector<T, 1>(AngleVector - this->_MeasurementVector.template cast<T>());
+        return NormalizeAngleVector<T, 1>(AngleVector - this->MeasurementVector_.template cast<T>());
       }
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
       bool operator()(const T* const State, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(State),
+        return this->Error_.template weight<T>(this->Evaluate(State),
                                                Params...);
       }
 
@@ -112,7 +112,7 @@ namespace libRSF
         /** map pointer to vectors */
         VectorRef<double, 1> State(StatePointers.at(0));
 
-        State = this->_MeasurementVector;
+        State = this->MeasurementVector_;
       }
   };
 
@@ -123,9 +123,9 @@ namespace libRSF
       /** construct factor and store measurement */
       PriorFactorQuaternion(ErrorType &Error, const Data &PriorQuaternion)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(4);
-        this->_MeasurementVector = PriorQuaternion.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(4);
+        this->MeasurementVector_ = PriorQuaternion.getMean();
       }
 
       /** geometric error model */
@@ -134,14 +134,14 @@ namespace libRSF
       {
         QuaternionRefConst<T> Q1(Quaternion);
 
-        return QuaternionError<T>(Q1, VectorToQuaternion<double>(this->_MeasurementVector).template cast<T>());
+        return QuaternionError<T>(Q1, VectorToQuaternion<double>(this->MeasurementVector_).template cast<T>());
       }
 
       /** combine probabilistic and geometric model */
       template <typename T, typename... ParamsType>
       bool operator()(const T* const State, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(State),
+        return this->Error_.template weight<T>(this->Evaluate(State),
                                                Params...);
       }
 
@@ -151,7 +151,7 @@ namespace libRSF
         /** map pointer to vectors */
         VectorRef<double, 4> State(StatePointers.at(0));
 
-        State = this->_MeasurementVector;
+        State = this->MeasurementVector_;
       }
   };
 

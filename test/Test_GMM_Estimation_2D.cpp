@@ -21,7 +21,7 @@
  ***************************************************************************/
 
  /**
- * @file Test_GMM_Estiamtion_1D.cpp
+ * @file Test_GMM_Estimation_1D.cpp
  * @author Tim Pfeifer
  * @date 29.11.2021
  * @brief A simple test to verify algorithms that estimate the parameters of a GMM.
@@ -68,14 +68,14 @@ TEST(Example, GMM_Estimation_2D)
   Config.EstimationAlgorithm = libRSF::ErrorModelTuningType::VBI_Full;
   Configs.push_back(Config);
 
-  for(int n = 0; n < Configs.size(); ++n)
+  for(auto & Config : Configs)
   {
     /** initialize */
     libRSF::GaussianMixture<2> GMM;
     GMM.initSpread(2, 10);
 
     /** estimate */
-    GMM.estimate(Data, Configs.at(n));
+    GMM.estimate(Data, Config);
     GMM.printParameter();
 
     /** extract components */

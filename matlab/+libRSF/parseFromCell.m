@@ -214,8 +214,6 @@ for n = 1:size(ResultCell,1)
             ResultStruct.Cost1.Hessian(end+1,1) = cell2mat(ResultCell(n,6));
             
         case 'cost_gradient2'
-            
-            
             if ~isfield(ResultStruct,'Cost2')
                 ResultStruct.Cost2 = [];
                 ResultStruct.Cost2.Time = [];
@@ -229,6 +227,21 @@ for n = 1:size(ResultCell,1)
             ResultStruct.Cost2.Cost(end+1,1)     = cell2mat(ResultCell(n,5));
             ResultStruct.Cost2.Gradient(end+1,:) = cell2mat(ResultCell(n,6:7));
             ResultStruct.Cost2.Hessian(end+1,:) = cell2mat(ResultCell(n,8:11));
+
+        case 'cost_gradient3'
+            if ~isfield(ResultStruct,'Cost3')
+                ResultStruct.Cost3 = [];
+                ResultStruct.Cost3.Time = [];
+                ResultStruct.Cost3.Position = [];
+                ResultStruct.Cost3.Cost = [];
+                ResultStruct.Cost3.Gradient = [];
+                ResultStruct.Cost3.Hessian = [];
+            end
+            ResultStruct.Cost3.Time(end+1,1)     = cell2mat(ResultCell(n,2));
+            ResultStruct.Cost3.Position(end+1,:) = cell2mat(ResultCell(n,3:5));
+            ResultStruct.Cost3.Cost(end+1,1)     = cell2mat(ResultCell(n,6));
+            ResultStruct.Cost3.Gradient(end+1,:) = cell2mat(ResultCell(n,7:9));
+            ResultStruct.Cost3.Hessian(end+1,:) = cell2mat(ResultCell(n,10:13));
             
         case 'solver_summary'
             if ~isfield(ResultStruct,'SolverSummary')

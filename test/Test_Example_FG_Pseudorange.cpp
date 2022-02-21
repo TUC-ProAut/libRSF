@@ -44,7 +44,7 @@ TEST(Example, FG_Pseudorange)
   ceres::Solver::Options SolverOptions;
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
-  SolverOptions.num_threads = std::thread::hardware_concurrency();
+  SolverOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
   SolverOptions.minimizer_progress_to_stdout = true;
 
   libRSF::FactorGraph SimpleGraph;
@@ -120,7 +120,7 @@ TEST(Example, FG_Pseudorange)
   Expected.addElement(libRSF::Data("point2 1.0 1.0 0.0075 0.005 0.0 0.0 0.005"));
   Expected.addElement(libRSF::Data("point2 2.0 1.0 0.931271 0.005 0.0 0.0 0.005"));
 
-  /** calculate maximum componentwise absolute difference between solution and expected (mean and covariance) - point2*/
+  /** calculate maximum component-wise absolute difference between solution and expected (mean and covariance) - point2*/
   const double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::DataType::Point2,
                                                      Expected,
                                                      POSITION_STATE,

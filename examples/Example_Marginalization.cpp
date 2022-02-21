@@ -115,9 +115,9 @@ void CreateGraphs(libRSF::FactorGraph &TranslationGraph,
   NoiseRotVec.fill(STDDEV_ROT);
 
   /** create noise models */
-  libRSF::GaussianDiagonal<3> GaussPos, GausRot;
+  libRSF::GaussianDiagonal<3> GaussPos, GaussRot;
   GaussPos.setStdDevSharedDiagonal(STDDEV_POS);
-  GausRot.setStdDevSharedDiagonal(STDDEV_ROT);
+  GaussRot.setStdDevSharedDiagonal(STDDEV_ROT);
 
   /** add states */
   TranslationGraph.addState(POSITION_STATE, libRSF::DataType::Point3, 0.0);
@@ -137,9 +137,9 @@ void CreateGraphs(libRSF::FactorGraph &TranslationGraph,
   TranslationGraph.addFactor<libRSF::FactorType::Prior3>(IDPos1, Measurements.getElement(libRSF::DataType::Point3, 1.0), GaussPos);
   TranslationGraph.addFactor<libRSF::FactorType::BetweenValue3>(IDPos0, IDPos1, Measurements.getElement(libRSF::DataType::Point3, 0.5), GaussPos);
 
-  RotationGraph.addFactor<libRSF::FactorType::PriorQuat>(IDRot0, Measurements.getElement(libRSF::DataType::Quaternion, 0.0), GausRot);
-  RotationGraph.addFactor<libRSF::FactorType::PriorQuat>(IDRot1, Measurements.getElement(libRSF::DataType::Quaternion, 1.0), GausRot);
-  RotationGraph.addFactor<libRSF::FactorType::BetweenQuaternion>(IDRot0, IDRot1, Measurements.getElement(libRSF::DataType::Quaternion, 0.5), GausRot);
+  RotationGraph.addFactor<libRSF::FactorType::PriorQuat>(IDRot0, Measurements.getElement(libRSF::DataType::Quaternion, 0.0), GaussRot);
+  RotationGraph.addFactor<libRSF::FactorType::PriorQuat>(IDRot1, Measurements.getElement(libRSF::DataType::Quaternion, 1.0), GaussRot);
+  RotationGraph.addFactor<libRSF::FactorType::BetweenQuaternion>(IDRot0, IDRot1, Measurements.getElement(libRSF::DataType::Quaternion, 0.5), GaussRot);
 }
 
 #ifndef TESTMODE // only compile main if not used in test context

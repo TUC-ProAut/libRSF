@@ -44,10 +44,10 @@ namespace libRSF
   {
     public:
       /** construct factor and store measurement */
-      IMUPreintegrationFactor(ErrorType &Error, const PreintegratedIMUResult &Preintegration) : _Preintegration(Preintegration)
+      IMUPreintegrationFactor(ErrorType &Error, const PreintegratedIMUResult &Preintegration) : Preintegration_(Preintegration)
       {
         /** save noise model */
-        this->_Error = Error;
+        this->Error_ = Error;
       }
 
       /** geometric error model */
@@ -72,17 +72,25 @@ namespace libRSF
         QuaternionRefConst<T> Rot2(QuatNew);
 
         /** linear approximation for biases */
-        const VectorT<T, 3> DeltaBiasAcc = BiasAcc1 - _Preintegration.BiasAcc.template cast<T>();
-        const VectorT<T, 3> DeltaBiasTR = BiasTR1 - _Preintegration.BiasTR.template cast<T>();
+        const VectorT<T, 3> DeltaBiasAcc = BiasAcc1 - Preintegration_.BiasAcc.template cast<T>();
+        const VectorT<T, 3> DeltaBiasTR = BiasTR1 - Preintegration_.BiasTR.template cast<T>();
 
-        const VectorT<T, 3> ApproxTranslation = _Preintegration.Translation.template cast<T>() + _Preintegration.JacTransBiasAcc.template cast<T>() * DeltaBiasAcc + _Preintegration.JacTransBiasTR.template cast<T>() * DeltaBiasTR;
+        const VectorT<T, 3> ApproxTranslation =
+            Preintegration_.Translation.template cast<T>() +
+            Preintegration_.JacTransBiasAcc.template cast<T>() * DeltaBiasAcc +
+            Preintegration_.JacTransBiasTR.template cast<T>() * DeltaBiasTR;
 
-        const VectorT<T, 3> ApproxVelocity = _Preintegration.Velocity.template cast<T>() + _Preintegration.JacVelBiasAcc.template cast<T>() * DeltaBiasAcc + _Preintegration.JacVelBiasTR.template cast<T>() * DeltaBiasTR;
+        const VectorT<T, 3> ApproxVelocity =
+            Preintegration_.Velocity.template cast<T>() +
+            Preintegration_.JacVelBiasAcc.template cast<T>() * DeltaBiasAcc +
+            Preintegration_.JacVelBiasTR.template cast<T>() * DeltaBiasTR;
 
-        const QuaternionT<T> ApproxRotation = _Preintegration.Rotation.template cast<T>() * AngularVelocityToQuaternion<T>(_Preintegration.JacRotBiasTRLocal.template cast<T>() * DeltaBiasTR, 1.0);
+        const QuaternionT<T> ApproxRotation =
+            Preintegration_.Rotation.template cast<T>() * AngularVelocityToQuaternion<T>(
+                Preintegration_.JacRotBiasTRLocal.template cast<T>() * DeltaBiasTR, 1.0);
 
         /** calculate error */
-        const double dt = _Preintegration.DeltaTime;
+        const double dt = Preintegration_.DeltaTime;
         VectorT<T, 15> Error;
         Error.template segment<3>(0) = Rot1.conjugate() * (P2 - P1 - dt * V1 + (0.5*dt*dt * GRAVITY_VECTOR).template cast<T>()) - ApproxTranslation;
         Error.template segment<3>(3) = Rot1.conjugate() * (V2 - V1 + (dt * GRAVITY_VECTOR).template cast<T>()) - ApproxVelocity;
@@ -101,7 +109,7 @@ namespace libRSF
                       const T* const PointNew, const T* const QuatNew, const T* const SpeedBiasNew,
                       T* Error) const
       {
-        this->_Error.weight(this->Evaluate(PointOld, QuatOld, SpeedBiasOld,
+        this->Error_.weight(this->Evaluate(PointOld, QuatOld, SpeedBiasOld,
                                            PointNew, QuatNew, SpeedBiasNew),
                             Error);
         return true;
@@ -121,8 +129,8 @@ namespace libRSF
         Vector9 SB2;
 
         /** loop over measurements to predict incrementally */
-        double OldTime = _Preintegration.StartTime;
-        for (const Data &Measurement : _Preintegration.Measurements)
+        double OldTime = Preintegration_.StartTime;
+        for (const Data &Measurement : Preintegration_.Measurements)
         {
           IMUModel<double>::applyForward(P1.data(),
                                          Q1.coeffs().data(),
@@ -150,7 +158,7 @@ namespace libRSF
       }
 
     private:
-      const PreintegratedIMUResult _Preintegration;
+      const PreintegratedIMUResult Preintegration_;
   };
 
   /** compile time mapping from factor type enum to corresponding factor class */

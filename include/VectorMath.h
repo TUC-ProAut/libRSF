@@ -110,8 +110,10 @@ namespace libRSF
     T SquaredNorm = V.squaredNorm();
 
     /** for stability of the derivation */
-    if(SquaredNorm < T(1e-10))
+    if(SquaredNorm < T(1e-10)) 
+    {
       SquaredNorm += 1e-10;
+    }
 
     return sqrt(SquaredNorm);
   }

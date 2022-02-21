@@ -62,7 +62,7 @@ void App_Robust_Models_2D_Testfunction(std::string Model, const double Mean, con
   libRSF::StateDataSet PostOptimizationData;
   libRSF::StateDataSet SolverData;
 
-  ASSERT_FALSE(CreateGraphAndSolve(Arguments, Config,
+  ASSERT_FALSE(CreateGraphAndSolve(Arguments,
                                    CostSurfaceData, PreOptimizationData, PostOptimizationData,
                                    SolverData)) << "Error calculating example";
 

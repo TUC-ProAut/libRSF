@@ -44,10 +44,10 @@ namespace libRSF
       /** construct factor and store measurement */
       RangeFactorBase(ErrorType &Error, const Data &Range)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(Dim + 1);
-        this->_MeasurementVector[0] = Range.getMean()[0];
-        this->_MeasurementVector.tail(Dim) = Range.getValue(DataElement::SatPos);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(Dim + 1);
+        this->MeasurementVector_[0] = Range.getMean()[0];
+        this->MeasurementVector_.tail(Dim) = Range.getValue(DataElement::SatPos);
       }
 
       /** geometric error model */
@@ -67,9 +67,9 @@ namespace libRSF
       bool operator()(const T* const Position,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Position,
-                                               this->_MeasurementVector.tail(Dim),
-                                               this->_MeasurementVector(0)),
+        return this->Error_.template weight<T>(this->Evaluate(Position,
+                                               this->MeasurementVector_.tail(Dim),
+                                               this->MeasurementVector_(0)),
                                                Params...);
       }
   };

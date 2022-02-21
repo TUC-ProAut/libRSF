@@ -44,9 +44,9 @@ namespace libRSF
       /** construct factor and store measurement */
       Point2RegistrationFactor(ErrorType &Error, const Data &RelativePoint)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(4);
-        this->_MeasurementVector = RelativePoint.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(4);
+        this->MeasurementVector_ = RelativePoint.getMean();
       }
 
       /** geometric error model */
@@ -73,10 +73,10 @@ namespace libRSF
       template <typename T, typename... ParamsType>
       bool operator()(const T* const Pos1, const T* const Yaw1, const T* const Pos2, const T* const Yaw2, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pos1, Yaw1,
+        return this->Error_.template weight<T>(this->Evaluate(Pos1, Yaw1,
                                                Pos2, Yaw2,
-                                               this->_MeasurementVector.head(2),
-                                               this->_MeasurementVector.tail(2)),
+                                               this->MeasurementVector_.head(2),
+                                               this->MeasurementVector_.tail(2)),
                                                Params...);
       }
   };
@@ -88,9 +88,9 @@ namespace libRSF
       /** construct factor and store measurement */
       Point2RegistrationPoseFactor(ErrorType &Error, const Data &RelativePoint)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(4);
-        this->_MeasurementVector = RelativePoint.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(4);
+        this->MeasurementVector_ = RelativePoint.getMean();
       }
 
       /** geometric error model */
@@ -116,9 +116,9 @@ namespace libRSF
       template <typename T, typename... ParamsType>
       bool operator()(const T* const Pose1, const T* const Pose2, ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pose1, Pose2,
-                                               this->_MeasurementVector.head(2),
-                                               this->_MeasurementVector.tail(2)),
+        return this->Error_.template weight<T>(this->Evaluate(Pose1, Pose2,
+                                               this->MeasurementVector_.head(2),
+                                               this->MeasurementVector_.tail(2)),
                                                Params...);
       }
   };

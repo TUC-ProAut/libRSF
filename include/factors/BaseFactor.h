@@ -62,11 +62,11 @@ namespace libRSF
       /** access the stored error model */
       ErrorType* getErrorModel()
       {
-        return &_Error;
+        return &Error_;
       }
 
       /** empty generic predictor */
-      virtual void predict(std::vector<double*> States) const {};
+      virtual void predict(const std::vector<double*> &States) const {};
 
       /** store the dimension of variables at compile time */
       using StateDims = std::integer_sequence<int, StateDimsTemp...>;
@@ -76,11 +76,11 @@ namespace libRSF
       const static bool HasMeasurement = HasMeasurementTemp;
 
     protected:
-      ErrorType   _Error; /**< represent the probabilistic error function */
+      ErrorType   Error_; /**< represent the probabilistic error function */
 
       /** optional members */
-      double      _DeltaTime = 0;     /**< the time that has been past between the connected states */
-      Vector      _MeasurementVector; /**< a efficient representation of the measurement */
+      double      DeltaTime_ = 0;     /**< the time that has been past between the connected states */
+      Vector      MeasurementVector_; /**< a efficient representation of the measurement */
   };
 }
 

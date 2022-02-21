@@ -39,7 +39,7 @@ namespace libRSF
 {
   void Marginalize(const Vector &Residual, const Matrix &Jacobian,
                    Vector &ResidualMarg, Matrix &JacobianMarg,
-                   const int MarginalSize, const double HessianInflation = 1.0);
+                   int MarginalSize, double HessianInflation = 1.0);
 
 }
 

@@ -53,23 +53,23 @@ namespace libRSF
   {
   public:
 
-      SwitchableConstraints(){}
+      SwitchableConstraints() = default;
 
-      explicit SwitchableConstraints(BaseModelType BaseModel, double Sigma): _Sigma(Sigma), _BaseModel(BaseModel)
+      explicit SwitchableConstraints(BaseModelType BaseModel, double Sigma): Sigma_(Sigma), BaseModel_(BaseModel)
       {}
 
       void setSigma(double Sigma)
       {
-        _Sigma = Sigma;
+        Sigma_ = Sigma;
       }
 
       template <typename T>
       bool weight(const VectorT<T, Dim> &RawError, const T* const SwitchVariable, T* Error) const
       {
-        if (this->_Enable)
+        if (this->Enable_)
         {
           /** evaluate with the non-robust model */
-          _BaseModel.weight(RawError, Error);
+          BaseModel_.weight(RawError, Error);
 
           /** store error in matrix */
           VectorRef<T, Dim+1> ErrorMap(Error);
@@ -78,7 +78,7 @@ namespace libRSF
           ErrorMap.template head<Dim>().array() *= SwitchVariable[0];
 
           /** add switch prior */
-          ErrorMap(Dim) = (SwitchVariable[0] - 1.0) / _Sigma;
+          ErrorMap(Dim) = (SwitchVariable[0] - 1.0) / Sigma_;
         }
         else
         {
@@ -94,8 +94,8 @@ namespace libRSF
       }
 
   private:
-    double _Sigma;
-    BaseModelType _BaseModel;
+    double Sigma_ = 1.0;
+    BaseModelType BaseModel_;
   };
 }
 

@@ -26,12 +26,12 @@ namespace libRSF
 {
   Timer::Timer()
   {
-    _Start = std::chrono::high_resolution_clock::now();
+    Start_ = std::chrono::high_resolution_clock::now();
   }
 
   void Timer::reset()
   {
-    _Start = std::chrono::high_resolution_clock::now();
+    Start_ = std::chrono::high_resolution_clock::now();
   }
 
   double Timer::getMilliseconds()
@@ -40,7 +40,7 @@ namespace libRSF
     TimestampType End = std::chrono::high_resolution_clock::now();
 
     /** convert to a duration */
-    double TimeDifference = std::chrono::duration_cast<std::chrono::nanoseconds>(End - _Start).count() / 1e6;
+    double TimeDifference = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(End - Start_).count()) / 1e6;
 
     /** convert to double */
     return TimeDifference;
@@ -52,7 +52,7 @@ namespace libRSF
     TimestampType End = std::chrono::high_resolution_clock::now();
 
     /** convert to a duration */
-    double TimeDifference = std::chrono::duration_cast<std::chrono::nanoseconds>(End - _Start).count() / 1e9;
+    double TimeDifference = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(End - Start_).count()) / 1e9;
 
     /** convert to double */
     return TimeDifference;

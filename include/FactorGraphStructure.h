@@ -68,7 +68,7 @@ namespace libRSF
         ErrorModelBase* ErrorModel = nullptr;
       };
 
-      /** collect all informations that are required to remove the BaseState from the graph */
+      /** collect all information that are required to remove the BaseState from the graph */
       void getMarginalizationInfo(const std::vector<double*> &BaseStates,
                                   std::vector<double*> &ConnectedStates,
                                   std::vector<ceres::ResidualBlockId> &ConnectedFactors,
@@ -88,10 +88,10 @@ namespace libRSF
                      const std::vector<DataType> &StateTypes)
       {
         /** add to time dependent representation */
-        _FactorList.addElement(Type, Timestamp, CeresID);
+        FactorList_.addElement(Type, Timestamp, CeresID);
 
         /** create ID and add to unordered maps */
-        const FactorID Factor(Type, Timestamp, _FactorList.countElement(Type, Timestamp)-1);
+        const FactorID Factor(Type, Timestamp, FactorList_.countElement(Type, Timestamp)-1);
 
         /** collect factor information */
         FactorInfo Info;
@@ -101,12 +101,12 @@ namespace libRSF
         Info.ErrorInputSize = ErrorModel->InputDim;
         Info.ErrorOutputSize = ErrorModel->OutputDim;
         Info.ErrorModel = static_cast<ErrorModelBase*>(ErrorModel);
-        _Factors.emplace(CeresID, Info);
+        Factors_.emplace(CeresID, Info);
 
         /** collect state information */
         for(int n = 0; n < static_cast<int>(States.size()); n++)
         {
-          if(_States.count(StatePointers.at(n)) == 0) /**< check if already existing */
+          if(States_.count(StatePointers.at(n)) == 0) /**< check if already existing */
           {
             StateInfo State;
             State.Name = States.at(n).ID;
@@ -114,58 +114,58 @@ namespace libRSF
             State.Number = States.at(n).Number;
             State.Type = StateTypes.at(n);
 
-            _States.emplace(StatePointers.at(n), State);
+            States_.emplace(StatePointers.at(n), State);
           }
         }
       }
 
       void removeFactor(const FactorID &Factor);
-      void removeFactor(const ceres::ResidualBlockId Factor);
+      void removeFactor(ceres::ResidualBlockId Factor);
       void removeState(const StateID &State);
 
       /** query single variables */
       void getResidualID(const FactorID &Factor, ceres::ResidualBlockId &Residual) const;
-      void getErrorModel(const FactorID &Factor, ErrorModelBase* &ErroModel) const;
+      void getErrorModel(const FactorID &Factor, ErrorModelBase* &ErrorModel) const;
       void getErrorInputSize(const FactorID &Factor, int &ResidualSize) const;
       void getErrorOutputSize(const FactorID &Factor, int &ResidualSize) const;
 
       /** query multiple variables */
-      void getFactorIDs(const FactorType Type, std::vector<FactorID> &Factors) const;
-      void getErrorModels(const FactorType Type, std::vector<ErrorModelBase*> &Models) const;
-      void getResidualIDs(const FactorType Type, std::vector<ceres::ResidualBlockId> &Blocks) const;
+      void getFactorIDs(FactorType Type, std::vector<FactorID> &Factors) const;
+      void getErrorModels(FactorType Type, std::vector<ErrorModelBase*> &Models) const;
+      void getResidualIDs(FactorType Type, std::vector<ceres::ResidualBlockId> &Blocks) const;
 
       /** query connected things */
       void getFactorsOfState(const StateID &State, std::vector<FactorID> &Factors) const;
 
       /** query timestamps */
-      void getTimesBetween(const FactorType Type, const double StartTime, const double EndTime, std::vector<double> &Times) const;
-      void getTimesBelow(const FactorType Type, const double EndTime, std::vector<double> &Times) const;
-      bool getTimeFirst(const FactorType Type, double& FirstTime) const;
-      bool getTimeLast(const FactorType Type, double& LastTime) const;
+      void getTimesBetween(FactorType Type, double StartTime, double EndTime, std::vector<double> &Times) const;
+      void getTimesBelow(FactorType Type, double EndTime, std::vector<double> &Times) const;
+      bool getTimeFirst(FactorType Type, double& FirstTime) const;
+      bool getTimeLast(FactorType Type, double& LastTime) const;
 
       /** query keys */
       void getFactorTypes(std::vector<FactorType> &Factors) const;
 
       /** count stuff */
-      int countFactor(const FactorType Type, const double Timestamp) const;
-      int countFactorType(const FactorType Type) const;
+      [[nodiscard]] int countFactor(FactorType Type, double Timestamp) const;
+      [[nodiscard]] int countFactorType(FactorType Type) const;
 
       /** check stuff */
-      bool checkFactor(const FactorType Type, const double Timestamp, const double Number = 0) const;
-      bool checkFactor(const FactorType Type) const;
+      [[nodiscard]] bool checkFactor(FactorType Type, double Timestamp, int Number = 0) const;
+      [[nodiscard]] bool checkFactor(FactorType Type) const;
 
     private:
 
       /** mapping ceres --> libRSF */
-      std::map<double*, StateInfo> _States;
-      std::map<ceres::ResidualBlockId, FactorInfo> _Factors;
+      std::map<double*, StateInfo> States_;
+      std::map<ceres::ResidualBlockId, FactorInfo> Factors_;
 
       /** mapping libRSF --> ceres */
-      FactorIDSet _FactorList;
-      StateDataSet * const _Data;
+      FactorIDSet FactorList_;
+      StateDataSet * const Data_;
 
       /** mapping states <--> factors */
-      ceres::Problem * const _Graph;
+      ceres::Problem * const Graph_;
   };
 }
 

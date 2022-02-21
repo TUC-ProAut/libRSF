@@ -24,21 +24,21 @@
 
 namespace libRSF
 {
-  /** contructors */
+  /** constructors */
   Data::Data()
   {
-    this->_Config = &GlobalDataConfig;
+    this->Config = &GlobalDataConfig;
   }
 
-  Data::Data(std::string Input)
+  Data::Data(const std::string& Input)
   {
-    this->_Config = &GlobalDataConfig;
+    this->Config = &GlobalDataConfig;
     this->constructFromString(Input);
   }
 
   Data::Data(DataType Type, double Timestamp)
   {
-    this->_Config = &GlobalDataConfig;
+    this->Config = &GlobalDataConfig;
     this->constructEmpty(Type, Timestamp);
   }
 
@@ -58,18 +58,17 @@ namespace libRSF
     {
       /** map vector to matrix */
       Vector CovVect = this->getValue(DataElement::Covariance);
-      MatrixRef<double, Dynamic, Dynamic> Cov(CovVect.data(), sqrt(CovVect.size()), sqrt(CovVect.size()));
+      MatrixRef<double, Dynamic, Dynamic> Cov(CovVect.data(),
+                                              static_cast<int>(sqrt(static_cast<double>(CovVect.size()))),
+                                              static_cast<int>(sqrt(static_cast<double>(CovVect.size()))));
       return Cov;
     }
-    else if (this->checkElement(DataElement::CovarianceDiagonal))
+    if (this->checkElement(DataElement::CovarianceDiagonal))
     {
       return this->getCovarianceDiagonal().asDiagonal();
     }
-    else
-    {
-      PRINT_ERROR("Data has no covariance element!");
-      return Vector();
-    }
+    PRINT_ERROR("Data has no covariance element!");
+    return {};
   }
 
   Vector Data::getCovarianceDiagonal() const
@@ -78,15 +77,12 @@ namespace libRSF
     {
       return this->getCovarianceMatrix().diagonal();
     }
-    else if (this->checkElement(DataElement::CovarianceDiagonal))
+    if (this->checkElement(DataElement::CovarianceDiagonal))
     {
       return this->getValue(DataElement::CovarianceDiagonal);
     }
-    else
-    {
-      PRINT_ERROR("Data has no covariance element!");
-      return Vector();
-    }
+    PRINT_ERROR("Data has no covariance element!");
+    return {};
   }
 
   Vector Data::getStdDevDiagonal() const
@@ -95,15 +91,12 @@ namespace libRSF
     {
       return this->getCovarianceMatrix().diagonal().cwiseSqrt();
     }
-    else if (this->checkElement(DataElement::CovarianceDiagonal))
+    if (this->checkElement(DataElement::CovarianceDiagonal))
     {
       return this->getCovarianceDiagonal().cwiseSqrt();
     }
-    else
-    {
-      PRINT_ERROR("Data has no covariance element!");
-      return Vector();
-    }
+    PRINT_ERROR("Data has no covariance element!");
+    return {};
   }
 
   double* Data::getMeanPointer()
@@ -116,7 +109,7 @@ namespace libRSF
     return this->getDataPointer(DataElement::Mean);
   }
 
-  void Data::setMean(const Vector Mean)
+  void Data::setMean(const Vector& Mean)
   {
     this->setValue(DataElement::Mean, Mean);
   }
@@ -126,7 +119,7 @@ namespace libRSF
     this->setValueScalar(DataElement::Timestamp, Timestamp);
   }
 
-  void Data::setCovarianceDiagonal(const Vector Cov)
+  void Data::setCovarianceDiagonal(const Vector& Cov)
   {
     if (this->checkElement(DataElement::Covariance) && this->getValue(DataElement::Covariance).size() == 1)
     {
@@ -138,13 +131,13 @@ namespace libRSF
     }
   }
 
-  void Data::setCovarianceMatrix(const Vector Cov)
+  void Data::setCovarianceMatrix(const Vector& Cov)
   {
     /** we expect a row-major vector representation of the actual matrix here */
     this->setValue(DataElement::Covariance, Cov);
   }
 
-  void Data::setStdDevDiagonal(const Vector StdDev)
+  void Data::setStdDevDiagonal(const Vector& StdDev)
   {
     this->setCovarianceDiagonal(StdDev.array().square());
   }

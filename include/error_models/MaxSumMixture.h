@@ -50,39 +50,39 @@ namespace libRSF
   {
     public:
 
-      MaxSumMixture()
+      MaxSumMixture(): Normalization_(0)
       {
         this->clear();
       }
 
       virtual ~MaxSumMixture() = default;
 
-      explicit MaxSumMixture(const MixtureType &Mixture)
+      explicit MaxSumMixture(const MixtureType &Mixture): Normalization_(0)
       {
-        this->addMixture(Mixture);
+        this->addMixture_(Mixture);
       }
 
       void clear()
       {
-        _Normalization = 0;
-        _Mixture.clear();
+        Normalization_ = 0;
+        Mixture_.clear();
       }
 
       template <typename T>
       bool weight(const VectorT<T, Dim> &RawError, T* Error) const
       {
-        if(this->_Enable)
+        if(this->Enable_)
         {
           /** calculate linear errors and scalings */
-          const int NumberOfComponents = _Mixture.getNumberOfComponents();
+          const int NumberOfComponents = Mixture_.getNumberOfComponents();
           MatrixT<T, Dynamic, 1> Scalings(NumberOfComponents);
           MatrixT<T, Dynamic, Dim> LinearExponents(NumberOfComponents, Dim);
 
           /** calculate component-wise */
           for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
           {
-            LinearExponents.row(nComponent) = _Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError);
-            Scalings(nComponent) = T(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError));
+            LinearExponents.row(nComponent) = Mixture_.template getExponentialPartOfComponent<T>(nComponent, RawError);
+            Scalings(nComponent) = T(Mixture_.template getLinearPartOfComponent<T>(nComponent, RawError));
           }
 
           /** apply the LSE */
@@ -97,7 +97,7 @@ namespace libRSF
           if (NumberOfComponents > 1)
           {
             /** to prevent numerical issues close to zero, we set a lower bound of the following term */
-            ErrorMap(Dim) = sqrt(ceres::fmax(-2.0 * (LSE(Dim) - log(_Normalization + DampingFactor)), T(1e-20))); /**< non-linear */
+            ErrorMap(Dim) = sqrt(ceres::fmax(-2.0 * (LSE(Dim) - log(Normalization_ + DampingFactor)), T(1e-20))); /**< non-linear */
           }
           else
           {
@@ -125,31 +125,31 @@ namespace libRSF
 
       MixtureType getMixture()
       {
-        return _Mixture;
+        return Mixture_;
       }
 
     private:
 
-      void addMixture(const MixtureType &Mixture)
+      void addMixture_(const MixtureType &Mixture)
       {
-        _Mixture = Mixture;
-        const int NumberOfComponents = _Mixture.getNumberOfComponents();
+        Mixture_ = Mixture;
+        const int NumberOfComponents = Mixture.getNumberOfComponents();
 
-        _Normalization = _Mixture.getMaximumOfComponent(0);
+        Normalization_ = Mixture.getMaximumOfComponent(0);
         for(int nComponent = 1; nComponent < static_cast<int>(NumberOfComponents); ++nComponent)
         {
-          _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
+          Normalization_ = std::max(Normalization_, Mixture.getMaximumOfComponent(nComponent));
         }
-        _Normalization *= NumberOfComponents;
+        Normalization_ *= NumberOfComponents;
       }
 
-      MixtureType _Mixture;
-      double _Normalization;
+      MixtureType Mixture_;
+      double Normalization_;
   };
 
-  typedef MaxSumMixture<1, GaussianMixture<1>> MaxSumMix1;
-  typedef MaxSumMixture<2, GaussianMixture<2>> MaxSumMix2;
-  typedef MaxSumMixture<3, GaussianMixture<3>> MaxSumMix3;
+  using MaxSumMix1 = MaxSumMixture<1, GaussianMixture<1>>;
+  using MaxSumMix2 = MaxSumMixture<2, GaussianMixture<2>>;
+  using MaxSumMix3 = MaxSumMixture<3, GaussianMixture<3>>;
 }
 
 #endif // MAXSUMMIXTURE_H

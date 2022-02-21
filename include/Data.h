@@ -43,31 +43,31 @@ namespace libRSF
 
       /** standard constructor */
       Data();
-      virtual ~Data() = default;
+      ~Data() override = default;
 
       /** default constructor for new empty data */
       Data(DataType Type, double Timestamp);
 
       /** string interface for files */
-      explicit Data(std::string Input);
+      explicit Data(const std::string& Input);
 
       /** specific getters */
-      double getTimestamp() const;
-      Vector getMean() const;
-      Matrix getCovarianceMatrix() const;
-      Vector getCovarianceDiagonal() const;
-      Vector getStdDevDiagonal() const;
+      [[nodiscard]] double getTimestamp() const;
+      [[nodiscard]] Vector getMean() const;
+      [[nodiscard]] Matrix getCovarianceMatrix() const;
+      [[nodiscard]] Vector getCovarianceDiagonal() const;
+      [[nodiscard]] Vector getStdDevDiagonal() const;
 
       /** specific pointer getters */
       double* getMeanPointer();
       double const * getMeanPointerConst();
 
       /** specific setters */
-      void setMean(const Vector Mean);
-      void setTimestamp(const double Timestamp);
-      void setCovarianceDiagonal(const Vector Cov);
-      void setStdDevDiagonal(const Vector StdDev);
-      void setCovarianceMatrix(const Vector Cov);
+      void setMean(const Vector& Mean);
+      void setTimestamp(double Timestamp);
+      void setCovarianceDiagonal(const Vector& Cov);
+      void setStdDevDiagonal(const Vector& StdDev);
+      void setCovarianceMatrix(const Vector& Cov);
 
     private:
 

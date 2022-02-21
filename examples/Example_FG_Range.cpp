@@ -58,13 +58,13 @@ void CreateData (libRSF::SensorDataSet &RangeMeasurements)
       Range[0] = (SatPositions.at(j) - EgoPositions.at(i)).norm() + Distribution(Generator);
       SatID << j;
 
-      libRSF::Data RangeMasurement(libRSF::DataType::Range2, i);
-      RangeMasurement.setMean(Range);
-      RangeMasurement.setStdDevDiagonal(StdDev);
-      RangeMasurement.setValue(libRSF::DataElement::SatPos, SatPositions.at(j));
-      RangeMasurement.setValue(libRSF::DataElement::SatID, SatID);
+      libRSF::Data RangeMeasurement(libRSF::DataType::Range2, i);
+      RangeMeasurement.setMean(Range);
+      RangeMeasurement.setStdDevDiagonal(StdDev);
+      RangeMeasurement.setValue(libRSF::DataElement::SatPos, SatPositions.at(j));
+      RangeMeasurement.setValue(libRSF::DataElement::SatID, SatID);
 
-      RangeMeasurements.addElement(RangeMasurement);
+      RangeMeasurements.addElement(RangeMeasurement);
     }
   }
 }
@@ -82,7 +82,7 @@ int main(int ArgC, char** ArgV)
   ceres::Solver::Options SolverOptions;
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
-  SolverOptions.num_threads = std::thread::hardware_concurrency();
+  SolverOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
   SolverOptions.minimizer_progress_to_stdout = true;
 
   libRSF::FactorGraph SimpleGraph;

@@ -24,7 +24,7 @@
 
 namespace libRSF
 {
-  void SensorDataSet::addElement(Data Element)
+  void SensorDataSet::addElement(const Data& Element)
   {
     addElement(Element.getType(), Element.getTimestamp(), Element);
   }

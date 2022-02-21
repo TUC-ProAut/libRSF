@@ -44,7 +44,7 @@ namespace libRSF
   template<typename TypeEnum, typename ElementEnum>
   class DataGeneric
   {
-    typedef DataConfig<TypeEnum, ElementEnum> ConfigType;
+    using ConfigType = DataConfig<TypeEnum, ElementEnum>;
 
     public:
       DataGeneric() = default;
@@ -53,55 +53,55 @@ namespace libRSF
       /** get properties */
       TypeEnum getType() const
       {
-        return _Type;
+        return Type_;
       }
 
-      std::string getName() const
+      [[nodiscard]] std::string getName() const
       {
-        return _Name;
+        return Name_;
       }
 
       /** get elements */
       Vector getValue(const ElementEnum Element) const
       {
-        return _Data.at(Element);
+        return Data_.at(Element);
       }
 
       /** get pointers */
       double* getDataPointer(const ElementEnum Element)
       {
-        return _Data.at(Element).data();
+        return Data_.at(Element).data();
       }
 
       /** set elements */
-      void setValue(const ElementEnum Element, const Vector Value)
+      void setValue(const ElementEnum Element, const Vector& Value)
       {
-        _Data.at(Element) = Value;
+        Data_.at(Element) = Value;
       }
 
       void setValueScalar(const ElementEnum Element, const double Value)
       {
-        _Data.at(Element).fill(Value);
+        Data_.at(Element).fill(Value);
       }
 
       /** check if element exists */
       bool checkElement(const ElementEnum Element) const
       {
-        return (_Data.count(Element) > 0);
+        return (Data_.count(Element) > 0);
       }
 
       /** generate pretty output strings */
-      std::string getValueString() const
+      [[nodiscard]] std::string getValueString() const
       {
         std::string Out;
 
-        for(const auto &Element : _Config->getConfig(_Type))
+        for(const auto &Element : Config->getConfig(Type_))
         {
-          for(Index nElement = 0; nElement < _Data.at(Element.first).size(); nElement++)
+          for(Index nElement = 0; nElement < Data_.at(Element.first).size(); nElement++)
           {
             std::ostringstream Stream;
             Stream.precision(8);
-            Stream << std::scientific << _Data.at(Element.first).operator[](nElement);
+            Stream << std::scientific << Data_.at(Element.first).operator[](nElement);
 
             Out.append(Stream.str());
             Out.append(" ");
@@ -111,13 +111,13 @@ namespace libRSF
         return Out;
       }
 
-      std::string getNameValueString() const
+      [[nodiscard]] std::string getNameValueString() const
       {
         std::string Out;
-        Out.append(_Name);
+        Out.append(Name_);
         Out.append(": ");
 
-        for(auto const &Element : _Data)
+        for(auto const &Element : Data_)
         {
           Out.append(" ");
 
@@ -135,18 +135,18 @@ namespace libRSF
       /** construct a specific data configuration */
       void constructEmpty(const TypeEnum Type, double Timestamp = 0.0)
       {
-        if(_Config->checkType(Type))
+        if(Config->checkType(Type))
         {
-          _Type = Type;
-          _Name = _Config->getName(Type);
+          Type_ = Type;
+          Name_ = Config->getName(Type);
 
-          for(const auto &Element : _Config->getConfig(Type))
+          for(const auto &Element : Config->getConfig(Type))
           {
-            _Data.emplace(Element.first, Vector(Element.second));
-            _Data.at(Element.first).fill(0.0);
+            Data_.emplace(Element.first, Vector(Element.second));
+            Data_.at(Element.first).fill(0.0);
           }
 
-          _Data[ElementEnum::Timestamp].operator[](0) = Timestamp;
+          Data_[ElementEnum::Timestamp].operator[](0) = Timestamp;
         }
         else
         {
@@ -154,17 +154,17 @@ namespace libRSF
         }
       }
 
-      void constructFromString(std::string Input)
+      void constructFromString(const std::string& Input)
       {
         /** read type from string */
         auto Split = Input.find_first_of(' ');
         std::string Name = Input.substr(0, Split);
 
         /** choose config according to type */
-        if(_Config->checkName(Name))
+        if(Config->checkName(Name))
         {
-          constructEmpty(_Config->getType(Name));
-          parseSubstring(Input.substr(Split));
+          constructEmpty(Config->getType(Name));
+          parseSubstring_(Input.substr(Split));
         }
         else
         {
@@ -173,20 +173,20 @@ namespace libRSF
       }
 
     /** pointer to the the list of configurations */
-    const ConfigType * _Config;
+    const ConfigType * Config;
 
     private:
       /** parse an ASCII input string */
-      std::string parseSubstring(std::string Input)
+      std::string parseSubstring_(const std::string& Input)
       {
         size_t StringEnd = 0;
         size_t InputStringEnd = 0;
 
-        for(const auto &Element : _Config->getConfig(_Type))
+        for(const auto &Element : Config->getConfig(Type_))
         {
-          for(Index nElement = 0; nElement < _Data.at(Element.first).size(); nElement++)
+          for(Index nElement = 0; nElement < Data_.at(Element.first).size(); nElement++)
           {
-            _Data.at(Element.first).operator[](nElement) = std::stod(Input.substr(InputStringEnd), &StringEnd);
+            Data_.at(Element.first).operator[](nElement) = std::stod(Input.substr(InputStringEnd), &StringEnd);
             InputStringEnd += StringEnd;
           }
         }
@@ -195,13 +195,13 @@ namespace libRSF
       }
 
       /** identifying string */
-      std::string _Name;
+      std::string Name_;
 
       /** internal type */
-      TypeEnum _Type;
+      TypeEnum Type_;
 
       /** where the data is stored */
-      std::map<ElementEnum, Vector> _Data;
+      std::map<ElementEnum, Vector> Data_;
   };
 }
 

@@ -37,9 +37,9 @@ namespace libRSF
        && (LocalSize.size() == LinearizationPoints.size())
        && (LocalSize.size() == StateTypes.size()))
     {
-      _LocalSize = LocalSize;
-      _GlobalSize = GlobalSize;
-      _StateTypes = StateTypes;
+      LocalSize_ = LocalSize;
+      GlobalSize_ = GlobalSize;
+      StateTypes_ = StateTypes;
 
       /** compute overall system size */
       int LocalSum = 0, GlobalSum = 0;
@@ -48,24 +48,24 @@ namespace libRSF
         LocalSum += LocalSize.at(n);
         GlobalSum += GlobalSize.at(n);
       }
-      _LocalSizeSum = LocalSum;
-      _GlobalSizeSum = GlobalSum;
+      LocalSizeSum_ = LocalSum;
+      GlobalSizeSum_ = GlobalSum;
 
       /** store linear system */
-      _LinearJacobian = J;
-      _LinearResidual = R;
+      LinearJacobian_ = J;
+      LinearResidual_ = R;
 
       /** store linearization points */
-      _LinearizationPoints.resize(_GlobalSizeSum);
+      LinearizationPoints_.resize(GlobalSizeSum_);
       int CumSum = 0;
       for (int n = 0; n < static_cast<int>(LinearizationPoints.size()); n++)
       {
-        _LinearizationPoints.segment(CumSum, GlobalSize.at(n)) = LinearizationPoints.at(n);
+        LinearizationPoints_.segment(CumSum, GlobalSize.at(n)) = LinearizationPoints.at(n);
         CumSum += GlobalSize.at(n);
       }
 
       /** parametrize factor */
-      this->set_num_residuals(_LocalSizeSum);
+      this->set_num_residuals(LocalSizeSum_);
       for (int BlockSize : GlobalSize)
       {
         this->mutable_parameter_block_sizes()->push_back(BlockSize);
@@ -82,33 +82,34 @@ namespace libRSF
                                double** Jacobians) const
   {
 
-    /** use seperate jacobian to represent the manifold operations */
+    /** use separate jacobian to represent the manifold operations */
     Matrix JacobianManifold;
     bool HasJacobian = false;
     if(Jacobians != nullptr)
     {
-      JacobianManifold.resize(_LocalSizeSum, _GlobalSizeSum);
+      JacobianManifold.resize(LocalSizeSum_, GlobalSizeSum_);
       JacobianManifold.setZero();
       HasJacobian = true;
     }
 
-    VectorRef<double, Dynamic> Error(Residuals, _LocalSizeSum);
-    Vector DeltaState(_LocalSizeSum);
+    VectorRef<double, Dynamic> Error(Residuals, LocalSizeSum_);
+    Vector DeltaState(LocalSizeSum_);
 
-    /** compute blockwise error */
+    /** compute block-wise error */
     int IndexError = 0;
     int IndexState = 0;
-    for (int nState = 0; nState < static_cast<int>(_GlobalSize.size()); nState++)
+    for (int nState = 0; nState < static_cast<int>(GlobalSize_.size()); nState++)
     {
       /** get dimensions of sub-block */
-      int GlobalSize = _GlobalSize.at(nState);
-      int LocalSize = _LocalSize.at(nState);
+      int GlobalSize = GlobalSize_.at(nState);
+      int LocalSize = LocalSize_.at(nState);
 
       /** map relevant variables */
       const VectorRefConst<double, Dynamic> State(Parameters[nState], GlobalSize);
-      const Vector LinearState = _LinearizationPoints.segment(IndexState, GlobalSize);
+      const Vector LinearState =
+          LinearizationPoints_.segment(IndexState, GlobalSize);
 
-      if (_StateTypes.at(nState) == DataType::Angle)
+      if (StateTypes_.at(nState) == DataType::Angle)
       {
         /** angle case */
         DeltaState.segment(IndexError, LocalSize) = NormalizeAngleVector<double, 1>(State - LinearState);
@@ -120,7 +121,7 @@ namespace libRSF
         }
 
       }
-      else if (_StateTypes.at(nState) == DataType::Quaternion)
+      else if (StateTypes_.at(nState) == DataType::Quaternion)
       {
         /** quaternion case */
         QuaternionRefConst<double> QState (State.data());
@@ -167,20 +168,20 @@ namespace libRSF
     }
 
     /** apply linear jacobian and residual */
-    Error = _LinearJacobian * DeltaState + _LinearResidual;
+    Error = LinearJacobian_ * DeltaState + LinearResidual_;
 
     /** jacobians are composed of linear jacobian and manifold jacobian */
     if(HasJacobian)
     {
       int IndexStateJac = 0;
-      for (int nState = 0; nState < static_cast<int>(_GlobalSize.size()); nState++)
+      for (int nState = 0; nState < static_cast<int>(GlobalSize_.size()); nState++)
       {
-        int GlobalSize = _GlobalSize.at(nState);
+        int GlobalSize = GlobalSize_.at(nState);
 
-        if(Jacobians[nState])
+        if(Jacobians[nState] != nullptr)
         {
-          MatrixRef<double, Dynamic, Dynamic> Jacobian(Jacobians[nState], _LocalSizeSum, GlobalSize);
-          Jacobian = _LinearJacobian * JacobianManifold.middleCols(IndexStateJac, GlobalSize);
+          MatrixRef<double, Dynamic, Dynamic> Jacobian(Jacobians[nState], LocalSizeSum_, GlobalSize);
+          Jacobian = LinearJacobian_ * JacobianManifold.middleCols(IndexStateJac, GlobalSize);
         }
 
         IndexStateJac += GlobalSize;

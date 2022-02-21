@@ -27,7 +27,7 @@ namespace libRSF
   double Median(const std::vector<double> &V)
   {
     std::vector<double> VCopy = V;
-    int n = VCopy.size() / 2;
+    int n = static_cast<int>(VCopy.size()) / 2;
     std::nth_element(VCopy.begin(), VCopy.begin() + n, VCopy.end());
     return VCopy[n];
   }
@@ -50,6 +50,6 @@ namespace libRSF
 
   double RMSE(const Vector &V)
   {
-    return sqrt(V.squaredNorm() / V.size());
+    return sqrt(V.squaredNorm() / static_cast<double>(V.size()));
   }
 }

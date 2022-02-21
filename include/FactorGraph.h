@@ -83,13 +83,17 @@
 
 namespace libRSF
 {
-  struct StateList
+  class StateList
   {
-    void add(string Type, double Timestamp, int Number = 0);
-    void add(StateID);
+   public:
+    StateList() = default;
+    virtual ~StateList() = default;
+
+    void add(const string& Type, double Timestamp, int Number = 0);
+    void add(const StateID&);
     void clear();
 
-    std::vector<StateID> _List;
+    std::vector<StateID> List_;
   };
 
   class FactorGraph
@@ -101,11 +105,11 @@ namespace libRSF
       virtual ~FactorGraph() = default;
 
       /** access to single states */
-      void addState(string Name, DataType Type, double Timestamp);
-      void addState(string Name, Data &Element);
+      void addState(const string& Name, DataType Type, double Timestamp);
+      void addState(const string& Name, Data &Element);
 
       /** add states only if they doesn't exist */
-      void addStateWithCheck(string Name, DataType Type, double Timestamp);
+      void addStateWithCheck(const string& Name, DataType Type, double Timestamp);
 
       /** access to complete state data */
       StateDataSet& getStateData();
@@ -120,7 +124,7 @@ namespace libRSF
 
       /** replace error models which are given as pointer of vectors */
       template <typename ErrorType>
-      void setNewErrorModel(std::vector<ErrorModelBase*> ErrorModels, const ErrorType &NoiseModel)
+      void setNewErrorModel(const std::vector<ErrorModelBase*>& ErrorModels, const ErrorType &NoiseModel)
       {
         for (const auto &ErrorModel : ErrorModels)
         {
@@ -133,7 +137,7 @@ namespace libRSF
       {
         /** find error model pointers */
         std::vector<ErrorModelBase*> ErrorModels;
-        _Structure.getErrorModels(CurrentFactorType, ErrorModels);
+        Structure_.getErrorModels(CurrentFactorType, ErrorModels);
 
         /** replace */
         setNewErrorModel(ErrorModels, NoiseModel);
@@ -146,16 +150,16 @@ namespace libRSF
         /** find the right error model pointer */
         ErrorModelBase* ModelPointer;
         FactorID ID(CurrentFactorType, TimeStamp, Number);
-        _Structure.getErrorModel(ID, ModelPointer);
+        Structure_.getErrorModel(ID, ModelPointer);
 
         /** replace */
-        std::vector<ErrorModelBase*> ModelPoiters = {ModelPointer};
-        setNewErrorModel(ModelPoiters, NoiseModel);
+        std::vector<ErrorModelBase*> ModelPointers = {ModelPointer};
+        setNewErrorModel(ModelPointers, NoiseModel);
       }
 
       /** add factors with variable number of states - first level*/
       template <FactorType CurrentFactorType, typename... FactorParameters>
-      void addFactor( StateID ID1,
+      void addFactor( const StateID& ID1,
                       FactorParameters... Params)
       {
         /** compile time error for IMU pre-integration */
@@ -169,7 +173,7 @@ namespace libRSF
       /** in-between level */
       template <FactorType CurrentFactorType, typename... FactorParameters>
       void addFactor(StateList List,
-                     StateID ID,
+                     const StateID& ID,
                      FactorParameters... Params)
       {
         /** move state ID into a state list */
@@ -185,14 +189,14 @@ namespace libRSF
                      ceres::LossFunction* RobustLoss,
                      const bool DoPrediction = true)
       {
-        addFactorBase<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), RobustLoss, DoPrediction);
+        addFactorBase_<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), RobustLoss, DoPrediction);
       }
       template <FactorType CurrentFactorType, typename ErrorType>
       void addFactor(StateList List,
                      ErrorType &NoiseModel,
                      const bool DoPrediction = true)
       {
-        addFactorBase<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), nullptr, DoPrediction);
+        addFactorBase_<CurrentFactorType>(List, NoiseModel, Data(DataType::Value1, 0.0), nullptr, DoPrediction);
       }
       /** last level with measurement */
       template <FactorType CurrentFactorType, typename ErrorType>
@@ -202,7 +206,7 @@ namespace libRSF
                      ceres::LossFunction* RobustLoss,
                      const bool DoPrediction = true)
       {
-        addFactorBase<CurrentFactorType>(List, NoiseModel, Measurement, RobustLoss, DoPrediction);
+        addFactorBase_<CurrentFactorType>(List, NoiseModel, Measurement, RobustLoss, DoPrediction);
       }
       template <FactorType CurrentFactorType, typename ErrorType>
       void addFactor(StateList List,
@@ -210,84 +214,91 @@ namespace libRSF
                      ErrorType &NoiseModel,
                      const bool DoPrediction = true)
       {
-        addFactorBase<CurrentFactorType>(List, NoiseModel, Measurement, nullptr, DoPrediction);
+        addFactorBase_<CurrentFactorType>(List, NoiseModel, Measurement, nullptr, DoPrediction);
       }
 
       /** special case for IMU pre-integration */
-      void addIMUPreintegrationFactor(StateList List, PreintegratedIMUResult IMUState);
+      void addIMUPreintegrationFactor(StateList List, const PreintegratedIMUResult& IMUState);
 
       /** for sliding window */
-      void removeFactor(const FactorType CurrentFactorType, const double Timestamp);
-      void removeFactorsOutsideWindow(const FactorType CurrentFactorType, const double TimeWindow, const double CurrentTime);
-      void removeAllFactorsOutsideWindow(const double TimeWindow, const double CurrentTime);
+      void removeFactor(FactorType CurrentFactorType, double Timestamp);
+      void removeFactorsOutsideWindow(FactorType CurrentFactorType, double TimeWindow, double CurrentTime);
+      void removeAllFactorsOutsideWindow(double TimeWindow, double CurrentTime);
 
       /** solve problem */
       void solve();
       void solve(ceres::Solver::Options Options);
 
       /** compute covariances */
-      bool computeCovarianceSigmaPoints(const string Name, const double Timestamp, const int StateNumber = 0);
-      bool computeCovariance(const string Name, const double Timestamp);
-      bool computeCovariance(const string Name);
+      bool computeCovarianceSigmaPoints(const string& Name, double Timestamp, int StateNumber = 0);
+      bool computeCovariance(const string& Name, double Timestamp);
+      bool computeCovariance(const string& Name);
 
       /** marginalize factors */
-      bool marginalizeState(const string Name, const double Timestamp, const int Number = 0);
-      bool marginalizeStates(std::vector<StateID> States, const double Inflation = 1.0);
-      bool marginalizeAllStatesOutsideWindow(const double TimeWindow, const double CurrentTime, const double Inflation = 1.0);
+      bool marginalizeState(const string& Name, double Timestamp, int Number = 0);
+      bool marginalizeStates(std::vector<StateID> States, double Inflation = 1.0);
+      bool marginalizeAllStatesOutsideWindow(double TimeWindow, double CurrentTime, double Inflation = 1.0);
 
       /** sample output state */
-      void sampleCost1D(const string StateName,
-                        const double Timestamp,
-                        const int Number,
-                        const int PointCount,
-                        const double Range,
+      void sampleCost1D(const string& StateName,
+                        double Timestamp,
+                        int Number,
+                        int PointCount,
+                        double Range,
                         StateDataSet &Result);
 
-      void sampleCost2D(const string StateName,
-                        const double Timestamp,
-                        const int Number,
-                        const int PointCount,
-                        const double Range,
+      void sampleCost2D(const string& StateName,
+                        double Timestamp,
+                        int Number,
+                        int PointCount,
+                        double Range,
+                        StateDataSet &Result);
+
+      void sampleCost3D(const string& StateName,
+                        double Timestamp,
+                        int Number,
+                        int PointCount,
+                        double Range,
                         StateDataSet &Result);
 
       /** remove old states*/
-      void removeState(const string Name, const double Timestamp);
-      void removeState(const string Name, const double Timestamp, const int Number);
-      void removeStatesOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime);
-      void removeAllStatesOutsideWindow(const double TimeWindow, const double CurrentTime);
+      void removeState(const string& Name, double Timestamp);
+      void removeState(const string& Name, double Timestamp, int Number);
+      void removeStatesOutsideWindow(const string& Name, double TimeWindow, double CurrentTime);
+      void removeAllStatesOutsideWindow(double TimeWindow, double CurrentTime);
 
       /** handle constant states */
-      void setConstant(const string Name, const double Timestamp);
-      void setVariable(const string Name, const double Timestamp);
-      void setVariable(const string Name);
+      void setConstant(const string& Name, double Timestamp);
+      void setVariable(const string& Name, double Timestamp);
+      void setVariable(const string& Name);
 
-      void setSubsetConstant(const string Name, const double Timestamp, const int Number, const std::vector<int> &ConstantIndex);
+      void setSubsetConstant(const string& Name, double Timestamp, int Number, const std::vector<int> &ConstantIndex);
 
-      void setConstantOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime);
-      void setVariableInsideWindow(const string Name, const double TimeWindow, const double CurrentTime);
-      void setAllConstantOutsideWindow(const double TimeWindow, const double CurrentTime);
-      void setAllVariableInsideWindow(const double TimeWindow, const double CurrentTime);
+      void setConstantOutsideWindow(const string& Name, double TimeWindow, double CurrentTime);
+      void setVariableInsideWindow(const string& Name, double TimeWindow, double CurrentTime);
+      void setAllConstantOutsideWindow(double TimeWindow, double CurrentTime);
+      void setAllVariableInsideWindow(double TimeWindow, double CurrentTime);
       void setAllVariable();
 
       /** handle bound */
-      void setUpperBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound);
-      void setLowerBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound);
+      void setUpperBound(const string &Name, double Timestamp, int StateNumber, const Vector &Bound);
+      void setLowerBound(const string &Name, double Timestamp, int StateNumber, const Vector &Bound);
 
       /** get information about the structure */
-      void getFactorsOfState(const string Name, const double Timestamp, const int Number, std::vector<FactorID> &Factors) const;
-      int countFactorsOfType(const FactorType CurrentFactorType) const;
+      void getFactorsOfState(const string& Name, double Timestamp, int Number, std::vector<FactorID> &Factors) const;
+      int countFactorsOfType(FactorType CurrentFactorType) const;
 
       /** compute overall error error models */
       double getCost();
 
       /** compute raw errors without error models */
-      void computeUnweightedError(const FactorType CurrentFactorType, std::vector<double> &ErrorData);
-      void computeUnweightedErrorMatrix(const FactorType CurrentFactorType, Matrix &ErrorMatrix);
-      void computeUnweightedError(const FactorType CurrentFactorType, const string &Name, StateDataSet &ErrorData);
-      void computeUnweightedError(const FactorType CurrentFactorType, const double Time, const int Number, Vector &Error);
+      void computeUnweightedError(FactorType CurrentFactorType, std::vector<double> &ErrorData);
+      void computeUnweightedErrorMatrix(FactorType CurrentFactorType, Matrix &ErrorMatrix);
+      void computeUnweightedError(FactorType CurrentFactorType, const string &Name, StateDataSet &ErrorData);
+      void computeUnweightedError(FactorType CurrentFactorType, double Time, int Number, Vector &Error);
 
       /** access solver options */
-      void setSolverOptions(ceres::Solver::Options Options);
+      void setSolverOptions(const ceres::Solver::Options &Options);
       ceres::Solver::Options getSolverOptions() const;
 
       /** access solver summary */
@@ -302,14 +313,14 @@ namespace libRSF
 
       /** helper function to create variadic templated cost functions */
       template<int NoiseModelOutputDim, typename FactorClass,  int... FactorStateDims, int... ErrorModelStateDims>
-      auto makeAutoDiffCostFunction(FactorClass *Factor, std::integer_sequence<int, FactorStateDims...>, std::integer_sequence<int, ErrorModelStateDims...>)
+      auto makeAutoDiffCostFunction_(FactorClass *Factor, std::integer_sequence<int, FactorStateDims...>, std::integer_sequence<int, ErrorModelStateDims...>)
       {
         return new ceres::AutoDiffCostFunction<FactorClass, NoiseModelOutputDim, FactorStateDims... , ErrorModelStateDims...> (Factor);
       }
 
       /** add and remove factors */
       template <typename ErrorType, typename FactorClass, typename... FactorParameters>
-      void addFactorGeneric (ErrorType &NoiseModel,
+      void addFactorGeneric_ (ErrorType &NoiseModel,
                              const std::vector<StateID> &StateList,
                              const FactorType FactorTypeEnum,
                              ceres::LossFunction* RobustLoss,
@@ -321,11 +332,12 @@ namespace libRSF
         std::vector<double*> StatePointers;
         for (const StateID &State : StateList)
         {
-          StatePointers.emplace_back(_StateData.getElement(State.ID , State.Timestamp, State.Number).getMeanPointer());
+          StatePointers.emplace_back(
+              StateData_.getElement(State.ID , State.Timestamp, State.Number).getMeanPointer());
         }
 
         /** create factor object */
-        FactorClass* Factor = new FactorClass(NoiseModel, Params...);
+        auto* Factor = new FactorClass(NoiseModel, Params...);
 
         /** use the factor to predict */
         if (DoPrediction)
@@ -334,12 +346,13 @@ namespace libRSF
         }
 
         /** wrap it in ceres cost function */
-        auto CostFunction = makeAutoDiffCostFunction<ErrorType::OutputDim, FactorClass> (Factor,
+        auto CostFunction = makeAutoDiffCostFunction_<ErrorType::OutputDim, FactorClass> (Factor,
                                                                                          typename FactorClass::StateDims{},
                                                                                          typename ErrorType::StateDims{});
 
         /** add it to the estimation problem  */
-        ceres::ResidualBlockId CurrentCeresFactorID = _Graph.AddResidualBlock(CostFunction,
+        ceres::ResidualBlockId CurrentCeresFactorID =
+            Graph_.AddResidualBlock(CostFunction,
                                                                               RobustLoss,
                                                                               StatePointers);
 
@@ -347,11 +360,12 @@ namespace libRSF
         std::vector<DataType> StateTypes;
         for(const StateID &State : StateList)
         {
-          StateTypes.emplace_back(_StateData.getElement(State.ID , State.Timestamp, State.Number).getType());
+          StateTypes.emplace_back(
+              StateData_.getElement(State.ID , State.Timestamp, State.Number).getType());
         }
 
         /** store the graphs structure */
-        _Structure.addFactor<ErrorType>(FactorTypeEnum,
+        Structure_.addFactor<ErrorType>(FactorTypeEnum,
                                         Timestamp,
                                         CurrentCeresFactorID,
                                         Factor->getErrorModel(),
@@ -361,22 +375,22 @@ namespace libRSF
       }
 
       template <FactorType CurrentFactorType, typename ErrorType>
-      void addFactorBase(StateList &States, ErrorType &NoiseModel, const Data &Measurement, ceres::LossFunction* RobustLoss, const bool DoPrediction)
+      void addFactorBase_(StateList &States, ErrorType &NoiseModel, const Data &Measurement, ceres::LossFunction* RobustLoss, const bool DoPrediction)
       {
         /** get index timestamp */
-        const double TimestampFirst = States._List.front().Timestamp;
+        const double TimestampFirst = States.List_.front().Timestamp;
 
         /** translate the factor type enum to the class that should be added to the graph */
-        typedef typename FactorTypeTranslator<CurrentFactorType,ErrorType>::Type FactorClassType;
+        using FactorClassType = typename FactorTypeTranslator<CurrentFactorType, ErrorType>::Type;
 
         /** decide at compile time which parameters are required */
-        if constexpr (FactorClassType::HasDeltaTime == true && FactorClassType::HasMeasurement == true)
+        if constexpr (static_cast<bool>(FactorClassType::HasDeltaTime) && static_cast<bool>(FactorClassType::HasMeasurement))
         {
           /** calculate delta time */
-          const double DeltaTime = States._List.back().Timestamp - TimestampFirst;
+          const double DeltaTime = States.List_.back().Timestamp - TimestampFirst;
 
-          addFactorGeneric<ErrorType, FactorClassType> (NoiseModel,
-                                                        States._List,
+          addFactorGeneric_<ErrorType, FactorClassType> (NoiseModel,
+                                                        States.List_,
                                                         CurrentFactorType,
                                                         RobustLoss,
                                                         DoPrediction,
@@ -384,33 +398,33 @@ namespace libRSF
                                                         Measurement,
                                                         DeltaTime);
         }
-        else if constexpr (FactorClassType::HasDeltaTime == false && FactorClassType::HasMeasurement == true)
+        else if constexpr (!static_cast<bool>(FactorClassType::HasDeltaTime) && static_cast<bool>(FactorClassType::HasMeasurement))
         {
-          addFactorGeneric<ErrorType, FactorClassType> (NoiseModel,
-                                                        States._List,
+          addFactorGeneric_<ErrorType, FactorClassType> (NoiseModel,
+                                                        States.List_,
                                                         CurrentFactorType,
                                                         RobustLoss,
                                                         DoPrediction,
                                                         TimestampFirst,
                                                         Measurement);
         }
-        else if constexpr (FactorClassType::HasDeltaTime == true && FactorClassType::HasMeasurement == false)
+        else if constexpr (static_cast<bool>(FactorClassType::HasDeltaTime) && !static_cast<bool>(FactorClassType::HasMeasurement))
         {
           /** calculate delta time */
-          const double DeltaTime = States._List.back().Timestamp - TimestampFirst;
+          const double DeltaTime = States.List_.back().Timestamp - TimestampFirst;
 
-          addFactorGeneric<ErrorType, FactorClassType> (NoiseModel,
-                                                        States._List,
+          addFactorGeneric_<ErrorType, FactorClassType> (NoiseModel,
+                                                        States.List_,
                                                         CurrentFactorType,
                                                         RobustLoss,
                                                         DoPrediction,
                                                         TimestampFirst,
                                                         DeltaTime);
         }
-        else if constexpr (FactorClassType::HasDeltaTime == false && FactorClassType::HasMeasurement == false)
+        else if constexpr (!static_cast<bool>(FactorClassType::HasDeltaTime) && !static_cast<bool>(FactorClassType::HasMeasurement))
         {
-          addFactorGeneric<ErrorType, FactorClassType> (NoiseModel,
-                                                        States._List,
+          addFactorGeneric_<ErrorType, FactorClassType> (NoiseModel,
+                                                        States.List_,
                                                         CurrentFactorType,
                                                         RobustLoss,
                                                         DoPrediction,
@@ -419,7 +433,7 @@ namespace libRSF
       }
 
       /** default settings for new ceres::Problems, especially enable_fast_removal = true */
-      const ceres::Problem::Options _DefaultProblemOptions = {ceres::Ownership::TAKE_OWNERSHIP, // cost_function_ownership
+      const ceres::Problem::Options DefaultProblemOptions_ = {ceres::Ownership::TAKE_OWNERSHIP, // cost_function_ownership
                                                               ceres::Ownership::TAKE_OWNERSHIP, // loss_function_ownership
                                                               ceres::Ownership::TAKE_OWNERSHIP, // local_parameterization_ownership
                                                               true, // enable_fast_removal
@@ -428,18 +442,18 @@ namespace libRSF
                                                               nullptr // evaluation_callback
                                                               };
 
-      ceres::Problem _Graph;
-      ceres::Solver::Summary _Report;
-      ceres::Solver::Options _SolverOptions;
+      ceres::Problem Graph_;
+      ceres::Solver::Summary Report_;
+      ceres::Solver::Options SolverOptions_;
 
-      StateDataSet _StateData;                      /**< holds all state variables */
-      FactorGraphStructure _Structure;              /**< represents the structure of variables and factors */
+      StateDataSet StateData_;                      /**< holds all state variables */
+      FactorGraphStructure Structure_;              /**< represents the structure of variables and factors */
 
       /** store information about the past computational load */
-      double _SolverDuration;
-      int _SolverIterations;
-      double _MarginalizationDuration;
-      double _CovarianceDuration;
+      double SolverDuration_;
+      int SolverIterations_;
+      double MarginalizationDuration_;
+      double CovarianceDuration_;
   };
 }
 

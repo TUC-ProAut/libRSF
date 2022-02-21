@@ -50,31 +50,31 @@ namespace libRSF
       /** integrate measurements */
       void addMeasurement(const Vector3 &Velocity, const Vector3 &TurnRate,
                           const Vector3 &VelocityCov, const Vector3 &TurnRateCov,
-                          const double DeltaTime);
-      void addMeasurement(const Data &Odom, const double DeltaTime);
+                          double DeltaTime);
+      void addMeasurement(const Data &Odom, double DeltaTime);
 
       /** get results */
       void getPose(Vector3 &Translation, Quaternion &Rotation) const;
       void getCov(Matrix33 &TranslationCov, Matrix44 &RotationCov) const;
       void getCovOnManifold(Matrix33 &TranslationCov, Matrix33 &RotationCov) const;
 
-      Vector7 getJointPose() const;
-      Matrix66 getJointCovOnManifold() const;
+      [[nodiscard]] Vector7 getJointPose() const;
+      [[nodiscard]] Matrix66 getJointCovOnManifold() const;
 
-      double getTime() const;
+      [[nodiscard]] double getTime() const;
 
 
     private:
 
       /** sum of the integrated time */
-      double _Time;
+      double Time_ = 0;
 
       /** mean */
-      Vector3 _Translation;
-      Quaternion _Rotation;
+      Vector3 Translation_;
+      Quaternion Rotation_;
 
       /** uncertainty */
-      Matrix77 _PoseCov;
+      Matrix77 PoseCov_;
   };
 }
 

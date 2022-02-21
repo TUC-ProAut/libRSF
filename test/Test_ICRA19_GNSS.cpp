@@ -39,8 +39,8 @@
 #define DATA_FMT "datasets/smartLoc/Frankfurt_Main_Tower"
 #define DATA_FWT "datasets/smartLoc/Frankfurt_Westend_Tower"
 
-bool RunGNSS(const std::string DataSet,
-             const std::string ErrorModel,
+bool RunGNSS(const std::string& DataSet,
+             const std::string& ErrorModel,
              libRSF::StateDataSet &Result,
              libRSF::SensorDataSet &GT)
 {
@@ -50,15 +50,15 @@ bool RunGNSS(const std::string DataSet,
   /** assign all arguments to string vector*/
   std::vector<std::string> Arguments;
   Arguments.push_back(std::string(DataSet) + std::string("_Input.txt"));
-  Arguments.push_back("Result.txt"); // shouldn't be neccesary, not writing
-  Arguments.push_back("error:");
+  Arguments.emplace_back("Result.txt"); // shouldn't be necessary, not writing
+  Arguments.emplace_back("error:");
   Arguments.push_back(ErrorModel);
 
   /** dummy argument */
   std::string OutputFile;
 
   /** run optimization */
-  return CreateGraphAndSolve(Arguments, Result, OutputFile);
+  return CreateGraphAndSolve(Arguments, Result, OutputFile) > 0;
 }
 
 TEST(ICRA19_GNSS, Berlin_Potsdamer_Platz_Gaussian)

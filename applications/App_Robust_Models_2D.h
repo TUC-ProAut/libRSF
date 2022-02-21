@@ -40,7 +40,6 @@
 #define SOLVE_TIME_STATE "SolveTime"
 
 int CreateGraphAndSolve(std::vector<std::string> &Arguments,
-                       libRSF::FactorGraphConfig &Config,
                        libRSF::StateDataSet &CostSurfaceData,
                        libRSF::StateDataSet &PreOptimizationData,
                        libRSF::StateDataSet &PostOptimizationData,

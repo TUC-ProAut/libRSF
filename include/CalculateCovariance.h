@@ -48,7 +48,7 @@ namespace libRSF
   /** @brief Calculates the Covariance of one datatype over a complete dataset.
    *
    * @param ceres::Problem& Graph The graph that contains the factors.
-   * @param libRSF::StateDataSet &States Struct that constains the data of the Graph. The Covariance is saved here!
+   * @param libRSF::StateDataSet &States Struct that contains the data of the Graph. The Covariance is saved here!
    * @param std::string Type Specific identifier for the desired datatype. (e.g. Position, Velocity...)
    * @return true if everything works fine.
    *
@@ -61,7 +61,7 @@ namespace libRSF
   /** @brief Calculates the Covariance of one datatype for a specific timestamp.
    *
    * @param ceres::Problem& Graph The graph that contains the factors.
-   * @param libRSF::StateDataSet &States Struct that constains the data of the Graph. The Covariance is saved here!
+   * @param libRSF::StateDataSet &States Struct that contains the data of the Graph. The Covariance is saved here!
    * @param std::string Type Specific identifier for the desired datatype. (e.g. Position, Velocity...)
    * @param double Timestamp Desired Timestamp.
    * @return true if everything works fine.
@@ -70,8 +70,8 @@ namespace libRSF
   bool CalculateCovariance(ceres::Problem &Graph,
                            StateDataSet &States,
                            const std::string &Type,
-                           const double Timestamp,
-                           const int StateNumber = 0);
+                           double Timestamp,
+                           int StateNumber = 0);
 
 
   /** \brief Compute the covariance based on a numerical estimation of the Hessian
@@ -134,7 +134,7 @@ namespace libRSF
   /** @brief Calculates the Covariance of one datatype for a specific timestamp using the sigma point algorithm.
    *
    * @param ceres::Problem& Graph The graph that contains the factors.
-   * @param libRSF::StateDataSet &States Struct that constains the data of the Graph. The Covariance is saved here!
+   * @param libRSF::StateDataSet &States Struct that contains the data of the Graph. The Covariance is saved here!
    * @param std::string StateName Specific identifier for the desired datatype. (e.g. Position, Velocity...)
    * @param double Timestamp Desired Timestamp.
    * @return true if everything works fine.
@@ -147,10 +147,8 @@ namespace libRSF
                                     const double StateTimestamp,
                                     const int StateNumber)
   {
-    bool Success;
-
     /** estimate covariance with Hessian */
-    Success = CalculateCovariance(Graph, States, StateName, StateTimestamp, StateNumber);
+    bool Success = CalculateCovariance(Graph, States, StateName, StateTimestamp, StateNumber);
 
     if (Success)
     {

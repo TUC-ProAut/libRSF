@@ -25,12 +25,11 @@
 namespace libRSF
 {
   void EvaluateCostSurfacePoints(ceres::Problem &Graph,
-                                 double* const StatePointer,
+                                 double * const StatePointer,
                                  const int Dim,
-                                 const VectorVectorSTL<Dynamic> Points,
+                                 const VectorVectorSTL<Dynamic> &Points,
                                  std::vector<double> &Costs)
   {
-
     /** save original value */
     VectorRef<double, Dynamic> State(StatePointer, Dim);
     const Vector OriginalState = State;
@@ -38,14 +37,14 @@ namespace libRSF
     /** configure evaluation */
     ceres::Problem::EvaluateOptions Options;
     Options.apply_loss_function = true;
-    Options.num_threads = std::thread::hardware_concurrency();
+    Options.num_threads = static_cast<int>(std::thread::hardware_concurrency());
     Options.parameter_blocks = {StatePointer};
 
     /** loop over grid */
     Costs.clear();
-    for (int n = 0; n < static_cast<int>(Points.size()); ++n)
+    for (const auto &Point : Points)
     {
-      State = Points.at(n);
+      State = Point;
 
       /** evaluate */
       double Cost;
@@ -58,4 +57,4 @@ namespace libRSF
     /** restore original cost */
     State = OriginalState;
   }
-}
+}  // namespace libRSF

@@ -26,58 +26,64 @@ namespace libRSF
 {
   IMUPreintegrator::IMUPreintegrator(const Vector3 &BiasAcc, const Vector3 &BiasTR,
                                      const double RandomWalkAcc, const double RandomWalkGyro,
-                                     const double CurrentTime): _CurrentTime(CurrentTime),
-                                     _NoiseDensityAcc(0.0), _NoiseDensityGyro(0.0),
-                                     _RandomWalkAcc(RandomWalkAcc), _RandomWalkGyro(RandomWalkGyro),
-                                     _BiasAcc(BiasAcc), _BiasTR(BiasTR)
+                                     const double CurrentTime): CurrentTime_(CurrentTime),
+      NoiseDensityAcc_(0.0),
+      NoiseDensityGyro_(0.0),
+      RandomWalkAcc_(RandomWalkAcc),
+      RandomWalkGyro_(RandomWalkGyro),
+      BiasAcc_(BiasAcc),
+      BiasTR_(BiasTR)
   {
-    initialize();
+    initialize_();
   }
 
   IMUPreintegrator::IMUPreintegrator(const Vector3 &BiasAcc, const Vector3 &BiasTR,
                                      const double NoiseDensityAcc, const double NoiseDensityGyro,
                                      const double RandomWalkAcc, const double RandomWalkGyro,
-                                     const double CurrentTime):_CurrentTime(CurrentTime),
-                                     _NoiseDensityAcc(NoiseDensityAcc), _NoiseDensityGyro(NoiseDensityGyro),
-                                     _RandomWalkAcc(RandomWalkAcc), _RandomWalkGyro(RandomWalkGyro),
-                                     _BiasAcc(BiasAcc), _BiasTR(BiasTR)
+                                     const double CurrentTime): CurrentTime_(CurrentTime),
+        NoiseDensityAcc_(NoiseDensityAcc),
+        NoiseDensityGyro_(NoiseDensityGyro),
+        RandomWalkAcc_(RandomWalkAcc),
+        RandomWalkGyro_(RandomWalkGyro),
+        BiasAcc_(BiasAcc),
+        BiasTR_(BiasTR)
   {
-    initialize();
+    initialize_();
   }
 
-  void IMUPreintegrator::initialize()
+  void IMUPreintegrator::initialize_()
   {
     /** mean */
-    _Translation = Vector3::Zero();
-    _Velocity = Vector3::Zero();
-    _Rotation = Quaternion::Identity();
+    Translation_ = Vector3::Zero();
+    Velocity_ = Vector3::Zero();
+    Rotation_ = Quaternion::Identity();
 
     /** jacobians */
-    _JacTransBiasAcc.setZero();
-    _JacTransBiasTR.setZero();
-    _JacVelBiasAcc.setZero();
-    _JacVelBiasTR.setZero();
-    _JacRotBiasTR.setZero();
+    JacTransBiasAcc_.setZero();
+    JacTransBiasTR_.setZero();
+    JacVelBiasAcc_.setZero();
+    JacVelBiasTR_.setZero();
+    JacRotBiasTR_.setZero();
 
     /** small initial Cov to avoid rank deficiency*/
-    _TVRCov = Matrix1010::Identity() * 1e-8;
+    TVRCov_ = Matrix1010::Identity() * 1e-8;
 
     /** length of integration */
-    _DeltaTime = 0;
+    DeltaTime_ = 0;
   }
 
   void IMUPreintegrator::updateBias(const Vector3 &BiasAcc, const Vector3 &BiasTR)
   {
-    const double StartTime = _CurrentTime - _DeltaTime;
-    this->initialize();
+    const double StartTime = CurrentTime_ - DeltaTime_;
+    this->initialize_();
 
     /** initial values */
-    _CurrentTime = StartTime;
-    _BiasAcc = BiasAcc;
-    _BiasTR = BiasTR;
+    CurrentTime_ = StartTime;
+    BiasAcc_ = BiasAcc;
+    BiasTR_ = BiasTR;
 
     /** perform full pre-integration */
-    integrateFull(_CurrentTime);
+    integrateFull_(CurrentTime_);
   }
 
   PreintegratedIMUResult IMUPreintegrator::getPreintegratedState()
@@ -85,45 +91,45 @@ namespace libRSF
     PreintegratedIMUResult Result;
 
     /** measurement biases */
-    Result.BiasAcc = _BiasAcc;
-    Result.BiasTR = _BiasTR;
+    Result.BiasAcc = BiasAcc_;
+    Result.BiasTR = BiasTR_;
 
     /** pre-integration objects*/
-    Result.Translation = _Translation;
-    Result.Velocity = _Velocity;
-    Result.Rotation = _Rotation;
+    Result.Translation = Translation_;
+    Result.Velocity = Velocity_;
+    Result.Rotation = Rotation_;
 
     /** calculate rotation manifold jacobian */
     Matrix34 JacQuat;
-    QuaternionError(_Rotation, Quaternion::Identity(), &JacQuat, nullptr);
+    QuaternionError(Rotation_, Quaternion::Identity(), &JacQuat, nullptr);
     MatrixStatic<9,10> JacFull = MatrixStatic<9,10>::Zero();
     JacFull.topLeftCorner<9,9>().setIdentity();
     JacFull.bottomRightCorner<3,4>() = JacQuat;
 
     /** covariance matrix */
     Result.PreIntCov.setZero();
-    Result.PreIntCov.topLeftCorner<9,9>() = JacFull * _TVRCov * JacFull.transpose();
-    Result.PreIntCov.bottomRightCorner<6,6>().topLeftCorner<3,3>() = Matrix33::Identity() * _RandomWalkAcc * _RandomWalkAcc * _DeltaTime;
-    Result.PreIntCov.bottomRightCorner<3,3>() = Matrix33::Identity() * _RandomWalkGyro * _RandomWalkGyro * _DeltaTime;
+    Result.PreIntCov.topLeftCorner<9,9>() = JacFull * TVRCov_ * JacFull.transpose();
+    Result.PreIntCov.bottomRightCorner<6,6>().topLeftCorner<3,3>() = Matrix33::Identity() * RandomWalkAcc_ * RandomWalkAcc_ * DeltaTime_;
+    Result.PreIntCov.bottomRightCorner<3,3>() = Matrix33::Identity() * RandomWalkGyro_ * RandomWalkGyro_ * DeltaTime_;
 
     /** Jacobians of the pre-integrated objects w.r.t. the measurement biases*/
-    Result.JacTransBiasAcc = _JacTransBiasAcc;
-    Result.JacTransBiasTR = _JacTransBiasTR;
+    Result.JacTransBiasAcc = JacTransBiasAcc_;
+    Result.JacTransBiasTR = JacTransBiasTR_;
 
-    Result.JacVelBiasAcc = _JacVelBiasAcc;
-    Result.JacVelBiasTR = _JacVelBiasTR;
+    Result.JacVelBiasAcc = JacVelBiasAcc_;
+    Result.JacVelBiasTR = JacVelBiasTR_;
 
     /** Jacobians in local tangent space */
-    Result.JacRotBiasTRLocal = JacQuat * _JacRotBiasTR;
+    Result.JacRotBiasTRLocal = JacQuat * JacRotBiasTR_;
 
     /** length of the integral in time */
-    Result.DeltaTime = _DeltaTime;
+    Result.DeltaTime = DeltaTime_;
 
     /** calculate start time */
-    Result.StartTime = _CurrentTime - _DeltaTime;
+    Result.StartTime = CurrentTime_ - DeltaTime_;
 
     /** measurements */
-    Result.Measurements = _Measurements;
+    Result.Measurements = Measurements_;
 
     return Result;
   }
@@ -131,40 +137,40 @@ namespace libRSF
   void IMUPreintegrator::addMeasurement(const Data &IMUMeasurement)
   {
     /** add to measurement list and perform an integration step */
-    _Measurements.emplace_back(IMUMeasurement);
-    this->integrateSingleMeasurement(_Measurements.size()-1,IMUMeasurement.getTimestamp());
+    Measurements_.emplace_back(IMUMeasurement);
+    this->integrateSingleMeasurement_(Measurements_.size()-1,IMUMeasurement.getTimestamp());
   }
 
   void IMUPreintegrator::integrateToTime(const double Timestamp)
   {
-    this->integrateSingleMeasurement(_Measurements.size()-1,Timestamp);
+    this->integrateSingleMeasurement_(Measurements_.size()-1,Timestamp);
   }
 
-  void IMUPreintegrator::integrateFull(const double Timestamp)
+  void IMUPreintegrator::integrateFull_(const double Timestamp)
   {
     /** loop over measurements and integrate */
-    for(int i = 0; i < static_cast<int>(_Measurements.size()); i++)
+    for(int i = 0; i < static_cast<int>(Measurements_.size()); i++)
     {
-      this->integrateSingleMeasurement(i, _Measurements.at(i).getTimestamp());
+      this->integrateSingleMeasurement_(i, Measurements_.at(i).getTimestamp());
     }
-    this->integrateSingleMeasurement(_Measurements.size()-1,Timestamp);
+    this->integrateSingleMeasurement_(Measurements_.size()-1,Timestamp);
   }
 
-  void IMUPreintegrator::integrateSingleMeasurement(const int Index, const double Timestamp)
+  void IMUPreintegrator::integrateSingleMeasurement_(const int Index, const double Timestamp)
   {
     /** calculate delta t */
-    const double dt = Timestamp - _CurrentTime;
+    const double dt = Timestamp - CurrentTime_;
 
     /** get measurements*/
-    Vector3 Acceleration2 = _Measurements.at(Index).getMean().head(3);
-    Vector3 TurnRate = _Measurements.at(Index).getMean().tail(3);
+    Vector3 Acceleration2 = Measurements_.at(Index).getMean().head(3);
+    Vector3 TurnRate = Measurements_.at(Index).getMean().tail(3);
 
     /** average for mid-point integration */
     Vector3 Acceleration1;
     if (Index > 0)
     {
-      Acceleration1 = _Measurements.at(Index-1).getMean().head(3);
-      TurnRate = 0.5*(TurnRate + _Measurements.at(Index-1).getMean().tail(3));
+      Acceleration1 = Measurements_.at(Index-1).getMean().head(3);
+      TurnRate = 0.5*(TurnRate + Measurements_.at(Index-1).getMean().tail(3));
     }
     else
     {
@@ -173,68 +179,70 @@ namespace libRSF
 
     /** get measurement covariances */
     Matrix33 AccelerationCov;
-    if(_NoiseDensityAcc <= 0.0)
+    if(NoiseDensityAcc_ <= 0.0)
     {
-      AccelerationCov = _Measurements.at(Index).getCovarianceDiagonal().head(3).asDiagonal();
+      AccelerationCov =
+          Measurements_.at(Index).getCovarianceDiagonal().head(3).asDiagonal();
     }
     else
     {
-      AccelerationCov = Matrix33::Identity() * _NoiseDensityAcc * _NoiseDensityAcc / dt;
+      AccelerationCov = Matrix33::Identity() * NoiseDensityAcc_ * NoiseDensityAcc_ / dt;
     }
 
     Matrix33 TurnRateCov ;
-    if(_NoiseDensityGyro <= 0.0)
+    if(NoiseDensityGyro_ <= 0.0)
     {
-      TurnRateCov = _Measurements.at(Index).getCovarianceDiagonal().tail(3).asDiagonal();
+      TurnRateCov =
+          Measurements_.at(Index).getCovarianceDiagonal().tail(3).asDiagonal();
     }
     else
     {
-      TurnRateCov = Matrix33::Identity() * _NoiseDensityGyro * _NoiseDensityGyro / dt;
+      TurnRateCov = Matrix33::Identity() * NoiseDensityGyro_ * NoiseDensityGyro_ / dt;
     }
 
     /** autodiff integration */
-    typedef ceres::Jet<double, 22> JetType;
+    using JetType = ceres::Jet<double, 22>;
 
     /** set up old states */
-    VectorT<JetType,3> Translation1Jet = this->_Translation.template cast<JetType>();
+    VectorT<JetType,3> Translation1Jet = this->Translation_.template cast<JetType>();
     Translation1Jet.x().v(0) = 1;
     Translation1Jet.y().v(1) = 1;
     Translation1Jet.z().v(2) = 1;
-    Translation1Jet.x().v.template segment<3>(10) = _JacTransBiasAcc.row(0);
-    Translation1Jet.y().v.template segment<3>(10) = _JacTransBiasAcc.row(1);
-    Translation1Jet.z().v.template segment<3>(10) = _JacTransBiasAcc.row(2);
-    Translation1Jet.x().v.template segment<3>(13) = _JacTransBiasTR.row(0);
-    Translation1Jet.y().v.template segment<3>(13) = _JacTransBiasTR.row(1);
-    Translation1Jet.z().v.template segment<3>(13) = _JacTransBiasTR.row(2);
+    Translation1Jet.x().v.template segment<3>(10) = JacTransBiasAcc_.row(0);
+    Translation1Jet.y().v.template segment<3>(10) = JacTransBiasAcc_.row(1);
+    Translation1Jet.z().v.template segment<3>(10) = JacTransBiasAcc_.row(2);
+    Translation1Jet.x().v.template segment<3>(13) = JacTransBiasTR_.row(0);
+    Translation1Jet.y().v.template segment<3>(13) = JacTransBiasTR_.row(1);
+    Translation1Jet.z().v.template segment<3>(13) = JacTransBiasTR_.row(2);
 
-    VectorT<JetType,3> Velocity1Jet = this->_Velocity.template cast<JetType>();
+    VectorT<JetType,3> Velocity1Jet = this->Velocity_.template cast<JetType>();
     Velocity1Jet.x().v(3) = 1;
     Velocity1Jet.y().v(4) = 1;
     Velocity1Jet.z().v(5) = 1;
-    Velocity1Jet.x().v.template segment<3>(10) = _JacVelBiasAcc.row(0);
-    Velocity1Jet.y().v.template segment<3>(10) = _JacVelBiasAcc.row(1);
-    Velocity1Jet.z().v.template segment<3>(10) = _JacVelBiasAcc.row(2);
-    Velocity1Jet.x().v.template segment<3>(13) = _JacVelBiasTR.row(0);
-    Velocity1Jet.y().v.template segment<3>(13) = _JacVelBiasTR.row(1);
-    Velocity1Jet.z().v.template segment<3>(13) = _JacVelBiasTR.row(2);
+    Velocity1Jet.x().v.template segment<3>(10) = JacVelBiasAcc_.row(0);
+    Velocity1Jet.y().v.template segment<3>(10) = JacVelBiasAcc_.row(1);
+    Velocity1Jet.z().v.template segment<3>(10) = JacVelBiasAcc_.row(2);
+    Velocity1Jet.x().v.template segment<3>(13) = JacVelBiasTR_.row(0);
+    Velocity1Jet.y().v.template segment<3>(13) = JacVelBiasTR_.row(1);
+    Velocity1Jet.z().v.template segment<3>(13) = JacVelBiasTR_.row(2);
 
-    QuaternionT<JetType> Rotation1Jet = this->_Rotation.template cast<JetType>();
+    QuaternionT<JetType> Rotation1Jet = this->Rotation_.template cast<JetType>();
     Rotation1Jet.x().v(6) = 1;
     Rotation1Jet.y().v(7) = 1;
     Rotation1Jet.z().v(8) = 1;
     Rotation1Jet.w().v(9) = 1;
-    Rotation1Jet.x().v.template segment<3>(13) = _JacRotBiasTR.row(0);
-    Rotation1Jet.y().v.template segment<3>(13) = _JacRotBiasTR.row(1);
-    Rotation1Jet.z().v.template segment<3>(13) = _JacRotBiasTR.row(2);
-    Rotation1Jet.w().v.template segment<3>(13) = _JacRotBiasTR.row(3);
+    Rotation1Jet.x().v.template segment<3>(13) = JacRotBiasTR_.row(0);
+    Rotation1Jet.y().v.template segment<3>(13) = JacRotBiasTR_.row(1);
+    Rotation1Jet.z().v.template segment<3>(13) = JacRotBiasTR_.row(2);
+    Rotation1Jet.w().v.template segment<3>(13) = JacRotBiasTR_.row(3);
 
     /** biases */
-    VectorT<JetType,3> BiasAccJet = this->_BiasAcc.template cast<JetType>();
+    VectorT<JetType,3> BiasAccJet = this->BiasAcc_.template cast<JetType>();
     BiasAccJet.x().v(10) = 1;
     BiasAccJet.y().v(11) = 1;
     BiasAccJet.z().v(12) = 1;
 
-    VectorT<JetType,3> BiasTRJet = this->_BiasTR.template cast<JetType>();
+    VectorT<JetType,3> BiasTRJet = this->BiasTR_.template cast<JetType>();
     BiasTRJet.x().v(13) = 1;
     BiasTRJet.y().v(14) = 1;
     BiasTRJet.z().v(15) = 1;
@@ -265,18 +273,18 @@ namespace libRSF
     const VectorT<JetType,3> Velocity2Jet = Velocity1Jet + dt*AccMidPoint;
 
     /** extract mean */
-    this->_Translation.x() = Translation2Jet.x().a;
-    this->_Translation.y() = Translation2Jet.y().a;
-    this->_Translation.z() = Translation2Jet.z().a;
+    this->Translation_.x() = Translation2Jet.x().a;
+    this->Translation_.y() = Translation2Jet.y().a;
+    this->Translation_.z() = Translation2Jet.z().a;
 
-    this->_Velocity.x() = Velocity2Jet.x().a;
-    this->_Velocity.y() = Velocity2Jet.y().a;
-    this->_Velocity.z() = Velocity2Jet.z().a;
+    this->Velocity_.x() = Velocity2Jet.x().a;
+    this->Velocity_.y() = Velocity2Jet.y().a;
+    this->Velocity_.z() = Velocity2Jet.z().a;
 
-    this->_Rotation.x() = Rotation2Jet.x().a;
-    this->_Rotation.y() = Rotation2Jet.y().a;
-    this->_Rotation.z() = Rotation2Jet.z().a;
-    this->_Rotation.w() = Rotation2Jet.w().a;
+    this->Rotation_.x() = Rotation2Jet.x().a;
+    this->Rotation_.y() = Rotation2Jet.y().a;
+    this->Rotation_.z() = Rotation2Jet.z().a;
+    this->Rotation_.w() = Rotation2Jet.w().a;
 
     /** extract Jacobian */
     MatrixStatic<10,16> Jacobian = MatrixStatic<10, 16>::Zero();
@@ -305,37 +313,37 @@ namespace libRSF
 
     /** set up input covariance (this is for euler integration) */
     MatrixStatic<16, 16> Covariance = MatrixStatic<16, 16>::Zero();
-    Covariance.topLeftCorner<10,10>() = this->_TVRCov;
+    Covariance.topLeftCorner<10,10>() = this->TVRCov_;
     Covariance.bottomRightCorner<6,6>().topLeftCorner<3,3>() = AccelerationCov;
     Covariance.bottomRightCorner<3,3>() = TurnRateCov;
 
     /** propagate covariance */
-    this->_TVRCov = Jacobian*Covariance*Jacobian.transpose();
+    this->TVRCov_ = Jacobian*Covariance*Jacobian.transpose();
 
     /** update bias jacobians */
-    this->_JacTransBiasAcc.row(0) = Translation2Jet.x().v.template segment<3>(10);
-    this->_JacTransBiasAcc.row(1) = Translation2Jet.y().v.template segment<3>(10);
-    this->_JacTransBiasAcc.row(2) = Translation2Jet.z().v.template segment<3>(10);
+    this->JacTransBiasAcc_.row(0) = Translation2Jet.x().v.template segment<3>(10);
+    this->JacTransBiasAcc_.row(1) = Translation2Jet.y().v.template segment<3>(10);
+    this->JacTransBiasAcc_.row(2) = Translation2Jet.z().v.template segment<3>(10);
 
-    this->_JacVelBiasAcc.row(0) = Velocity2Jet.x().v.template segment<3>(10);
-    this->_JacVelBiasAcc.row(1) = Velocity2Jet.y().v.template segment<3>(10);
-    this->_JacVelBiasAcc.row(2) = Velocity2Jet.z().v.template segment<3>(10);
+    this->JacVelBiasAcc_.row(0) = Velocity2Jet.x().v.template segment<3>(10);
+    this->JacVelBiasAcc_.row(1) = Velocity2Jet.y().v.template segment<3>(10);
+    this->JacVelBiasAcc_.row(2) = Velocity2Jet.z().v.template segment<3>(10);
 
-    this->_JacTransBiasTR.row(0) = Translation2Jet.x().v.template segment<3>(13);
-    this->_JacTransBiasTR.row(1) = Translation2Jet.y().v.template segment<3>(13);
-    this->_JacTransBiasTR.row(2) = Translation2Jet.z().v.template segment<3>(13);
+    this->JacTransBiasTR_.row(0) = Translation2Jet.x().v.template segment<3>(13);
+    this->JacTransBiasTR_.row(1) = Translation2Jet.y().v.template segment<3>(13);
+    this->JacTransBiasTR_.row(2) = Translation2Jet.z().v.template segment<3>(13);
 
-    this->_JacVelBiasTR.row(0) = Velocity2Jet.x().v.template segment<3>(13);
-    this->_JacVelBiasTR.row(1) = Velocity2Jet.y().v.template segment<3>(13);
-    this->_JacVelBiasTR.row(2) = Velocity2Jet.z().v.template segment<3>(13);
+    this->JacVelBiasTR_.row(0) = Velocity2Jet.x().v.template segment<3>(13);
+    this->JacVelBiasTR_.row(1) = Velocity2Jet.y().v.template segment<3>(13);
+    this->JacVelBiasTR_.row(2) = Velocity2Jet.z().v.template segment<3>(13);
 
-    this->_JacRotBiasTR.row(0) = Rotation2Jet.x().v.template segment<3>(13);
-    this->_JacRotBiasTR.row(1) = Rotation2Jet.y().v.template segment<3>(13);
-    this->_JacRotBiasTR.row(2) = Rotation2Jet.z().v.template segment<3>(13);
-    this->_JacRotBiasTR.row(3) = Rotation2Jet.w().v.template segment<3>(13);
+    this->JacRotBiasTR_.row(0) = Rotation2Jet.x().v.template segment<3>(13);
+    this->JacRotBiasTR_.row(1) = Rotation2Jet.y().v.template segment<3>(13);
+    this->JacRotBiasTR_.row(2) = Rotation2Jet.z().v.template segment<3>(13);
+    this->JacRotBiasTR_.row(3) = Rotation2Jet.w().v.template segment<3>(13);
 
     /** update time variables */
-    _CurrentTime = Timestamp;
-    _DeltaTime += dt;
+    CurrentTime_ = Timestamp;
+    DeltaTime_ += dt;
   }
 }

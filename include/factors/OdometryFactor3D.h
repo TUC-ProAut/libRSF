@@ -45,11 +45,11 @@ namespace libRSF
       /** construct factor and store measurement */
       OdometryFactor3D4DOF_ECEF(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
-        this->_Error = Error;
+        this->Error_ = Error;
 
-        this->_MeasurementVector.resize(6);
-        this->_MeasurementVector = OdometryMeasurement.getMean();
-        this->_DeltaTime = DeltaTime;
+        this->MeasurementVector_.resize(6);
+        this->MeasurementVector_ = OdometryMeasurement.getMean();
+        this->DeltaTime_ = DeltaTime;
       }
 
       /** geometric error model */
@@ -57,16 +57,16 @@ namespace libRSF
       VectorT<T, 4> Evaluate(const T* const Pos1, const T* const Yaw1,
                              const T* const Pos2, const T* const Yaw2) const
       {
-        const Vector6 Odometry = this->_MeasurementVector;
+        const Vector6 Odometry = this->MeasurementVector_;
 
         /** estimate measurements */
         VectorT<T, 3> VelocityEst, TurnRateEst;
-        OdometryModel4DOFECEF<T>::applyBackward(Pos1, Yaw1, Pos2, Yaw2, VelocityEst, TurnRateEst, this->_DeltaTime);
+        OdometryModel4DOFECEF<T>::applyBackward(Pos1, Yaw1, Pos2, Yaw2, VelocityEst, TurnRateEst, this->DeltaTime_);
 
         /** error = estimated measurement - measurement */
         VectorT<T, 4> Error;
         Error.template head<3>() = VelocityEst - Odometry.template head<3>().template cast<T>();
-        Error(3) = NormalizeAngleVelocity<T>(TurnRateEst(2) - Odometry(5), this->_DeltaTime);
+        Error(3) = NormalizeAngleVelocity<T>(TurnRateEst(2) - Odometry(5), this->DeltaTime_);
 
         return Error;
       }
@@ -77,7 +77,7 @@ namespace libRSF
                       const T* const Pos2, const T* const Yaw2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pos1, Yaw1,
+        return this->Error_.template weight<T>(this->Evaluate(Pos1, Yaw1,
                                                               Pos2, Yaw2),
                                                Params...);
       }
@@ -89,9 +89,9 @@ namespace libRSF
                                                     StatePointers[1],
                                                     StatePointers[2],
                                                     StatePointers[3],
-                                                    this->_MeasurementVector.head(3),
-                                                    this->_MeasurementVector.tail(3),
-                                                    this->_DeltaTime);
+                                                    this->MeasurementVector_.head(3),
+                                                    this->MeasurementVector_.tail(3),
+                                                    this->DeltaTime_);
       }
   };
 
@@ -102,10 +102,10 @@ namespace libRSF
       /** construct factor and store measurement */
       OdometryFactor3D4DOF(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(6);
-        this->_MeasurementVector = OdometryMeasurement.getMean();
-        this->_DeltaTime = DeltaTime;
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(6);
+        this->MeasurementVector_ = OdometryMeasurement.getMean();
+        this->DeltaTime_ = DeltaTime;
       }
 
       /** geometric error model */
@@ -113,16 +113,16 @@ namespace libRSF
       VectorT<T, 4> Evaluate(const T* const Pos1, const T* const Yaw1,
                              const T* const Pos2, const T* const Yaw2) const
       {
-        const Vector6 Odometry = this->_MeasurementVector;
+        const Vector6 Odometry = this->MeasurementVector_;
 
         /** estimate measurements */
         VectorT<T, 3> VelocityEst, TurnRateEst;
-        OdometryModel4DOF<T>::applyBackward(Pos1, Yaw1, Pos2, Yaw2, VelocityEst, TurnRateEst, this->_DeltaTime);
+        OdometryModel4DOF<T>::applyBackward(Pos1, Yaw1, Pos2, Yaw2, VelocityEst, TurnRateEst, this->DeltaTime_);
 
         /** error = estimated measurement - measurement */
         VectorT<T, 4> Error;
         Error.template head<3>() = VelocityEst - Odometry.template head<3>().template cast<T>();
-        Error(3) = NormalizeAngleVelocity<T>(TurnRateEst(2) - Odometry(5), this->_DeltaTime);
+        Error(3) = NormalizeAngleVelocity<T>(TurnRateEst(2) - Odometry(5), this->DeltaTime_);
 
         return Error;
       }
@@ -132,7 +132,7 @@ namespace libRSF
                       const T* const Pos2, const T* const Yaw2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pos1, Yaw1,
+        return this->Error_.template weight<T>(this->Evaluate(Pos1, Yaw1,
                                                               Pos2, Yaw2),
                                                Params...);
       }
@@ -144,9 +144,9 @@ namespace libRSF
                                                 StatePointers[1],
                                                 StatePointers[2],
                                                 StatePointers[3],
-                                                this->_MeasurementVector.head(3),
-                                                this->_MeasurementVector.tail(3),
-                                                this->_DeltaTime);
+                                                this->MeasurementVector_.head(3),
+                                                this->MeasurementVector_.tail(3),
+                                                this->DeltaTime_);
       }
   };
 
@@ -157,10 +157,10 @@ namespace libRSF
       /** construct factor and store measurement */
       OdometryFactor3D6DOF(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(6);
-        this->_MeasurementVector = OdometryMeasurement.getMean();
-        this->_DeltaTime = DeltaTime;
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(6);
+        this->MeasurementVector_ = OdometryMeasurement.getMean();
+        this->DeltaTime_ = DeltaTime;
       }
 
       /** geometric error model */
@@ -168,16 +168,16 @@ namespace libRSF
       VectorT<T, 6> Evaluate(const T* const Pos1, const T* const Quat1,
                              const T* const Pos2, const T* const Quat2) const
       {
-        const Vector6 Odometry = this->_MeasurementVector;
+        const Vector6 Odometry = this->MeasurementVector_;
 
         /** estimate measurements */
         VectorT<T, 3> VelocityEst, TurnRateEst;
-        OdometryModel6DOF<T>::applyBackward(Pos1, Quat1, Pos2, Quat2, VelocityEst, TurnRateEst, this->_DeltaTime);
+        OdometryModel6DOF<T>::applyBackward(Pos1, Quat1, Pos2, Quat2, VelocityEst, TurnRateEst, this->DeltaTime_);
 
         /** error = estimated measurement - measurement */
         VectorT<T, 6> Error;
         Error.template head<3>() = VelocityEst - Odometry.template head<3>().template cast<T>();
-        Error.template tail<3>() = NormalizeAngleVelocityVector<T, 3>(TurnRateEst - Odometry.template tail<3>().template cast<T>(), this->_DeltaTime);
+        Error.template tail<3>() = NormalizeAngleVelocityVector<T, 3>(TurnRateEst - Odometry.template tail<3>().template cast<T>(), this->DeltaTime_);
 
         return Error;
       }
@@ -188,7 +188,7 @@ namespace libRSF
                       const T* const Pos2, const T* const Quat2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pos1, Quat1,
+        return this->Error_.template weight<T>(this->Evaluate(Pos1, Quat1,
                                                               Pos2, Quat2),
                                                Params...);
       }
@@ -200,9 +200,9 @@ namespace libRSF
                                                 StatePointers[1],
                                                 StatePointers[2],
                                                 StatePointers[3],
-                                                this->_MeasurementVector.head(3),
-                                                this->_MeasurementVector.tail(3),
-                                                this->_DeltaTime);
+                                                this->MeasurementVector_.head(3),
+                                                this->MeasurementVector_.tail(3),
+                                                this->DeltaTime_);
       }
   };
 

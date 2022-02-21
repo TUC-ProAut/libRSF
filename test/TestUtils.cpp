@@ -76,7 +76,7 @@ namespace libRSF
   }
 
 
-  /** \brief maximum componentwise absolute difference between two datasets (mean and covariance)
+  /** \brief maximum component-wise absolute difference between two datasets (mean and covariance)
    *
    * \param TypeGT the type of the GT data
    * \param GT a data set that holds the GT

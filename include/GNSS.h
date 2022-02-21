@@ -50,14 +50,14 @@ namespace libRSF
   {
   public:
     TangentPlaneConverter();
-    explicit TangentPlaneConverter(Vector3 TangentPoint);
-    ~TangentPlaneConverter(){};
+    explicit TangentPlaneConverter(const Vector3 &TangentPoint);
+    ~TangentPlaneConverter() = default;
 
     /** set local reference point */
     void setTangentPoint(Vector3 TangentPoint);
 
     /** check status */
-    bool isInitialized();
+    [[nodiscard]] bool isInitialized() const;
 
     /** element-wise interface */
     void convertMeasurementToLocal(Data &Measurement);
@@ -67,30 +67,30 @@ namespace libRSF
 
     /** batch interface */
     void convertAllPseudorangesToLocal(SensorDataSet &Measurements);
-    void convertAllStatesToLocal(StateDataSet &States, std::string ID);
-    void convertAllStatesToGlobal(StateDataSet &States, std::string ID);
+    void convertAllStatesToLocal(StateDataSet &States, const std::string& ID);
+    void convertAllStatesToGlobal(StateDataSet &States, const std::string& ID);
 
   private:
     /** convert mean only */
-    Vector3 convertToLocal(const Vector3 &GlobalPoint) const;
-    Vector3 convertToGlobal(const Vector3 &LocalPoint) const;
+    [[nodiscard]] Vector3 convertToLocal_(const Vector3 &GlobalPoint) const;
+    [[nodiscard]] Vector3 convertToGlobal_(const Vector3 &LocalPoint) const;
 
     /** convert mean and covariance */
-    void convertToLocal(const Vector3  &GlobalPoint,
+    void convertToLocal_(const Vector3  &GlobalPoint,
                         const Matrix33 &GlobalCov,
                         Vector3  &LocalPoint,
                         Matrix33 &LocalCov) const;
 
-    void convertToGlobal(const Vector3  &LocalPoint,
+    void convertToGlobal_(const Vector3  &LocalPoint,
                          const Matrix33 &LocalCov,
                          Vector3  &GlobalPoint,
                          Matrix33 &GlobalCov) const;
 
-    bool                              _isInitialized;
-    Vector3                           _TangentPoint;
+    bool                              isInitialized_;
+    Vector3                           TangentPoint_;
 
-    GeographicLib::LocalCartesian     _LocalProjection;
-    const GeographicLib::Geocentric   _Earth = GeographicLib::Geocentric::WGS84();
+    GeographicLib::LocalCartesian     LocalProjection_;
+    const GeographicLib::Geocentric   Earth_ = GeographicLib::Geocentric::WGS84();
   };
 
 

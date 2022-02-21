@@ -37,6 +37,7 @@
 #include "../Misc.h"
 #include "../Messages.h"
 #include "../Statistics.h"
+#include "../FactorGraphConfig.h"
 
 #include <Eigen/Dense>
 #include <unsupported/Eigen/SpecialFunctions>
@@ -49,15 +50,13 @@ namespace libRSF
   class GaussianMixture
   {
     public:
-      GaussianMixture() = default;
-      virtual ~GaussianMixture() = default;
 
-      typedef MatrixT<double, Dim, Dynamic> ErrorMatType;
+      using ErrorMatType = MatrixT<double, Dim, Dynamic>;
 
       /** config for mixture estimation */
       struct EstimationConfig
       {
-        typedef ErrorModelTuningType EstimationAlgorithmType;
+        using EstimationAlgorithmType = ErrorModelTuningType;
         /** estimation algorithm */
         EstimationAlgorithmType EstimationAlgorithm = EstimationAlgorithmType::EM;
 
@@ -72,7 +71,7 @@ namespace libRSF
         double MinimalSamples = 15;
 
         /** hyper-priors */
-        double PriorDirichletConcentration = 1;
+        double PriorDirichletConcentration = 1e-4;
 
         double PriorNormalInfoScaling = 1e-6;
         VectorStatic<Dim> PriorNormalMean = VectorStatic<Dim>::Zero();
@@ -86,8 +85,8 @@ namespace libRSF
         double MinSamplePerComponent = Dim + 1;
 
         /** check the Bhattacharyya distance between all components to merge similar ones */
-        bool MergeSimiliarComponents = false;
-        double MergingThreshhold = 0.1;
+        bool MergeSimilarComponents = false;
+        double MergingThreshold = 0.1;
       };
 
       /** Bayesian representation of the parameter estimation problem */
@@ -105,6 +104,90 @@ namespace libRSF
 
         Matrix Responsibilities;
       };
+
+      /** default constructor */
+      GaussianMixture() = default;
+      virtual ~GaussianMixture() = default;
+
+      /** convenient constructor from external config struct*/
+      explicit GaussianMixture(const FactorGraphConfig::GaussianMixtureConfig &Config)
+      {
+        switch (Config.TuningType)
+        {
+          case ErrorModelTuningType::None:
+            {
+              /** init with static parameterization */
+              GaussianComponent<Dim> Comp1, Comp2;
+              MatrixStatic<Dim, Dim> Cov1, Cov2;
+
+              Cov1 << Config.StdDev.head(Dim*Dim);
+              Cov1 = Cov1.transpose()*Cov1;
+
+              Cov2 << Config.StdDev.tail(Dim*Dim);
+              Cov2 = Cov2.transpose()*Cov2;
+
+              Comp1.setParamsCovariance(Cov1, Config.Mean.head(Dim), Config.Weight.head(1));
+              Comp2.setParamsCovariance(Cov2, Config.Mean.tail(Dim), Config.Weight.tail(1));
+
+              this->addComponent(Comp1);
+              this->addComponent(Comp2);
+            }
+            break;
+
+          case ErrorModelTuningType::EM:
+          case ErrorModelTuningType::EM_MAP:
+          case ErrorModelTuningType::VBI:
+          case ErrorModelTuningType::VBI_Full:
+            this->initSpread(Config.NumberComponents, Config.BaseStandardDeviation);
+            break;
+
+          default:
+            PRINT_ERROR("Error model tuning type not handled: ", Config.TuningType);
+            break;
+        }
+      }
+
+      static EstimationConfig ConvertConfig(const FactorGraphConfig::GaussianMixtureConfig &Config)
+      {
+        EstimationConfig NewConfig;
+
+        /** copy type */
+        NewConfig.EstimationAlgorithm = Config.TuningType;
+
+        /** copy prior parameter*/
+        switch (Config.TuningType)
+        {
+          case ErrorModelTuningType::EM:
+            break;
+
+          case ErrorModelTuningType::EM_MAP:
+          case ErrorModelTuningType::VBI_Full:
+            NewConfig.PriorDirichletConcentration = Config.PriorDirichletConcentration;
+            NewConfig.PriorNormalInfoScaling = Config.PriorNormalInfoScaling;
+            NewConfig.PriorWishartDOF = Config.PriorWishartDOF;
+            break;
+
+          case ErrorModelTuningType::VBI:
+            NewConfig.PriorNormalInfoScaling = Config.PriorNormalInfoScaling;
+            NewConfig.PriorWishartDOF = Config.PriorWishartDOF;
+            break;
+
+          default:
+            PRINT_ERROR("Error model tuning type not handled: ", Config.TuningType);
+            break;
+        }
+
+        if(Config.IncrementalTuning)
+        {
+          NewConfig.RemoveSmallComponents = true;
+        }
+        else
+        {
+          NewConfig.RemoveSmallComponents = false;
+        }
+
+        return NewConfig;
+      }
 
       bool estimate(const std::vector<double> &Data, const EstimationConfig &Config)
       {
@@ -146,16 +229,16 @@ namespace libRSF
         bool ReachedMaxIteration = false;
         bool Converged = false;
         bool Merged = false;
-        bool Prunned = false;
+        bool Pruned = false;
         double LikelihoodSumOld = 0;
         double LikelihoodSum = 0;
         int k = 1;
 
         /** iterate until convergence */
-        while ((Converged == false && ReachedMaxIteration == false) || Merged == true || Prunned == true)
+        while ((!Converged && !ReachedMaxIteration) || Merged || Pruned)
         {
-          /** init required varaibles */
-          int M = _Mixture.size();
+          /** init required variables */
+          int M = Mixture_.size();
 
           switch (Config.EstimationAlgorithm)
           {
@@ -217,17 +300,17 @@ namespace libRSF
             /** remove components with a low weight */
             if (Config.RemoveSmallComponents)
             {
-              Prunned = this->prunMixture(std::min(Config.MinSamplePerComponent / N, 1.0));
+              Pruned = this->prunMixture(std::min(Config.MinSamplePerComponent / N, 1.0));
             }
             else
             {
-              Prunned = this->prunMixture(0.0);
+              Pruned = this->prunMixture(0.0);
             }
 
             /** merge components that are close to each other */
-            if (Config.MergeSimiliarComponents)
+            if (Config.MergeSimilarComponents)
             {
-              Merged = this->reduceMixture(Config.MergingThreshhold);
+              Merged = this->reduceMixture(Config.MergingThreshold);
             }
             else
             {
@@ -273,17 +356,17 @@ namespace libRSF
         /** check if any GMM parameter is consistent after the estimation (only in debug mode)*/
         bool GMMConsistency = true;
 #ifndef NDEBUG
-        for (int m = 0; m < static_cast<int>(_Mixture.size()); m++)
+        for (int m = 0; m < static_cast<int>(Mixture_.size()); m++)
         {
-          if (_Mixture.at(m).checkParameters() == false)
+          if (Mixture_.at(m).checkParameters() == false)
           {
-            PRINT_ERROR("Check of GMM component ", m+1, " of ", _Mixture.size(), " failed!");
+            PRINT_ERROR("Check of GMM component ", m+1, " of ", Mixture_.size(), " failed!");
             GMMConsistency = false;
           }
         }
 
         PRINT_LOGGING("GMM estimation started with ", N, " samples.");
-        PRINT_LOGGING("GMM estimation ended with ", _Mixture.size(), " components, after ", k - 1, " iterations.");
+        PRINT_LOGGING("GMM estimation ended with ", Mixture_.size(), " components, after ", k - 1, " iterations.");
         this->printParameter();
 #endif
 
@@ -291,7 +374,7 @@ namespace libRSF
       }
 
       /** init with increasing uncertainties */
-      void initSpread(const int Components, const double BaseStdDev, const bool IsAssymetric = false)
+      void initSpread(const int Components, const double BaseStdDev, const bool IsAsymmetric = false)
       {
         libRSF::GaussianComponent<Dim> Component;
 
@@ -302,7 +385,7 @@ namespace libRSF
         this->clear();
         for (int nComponent = 0; nComponent < static_cast<int>(Components); ++nComponent)
         {
-          if(nComponent > 0 && IsAssymetric)
+          if(nComponent > 0 && IsAsymmetric)
           {
             Mean = MatrixStatic<Dim, 1>::Ones() * BaseStdDev*BaseStdDev * std::pow(10, nComponent-1);
           }
@@ -317,45 +400,45 @@ namespace libRSF
 
       void addComponent(GaussianComponent<Dim> Gaussian)
       {
-        _Mixture.emplace_back(Gaussian);
+        Mixture_.emplace_back(Gaussian);
       }
 
       /** for distribution-to-distribution models */
       void inflateWithCov(MatrixStatic<Dim, Dim> Cov)
       {
-        for (int i = 0; i < static_cast<int>(_Mixture.size()); ++i)
+        for (int i = 0; i < static_cast<int>(Mixture_.size()); ++i)
         {
           MatrixStatic<Dim, Dim> CovNew;
 
-          CovNew = Cov + _Mixture.at(i).getCovariance();
+          CovNew = Cov + Mixture_.at(i).getCovariance();
 
-          _Mixture.at(i).updateCovariance(CovNew);
+          Mixture_.at(i).updateCovariance(CovNew);
         }
       }
 
       void removeLastComponent()
       {
-        _Mixture.pop_back();
+        Mixture_.pop_back();
       }
 
       void clear()
       {
-        _Mixture.clear();
+        Mixture_.clear();
       }
 
-      int getNumberOfComponents() const
+      [[nodiscard]] int getNumberOfComponents() const
       {
-        return _Mixture.size();
+        return Mixture_.size();
       }
 
       void getMixture(std::vector<GaussianComponent<Dim>> &Mixture)
       {
-        Mixture = _Mixture;
+        Mixture = Mixture_;
       }
 
       void computeLikelihood(const ErrorMatType &DataVector, Matrix &Likelihood) const
       {
-        const int M = _Mixture.size(); /**< number of components */
+        const int M = Mixture_.size(); /**< number of components */
         const int N = DataVector.cols(); /**< number of data samples */
 
         /** adapt size of output matrix */
@@ -364,7 +447,7 @@ namespace libRSF
         /** loop over components*/
         for (int m = 0; m < M; ++m)
         {
-          Likelihood.row(m) = _Mixture.at(m).computeLikelihood(DataVector);
+          Likelihood.row(m) = Mixture_.at(m).computeLikelihood(DataVector);
         }
 
         /** remove NaNs */
@@ -373,7 +456,7 @@ namespace libRSF
 
       double computeProbability(const ErrorMatType &DataVector, Matrix &Probability) const
       {
-        const int M = _Mixture.size(); /**< number of components */
+        const int M = Mixture_.size(); /**< number of components */
         const int N = DataVector.cols(); /**< number of data samples */
 
         /** get likelihood */
@@ -408,7 +491,7 @@ namespace libRSF
 
       double computeNegLogLikelihood(const ErrorMatType &DataVector, Matrix &NegLogLikelihood, const bool EvalAsError = true) const
       {
-        const int M = _Mixture.size(); /**< number of components */
+        const int M = Mixture_.size(); /**< number of components */
         const int N = DataVector.cols(); /**< number of data samples */
 
         /** adapt size of output matrix */
@@ -417,7 +500,7 @@ namespace libRSF
         /** loop over components*/
         for (int m = 0; m < M; ++m)
         {
-          NegLogLikelihood.row(m) = _Mixture.at(m).computeNegLogLikelihood(DataVector, EvalAsError);
+          NegLogLikelihood.row(m) = Mixture_.at(m).computeNegLogLikelihood(DataVector, EvalAsError);
         }
 
         /** remove NaNs */
@@ -429,7 +512,7 @@ namespace libRSF
       void extractParameterFromBayes(const BayesianState &State)
       {
         /** delete old mixture */
-        _Mixture.clear();
+        Mixture_.clear();
 
         /** extract parameter component-wise */
         const int GMMSize = State.Weight.size();
@@ -467,7 +550,7 @@ namespace libRSF
         {
           for (int n = VBIState.Weight.size(); n < VBIState.Responsibilities.rows(); ++n)
           {
-            VBIState.Weight.push_back(this->_Mixture.at(n).getWeight()(0));
+            VBIState.Weight.push_back(this->Mixture_.at(n).getWeight()(0));
             VBIState.InfoMean.push_back(Beta0); /**< will be overwritten */
             VBIState.MeanMean.push_back(Mean0); /**< will be overwritten */
             VBIState.NuInfo.push_back(Nu0);
@@ -580,7 +663,7 @@ namespace libRSF
         /** remove useless or degenerated components */
         for (int m = GMMSize-1; m >=0 ; --m)
         {
-          if(!(VBIState.Weight.at(m) >= (Config.MinSamplePerComponent / SampleSize)) && VBIState.Weight.size() > 1)/**< catches NaN also */
+          if(((VBIState.Weight.at(m) < (Config.MinSamplePerComponent / SampleSize) && Config.RemoveSmallComponents ) || std::isnan(VBIState.Weight.at(m))) && VBIState.Weight.size() > 1)
           {
             /** remove component from posterior states */
             VBIState.NuInfo.erase(VBIState.NuInfo.begin() + m);
@@ -630,7 +713,7 @@ namespace libRSF
             VBIState.BetaMean.push_back(Beta0);
             VBIState.NuInfo.push_back(Nu0);
             VBIState.WInfo.push_back(Inverse(Config.PriorWishartScatter));
-            VBIState.Weight.push_back(this->_Mixture.at(n).getWeight()(0));
+            VBIState.Weight.push_back(this->Mixture_.at(n).getWeight()(0));
           }
         }
         const int GMMSize = VBIState.AlphaWeight.size();
@@ -726,7 +809,8 @@ namespace libRSF
         /** remove useless or degenerated components */
         for (int k = GMMSize-1; k >=0 ; --k)
         {
-          if(!(VBIState.Weight.at(k) >= (Config.MinSamplePerComponent / SampleSize)) && VBIState.Weight.size() > 1)/**< catches NaN also */
+
+          if(((VBIState.Weight.at(k) < (Config.MinSamplePerComponent / SampleSize) && Config.RemoveSmallComponents ) || std::isnan(VBIState.Weight.at(k))) && VBIState.Weight.size() > 1)
           {
             /** remove component from posterior states */
             VBIState.AlphaWeight.erase(VBIState.AlphaWeight.begin() + k);
@@ -751,10 +835,10 @@ namespace libRSF
 
       void computeMixtureParameters(const ErrorMatType &DataVector, const Matrix &Likelihood, const EstimationConfig &Config)
       {
-        const int M = _Mixture.size();
+        const int M = Mixture_.size();
         for (int m = 0; m < M; m++)
         {
-          _Mixture.at(m).estimateParameters(DataVector, Likelihood.row(m), Config.EstimateMean);
+          Mixture_.at(m).estimateParameters(DataVector, Likelihood.row(m), Config.EstimateMean);
         }
       }
 
@@ -762,12 +846,12 @@ namespace libRSF
       {
 
         /** sum over components */
-        const int M = _Mixture.size();
+        const int M = Mixture_.size();
         const double DirichletSum = (Config.PriorDirichletConcentration - 1) * M;
 
         for (int m = 0; m < M; m++)
         {
-          _Mixture.at(m).estimateParametersMAP(DataVector,
+          Mixture_.at(m).estimateParametersMAP(DataVector,
                                                Likelihood.row(m),
                                                Config.PriorDirichletConcentration,
                                                DirichletSum,
@@ -782,39 +866,41 @@ namespace libRSF
       /** remove components, that are to small */
       bool prunMixture(const double MinWeight)
       {
-        bool Prunned = false;
-
-        for (int m = _Mixture.size() - 1; m >= 0; m--)
+        bool Pruned = false;
+        for (int m = Mixture_.size() - 1; m >= 0; m--)
         {
-          if ((_Mixture.at(m).getWeight()(0) < MinWeight || _Mixture.at(m).getWeight()(0) == 0.0)
-              && _Mixture.size() > 1)
+          if ((Mixture_.at(m).getWeight()(0) < MinWeight ||
+               Mixture_.at(m).getWeight()(0) == 0.0)
+              &&
+              Mixture_.size() > 1)
           {
-            _Mixture.erase(_Mixture.begin() + m);
-            Prunned = true;
+            Mixture_.erase(Mixture_.begin() + m);
+            Pruned = true;
           }
         }
 
-        return Prunned;
+        return Pruned;
       }
 
       /** merge components that are identical */
       bool reduceMixture(const double BhattacharyyaLimit)
       {
         bool PerformedMerge = false;
-        int M = _Mixture.size();
+        int M = Mixture_.size();
 
         for (int m1 = 0; m1 < M - 1; ++m1)
         {
           for (int m2 = m1 + 1; m2 < M; ++m2)
           {
             /** calculate metric */
-            double d = CalculateBhattacharyyaDistance(_Mixture.at(m1), _Mixture.at(m2));
+            double d = CalculateBhattacharyyaDistance(Mixture_.at(m1),
+                                                      Mixture_.at(m2));
 
             /** perform merge if the distance exceed a specific tuning parameter*/
             if (exp(-d) > BhattacharyyaLimit)
             {
-              _Mixture.at(m1) = MergeGaussians<Dim>(_Mixture.at(m1), _Mixture.at(m2));
-              _Mixture.erase(_Mixture.begin() + m2);
+              Mixture_.at(m1) = MergeGaussians<Dim>(Mixture_.at(m1), Mixture_.at(m2));
+              Mixture_.erase(Mixture_.begin() + m2);
 
               M -= 1;
               m2 -= 1;
@@ -829,12 +915,12 @@ namespace libRSF
       void printParameter() const
       {
         PRINT_LOGGING("GMM Parameter: Mean       StdDev-Diagonal       Weight");
-        for (int n = 0; n < static_cast<int>(_Mixture.size()); ++n)
+        for (int n = 0; n < static_cast<int>(Mixture_.size()); ++n)
         {
           PRINT_LOGGING("Component ", n + 1, ":   ",
-                        _Mixture.at(n).getMean().transpose(), "       ",
-                        _Mixture.at(n).getSqrtInformation().diagonal().cwiseInverse().transpose(), "  ",
-                        _Mixture.at(n).getWeight());
+                        Mixture_.at(n).getMean().transpose(), "       ",
+                        Mixture_.at(n).getSqrtInformation().diagonal().cwiseInverse().transpose(), "  ",
+                        Mixture_.at(n).getWeight());
         }
       }
 
@@ -842,18 +928,18 @@ namespace libRSF
       template <typename T>
       VectorT<T, Dim> getExponentialPartOfComponent(int NumberOfComponent, const VectorT<T, Dim> &Error) const
       {
-        return _Mixture.at(NumberOfComponent).getExponentialPart(Error);
+        return Mixture_.at(NumberOfComponent).getExponentialPart(Error);
       }
 
       template <typename T>
       double getLinearPartOfComponent(int NumberOfComponent, const VectorT<T, Dim> &Error) const
       {
-        return _Mixture.at(NumberOfComponent).getLinearPart(Error);
+        return Mixture_.at(NumberOfComponent).getLinearPart(Error);
       }
 
-      double getMaximumOfComponent(int NumberOfComponent) const
+      [[nodiscard]] double getMaximumOfComponent(int NumberOfComponent) const
       {
-        return _Mixture.at(NumberOfComponent).getMaximum();
+        return Mixture_.at(NumberOfComponent).getMaximum();
       }
 
       /** sampling */
@@ -870,16 +956,16 @@ namespace libRSF
           int CurrentNumber;
           if (n < NumComp-1)
           {
-            CurrentNumber = round(Number * this->_Mixture.at(n).getWeight()(0));
+            CurrentNumber = round(Number * this->Mixture_.at(n).getWeight()(0));
           }
           else
           {
-            /** fill with last component to avoid rund-off */
+            /** fill with last component to avoid round-off */
             CurrentNumber = Number - SampleVector.size();
           }
 
           /** draw */
-          const VectorVectorSTL<Dim> CurrentSamples = this->_Mixture.at(n).DrawSamples(CurrentNumber);
+          const VectorVectorSTL<Dim> CurrentSamples = this->Mixture_.at(n).DrawSamples(CurrentNumber);
 
           /** append */
           SampleVector.insert(std::end(SampleVector), std::begin(CurrentSamples), std::end(CurrentSamples));
@@ -922,49 +1008,49 @@ namespace libRSF
         const int NumberOfComponents = this->getNumberOfComponents();
         for(int i = 0; i < NumberOfComponents; ++i)
         {
-          _Mixture.at(i).setMean(_Mixture.at(i).getMean() - Offset);
+          Mixture_.at(i).setMean(Mixture_.at(i).getMean() - Offset);
         }
       }
 
       void removeMean()
       {
-        for (int i = 0; i < static_cast<int>(_Mixture.size()); ++i)
+        for (int i = 0; i < static_cast<int>(Mixture_.size()); ++i)
         {
-          _Mixture.at(i).setMean(MatrixStatic<Dim, 1>::Zero());
+          Mixture_.at(i).setMean(MatrixStatic<Dim, 1>::Zero());
         }
       }
 
       /** sort for better readability */
       void sortComponentsByMean()
       {
-        std::sort(_Mixture.begin(), _Mixture.end(), compareByMean<Dim>);
+        std::sort(Mixture_.begin(), Mixture_.end(), compareByMean<Dim>);
       }
 
       void sortComponentsByAbsMean()
       {
-        std::sort(_Mixture.begin(), _Mixture.end(), compareByAbsMean<Dim>);
+        std::sort(Mixture_.begin(), Mixture_.end(), compareByAbsMean<Dim>);
       }
 
       void sortComponentsByWeight()
       {
-        std::sort(_Mixture.begin(), _Mixture.end(), compareByWeight<Dim>);
+        std::sort(Mixture_.begin(), Mixture_.end(), compareByWeight<Dim>);
       }
 
       void sortComponentsByMode()
       {
-        std::sort(_Mixture.begin(), _Mixture.end(), compareByMode<Dim>);
+        std::sort(Mixture_.begin(), Mixture_.end(), compareByMode<Dim>);
       }
 
       void sortComponentsByLOSness()
       {
-        std::sort(_Mixture.begin(), _Mixture.end(), compareByLOSness<Dim>);
+        std::sort(Mixture_.begin(), Mixture_.end(), compareByLOSness<Dim>);
       }
 
       /** export GMM into state data for logging */
       Data exportToStateData(double Timestamp);
 
     private:
-      std::vector<GaussianComponent<Dim>> _Mixture;
+      std::vector<GaussianComponent<Dim>> Mixture_;
   };
 }
 

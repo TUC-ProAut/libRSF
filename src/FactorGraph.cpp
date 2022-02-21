@@ -25,67 +25,73 @@
 
 namespace libRSF
 {
-  void StateList::add(string Type, double Timestamp, int Number)
+  void StateList::add(const string& Type, double Timestamp, int Number)
   {
     this->add(StateID(Type, Timestamp, Number));
   }
 
-  void StateList::add(StateID State)
-  {
-    _List.emplace_back(State);
+  void StateList::add(const StateID& State)
+  { List_.emplace_back(State);
   }
 
   void StateList::clear()
-  {
-    _List.clear();
+  { List_.clear();
   }
 
-  FactorGraph::FactorGraph() : _Graph(this->_DefaultProblemOptions), _Structure(&_Graph, &_StateData), _SolverDuration(0.0), _CovarianceDuration(0.0), _SolverIterations(0), _MarginalizationDuration(0.0)
+  FactorGraph::FactorGraph() : Graph_(this->DefaultProblemOptions_),
+        Structure_(&Graph_, &StateData_),
+        SolverDuration_(0.0),
+        CovarianceDuration_(0.0),
+        SolverIterations_(0),
+        MarginalizationDuration_(0.0)
   {}
 
   void FactorGraph::solve()
   {
     /** check if config is valid */
     std::string OptionsError;
-    if (_SolverOptions.IsValid(&OptionsError) == false)
+    if (!SolverOptions_.IsValid(&OptionsError))
     {
       PRINT_ERROR("The given solver options are wrong: ", OptionsError);
     }
     else
     {
       /** call ceres to solve the optimization problem */
-      ceres::Solve(_SolverOptions, &_Graph, &_Report);
-      _SolverDuration += _Report.total_time_in_seconds;
-      _SolverIterations += _Report.num_successful_steps + _Report.num_unsuccessful_steps;
+      ceres::Solve(SolverOptions_, &Graph_, &Report_);
+      SolverDuration_ += Report_.total_time_in_seconds;
+      SolverIterations_ +=
+          Report_.num_successful_steps + Report_.num_unsuccessful_steps;
     }
   }
 
   void FactorGraph::solve(ceres::Solver::Options Options)
   {
-    _SolverOptions = Options;
+    SolverOptions_ = Options;
     this->solve();
   }
 
-  void FactorGraph::addState(string Name, DataType Type, double Timestamp)
+  void FactorGraph::addState(const string& Name, DataType Type, double Timestamp)
   {
     Data Element(Type, Timestamp);
     addState(Name, Element);
   }
 
-  void FactorGraph::addState(string Name, Data &Element)
+  void FactorGraph::addState(const string& Name, Data &Element)
   {
-    _StateData.addElement(Name, Element);
+    StateData_.addElement(Name, Element);
     double Timestamp = Element.getTimestamp();
-    int StateNumber = _StateData.countElement(Name, Timestamp) - 1;
+    int StateNumber = StateData_.countElement(Name, Timestamp) - 1;
 
-    double* StatePointer = _StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer();
-    int StateSize = _StateData.getElement(Name, Timestamp, StateNumber).getMean().size();
+    double* StatePointer =
+        StateData_.getElement(Name, Timestamp, StateNumber).getMeanPointer();
+    const int StateSize = static_cast<int>(
+        StateData_.getElement(Name, Timestamp, StateNumber).getMean().size());
 
     /** add state vector as parameter block with local parametrization if required */
-    switch (_StateData.getElement(Name, Timestamp, StateNumber).getType())
+    switch (StateData_.getElement(Name, Timestamp, StateNumber).getType())
     {
       case DataType::Angle:
-        _Graph.AddParameterBlock(StatePointer, StateSize, AngleLocalParameterization::Create());
+        Graph_.AddParameterBlock(StatePointer, StateSize, AngleLocalParameterization::Create());
         break;
 
       case DataType::UnitCircle:
@@ -93,9 +99,9 @@ namespace libRSF
           /** initialize with 0 degree rotation */
           Vector2 Circle;
           Circle << 1, 0;
-          _StateData.getElement(Name, Timestamp, StateNumber).setMean(Circle);
+          StateData_.getElement(Name, Timestamp, StateNumber).setMean(Circle);
 
-          _Graph.AddParameterBlock(StatePointer, StateSize, UnitCircleLocalParameterization::Create());
+          Graph_.AddParameterBlock(StatePointer, StateSize, UnitCircleLocalParameterization::Create());
           break;
         }
 
@@ -104,16 +110,16 @@ namespace libRSF
           /** initialize with valid quaternion */
           Vector4 Quat;
           Quat << 0, 0, 0, 1; /**< x,y,z,w */
-          _StateData.getElement(Name, Timestamp, StateNumber).setMean(Quat);
+          StateData_.getElement(Name, Timestamp, StateNumber).setMean(Quat);
 
-          _Graph.AddParameterBlock(StatePointer, StateSize, QuaternionLocalParameterization::Create());
+          Graph_.AddParameterBlock(StatePointer, StateSize, QuaternionLocalParameterization::Create());
           break;
         }
 
       case DataType::Pose2:
         {
           ceres::LocalParameterization *LocalParamPose2 = new ceres::ProductParameterization(new ceres::IdentityParameterization(2), AngleLocalParameterization::Create());
-          _Graph.AddParameterBlock(StatePointer, StateSize, LocalParamPose2);
+          Graph_.AddParameterBlock(StatePointer, StateSize, LocalParamPose2);
           break;
         }
 
@@ -122,33 +128,35 @@ namespace libRSF
           /** initialize with valid quaternion */
           Vector7 Pose3;
           Pose3 << 0,0,0, 0,0,0,1;
-          _StateData.getElement(Name, Timestamp, StateNumber).setMean(Pose3);
+          StateData_.getElement(Name, Timestamp, StateNumber).setMean(Pose3);
 
           ceres::LocalParameterization *LocalParamPose3 = new ceres::ProductParameterization(new ceres::IdentityParameterization(3), QuaternionLocalParameterization::Create());
-          _Graph.AddParameterBlock(StatePointer, StateSize, LocalParamPose3);
+          Graph_.AddParameterBlock(StatePointer, StateSize, LocalParamPose3);
           break;
         }
 
       case DataType::Switch:
         {
           /** initialize with one */
-          _StateData.getElement(Name, Timestamp, StateNumber).setMean(Vector1::Identity());
+          StateData_.getElement(Name, Timestamp, StateNumber).setMean(Vector1::Identity());
 
-          _Graph.AddParameterBlock(StatePointer, StateSize);
+          Graph_.AddParameterBlock(StatePointer, StateSize);
 
           /** limit between zero and one */
-          _Graph.SetParameterLowerBound(_StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer(), 0, 0.0);
-          _Graph.SetParameterUpperBound(_StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer(), 0, 1.0);
+          Graph_.SetParameterLowerBound(
+              StateData_.getElement(Name, Timestamp, StateNumber).getMeanPointer(), 0, 0.0);
+          Graph_.SetParameterUpperBound(
+              StateData_.getElement(Name, Timestamp, StateNumber).getMeanPointer(), 0, 1.0);
           break;
         }
 
       default:
-        _Graph.AddParameterBlock(StatePointer, StateSize);
+        Graph_.AddParameterBlock(StatePointer, StateSize);
         break;
     }
   }
 
-  void FactorGraph::addStateWithCheck(string Name, DataType Type, double Timestamp)
+  void FactorGraph::addStateWithCheck(const string& Name, DataType Type, double Timestamp)
   {
     if (!this->getStateData().checkElement(Name, Timestamp))
     {
@@ -156,64 +164,70 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::addIMUPreintegrationFactor(StateList List, PreintegratedIMUResult IMUState)
+  void FactorGraph::addIMUPreintegrationFactor(StateList List, const PreintegratedIMUResult& IMUState)
   {
     /** create noise model */
     GaussianFull<15> IMUNoiseModel;
     IMUNoiseModel.setCovarianceMatrix(IMUState.PreIntCov);
 
     /** add to factor graph */
-    typedef typename FactorTypeTranslator<FactorType::IMUPretintegration, GaussianFull<15>>::Type FactorClassType;
-    addFactorGeneric<GaussianFull<15>, FactorClassType> (IMUNoiseModel,
-                                                          List._List,
+    using FactorClassType = typename FactorTypeTranslator<FactorType::IMUPretintegration, GaussianFull<15>>::Type;
+    addFactorGeneric_<GaussianFull<15>, FactorClassType> (IMUNoiseModel,
+                                                          List.List_,
                                                           FactorType::IMUPretintegration,
                                                           nullptr,
                                                           true,
-                                                          List._List.front().Timestamp,
+                                                          List.List_.front().Timestamp,
                                                           IMUState);
   }
 
   void FactorGraph::printReport() const
   {
-    std::cout << _Report.FullReport() << "\n";
+    std::cout << Report_.FullReport() << "\n";
   }
 
   ceres::Solver::Summary FactorGraph::getSolverSummary() const
   {
-    return _Report;
+    return Report_;
   }
 
-  void FactorGraph::setConstant(const string Name, const double Timestamp)
+  void FactorGraph::setConstant(const string& Name, const double Timestamp)
   {
-    for (int StateNumber = _StateData.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
+    for (int StateNumber = StateData_.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
     {
-      _Graph.SetParameterBlockConstant(_StateData.getElement(Name, Timestamp, StateNumber - 1).getMeanPointer());
+      Graph_.SetParameterBlockConstant(
+          StateData_.getElement(Name, Timestamp, StateNumber - 1).getMeanPointer());
     }
   }
 
-  void FactorGraph::setVariable(const string Name, const double Timestamp)
+  void FactorGraph::setVariable(const string& Name, const double Timestamp)
   {
-    for (int StateNumber = _StateData.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
+    for (int StateNumber = StateData_.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
     {
-      _Graph.SetParameterBlockVariable(_StateData.getElement(Name, Timestamp, StateNumber - 1).getMeanPointer());
+      Graph_.SetParameterBlockVariable(
+          StateData_.getElement(Name, Timestamp, StateNumber - 1).getMeanPointer());
     }
   }
 
-  void FactorGraph::setSubsetConstant(const string Name, const double Timestamp, const int Number, const std::vector<int> &ConstantIndex)
+  void FactorGraph::setSubsetConstant(const string& Name, const double Timestamp, const int Number, const std::vector<int> &ConstantIndex)
   {
-    _Graph.SetParameterization(_StateData.getElement(Name, Timestamp, Number).getMeanPointer(),
-                               new ceres::SubsetParameterization(_StateData.getElement(Name, Timestamp, Number).getMean().size(), ConstantIndex));
+    Graph_.SetParameterization(
+        StateData_.getElement(Name, Timestamp, Number).getMeanPointer(),
+                               new ceres::SubsetParameterization(
+            StateData_.getElement(Name, Timestamp, Number).getMean().size(), ConstantIndex));
   }
 
   void FactorGraph::setUpperBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound)
   {
-    const int Dim = _StateData.getElement(Name, Timestamp, StateNumber).getMean().size();
+    const int Dim = static_cast<int>(
+        StateData_.getElement(Name, Timestamp, StateNumber).getMean().size());
 
     if (Bound.size() == Dim)
     {
       for (int n = 0; n < Dim; n++)
       {
-        _Graph.SetParameterUpperBound(_StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer(), n, Bound(n));
+        Graph_.SetParameterUpperBound(
+            StateData_.getElement(Name, Timestamp, StateNumber).getMeanPointer(), n, Bound(n));
       }
     }
     else
@@ -224,13 +238,15 @@ namespace libRSF
 
   void FactorGraph::setLowerBound(const string &Name, const double Timestamp, const int StateNumber, const Vector &Bound)
   {
-    const int Dim = _StateData.getElement(Name, Timestamp, StateNumber).getMean().size();
+    const int Dim = static_cast<int>(
+        StateData_.getElement(Name, Timestamp, StateNumber).getMean().size());
 
     if (Bound.size() == Dim)
     {
       for (int n = 0; n < Dim; n++)
       {
-        _Graph.SetParameterLowerBound(_StateData.getElement(Name, Timestamp, StateNumber).getMeanPointer(), n, Bound(n));
+        Graph_.SetParameterLowerBound(
+            StateData_.getElement(Name, Timestamp, StateNumber).getMeanPointer(), n, Bound(n));
       }
     }
     else
@@ -245,7 +261,7 @@ namespace libRSF
     Timer MargTimer;
 
     /**check if state vector has been filled */
-    if (States.empty() == true)
+    if (States.empty())
     {
       PRINT_ERROR("Request for marginalization without any state.");
       return false;
@@ -256,17 +272,18 @@ namespace libRSF
     for (const StateID &State : States)
     {
       /** check if this is a set of valid states */
-      if (this->_StateData.checkElement(State.ID, State.Timestamp, State.Number) == false)
+      if (!this->StateData_.checkElement(State.ID, State.Timestamp, State.Number))
       {
         PRINT_ERROR("State doesn't exist at: ", State.Timestamp, " Type: ", State.ID, " Number: ", State.Number);
         return false;
       }
 
       /** store pointer */
-      MarginalStates.push_back(_StateData.getElement(State.ID, State.Timestamp, State.Number).getMeanPointer());
+      MarginalStates.push_back(
+          StateData_.getElement(State.ID, State.Timestamp, State.Number).getMeanPointer());
 
       /** compute size of the marginalized system */
-      MarginalSize += _Graph.ParameterBlockLocalSize(MarginalStates.back());
+      MarginalSize += Graph_.ParameterBlockLocalSize(MarginalStates.back());
     }
 
     /** get connected states */
@@ -276,14 +293,14 @@ namespace libRSF
     std::vector<int> LocalSize;
     std::vector<StateID> StateIDs;
     std::vector<DataType> StateTypes;
-    _Structure.getMarginalizationInfo(MarginalStates, ConnectedStates, Factors, GlobalSize, LocalSize, StateIDs, StateTypes);
+    Structure_.getMarginalizationInfo(MarginalStates, ConnectedStates, Factors, GlobalSize, LocalSize, StateIDs, StateTypes);
 
-    if (ConnectedStates.empty() == false)
+    if (!ConnectedStates.empty())
     {
       /** calculate mean and uncertainty*/
       ceres::Problem::EvaluateOptions Options;
       Options.apply_loss_function = true;
-      Options.num_threads = std::thread::hardware_concurrency();
+      Options.num_threads = static_cast<int>(std::thread::hardware_concurrency());
 
       /** set which states should be evaluated (base + the connected ones) */
       std::vector<double*> CombinedStates;
@@ -297,7 +314,7 @@ namespace libRSF
       /** evaluate sub-problem */
       ceres::CRSMatrix JacobianCRS;
       std::vector<double> ResidualVec;
-      _Graph.Evaluate(Options, nullptr, &ResidualVec, nullptr, &JacobianCRS);
+      Graph_.Evaluate(Options, nullptr, &ResidualVec, nullptr, &JacobianCRS);
 
       /** map error to vector */
       Vector Residuals = Eigen::Map<Vector, Eigen::Unaligned>(ResidualVec.data(), ResidualVec.size());
@@ -316,11 +333,12 @@ namespace libRSF
       for (int n = 0; n < static_cast<int>(ConnectedStates.size()); n++)
       {
         VectorRef<double, Dynamic> State(ConnectedStates.at(n), GlobalSize.at(n));
-        OriginalStates.push_back(State);
+        OriginalStates.emplace_back(State);
       }
 
       /** add factor */
-      ceres::ResidualBlockId ID = _Graph.AddResidualBlock(new MarginalPrior(LocalSize,
+      ceres::ResidualBlockId ID =
+          Graph_.AddResidualBlock(new MarginalPrior(LocalSize,
                                   GlobalSize,
                                   OriginalStates,
                                   StateTypes,
@@ -330,9 +348,9 @@ namespace libRSF
                                   ConnectedStates);
 
       /** add factor to internal structure */
-      _Structure.addFactor<ErrorModel<0, 0>>(FactorType::Marginal, StateIDs.front().Timestamp, ID, nullptr, StateIDs, ConnectedStates, StateTypes);
+      Structure_.addFactor<ErrorModel<0, 0>>(FactorType::Marginal, StateIDs.front().Timestamp, ID, nullptr, StateIDs, ConnectedStates, StateTypes);
 
-      _MarginalizationDuration += MargTimer.getSeconds();
+      MarginalizationDuration_ += MargTimer.getSeconds();
     }
     else
     {
@@ -349,7 +367,7 @@ namespace libRSF
     return true;
   }
 
-  bool FactorGraph::marginalizeState(const string Name, const double Timestamp, const int Number)
+  bool FactorGraph::marginalizeState(const string& Name, const double Timestamp, const int Number)
   {
     std::vector<StateID> SingleState;
     SingleState.emplace_back(StateID(Name, Timestamp, Number));
@@ -364,7 +382,7 @@ namespace libRSF
 
     /** check if marginalization is required before doing anything  */
     double TimeFirst = CutTime;
-    _StateData.getTimeFirstOverall(TimeFirst);
+    StateData_.getTimeFirstOverall(TimeFirst);
     if (TimeFirst > CutTime)
     {
       /** no marginalization required, exit here... */
@@ -375,23 +393,23 @@ namespace libRSF
     std::vector<StateID> States;
 
     /** iterate over state names */
-    const std::vector<string> StateNames = _StateData.getKeysAll();
+    const std::vector<string> StateNames = StateData_.getKeysAll();
     for (const string &Name : StateNames)
     {
       /** check if there is an element below cut time */
       double TimeFirstState;
-      if (_StateData.getTimeFirst(Name, TimeFirstState))
+      if (StateData_.getTimeFirst(Name, TimeFirstState))
       {
         if (TimeFirstState <= CutTime)
         {
           /** iterate over timestamps */
           std::vector<double> Times;
-          if (_StateData.getTimesBelowOrEqual(Name, CutTime, Times))
+          if (StateData_.getTimesBelowOrEqual(Name, CutTime, Times))
           {
             for (const double Time : Times)
             {
               /** iterate over number */
-              int Numbers = _StateData.countElement(Name, Time);
+              int Numbers = StateData_.countElement(Name, Time);
               for (int n = 0; n < Numbers; n++)
               {
                 States.emplace_back(StateID(Name, Time, n));
@@ -406,98 +424,120 @@ namespace libRSF
     return this->marginalizeStates(States, Inflation);
   }
 
-  bool FactorGraph::computeCovariance(const string Name, const double Timestamp)
+  bool FactorGraph::computeCovariance(const string& Name, const double Timestamp)
   {
     /** time measurement */
     Timer CovTimer;
 
-    const bool Success = CalculateCovariance(_Graph, _StateData, Name, Timestamp);
+    const bool Success = CalculateCovariance(Graph_, StateData_, Name, Timestamp);
 
-    _CovarianceDuration += CovTimer.getSeconds();
+    CovarianceDuration_ += CovTimer.getSeconds();
 
     return Success;
   }
 
-  bool FactorGraph::computeCovariance(const string Name)
+  bool FactorGraph::computeCovariance(const string& Name)
   {
     /** time measurement */
     Timer CovTimer;
 
-    const bool Success = CalculateCovariance(_Graph, _StateData, Name);
+    const bool Success = CalculateCovariance(Graph_, StateData_, Name);
 
-    _CovarianceDuration += CovTimer.getSeconds();
+    CovarianceDuration_ += CovTimer.getSeconds();
 
     return Success;
   }
 
-  bool FactorGraph::computeCovarianceSigmaPoints(const string Name, const double Timestamp, const int StateNumber)
+  bool FactorGraph::computeCovarianceSigmaPoints(const string& Name, const double Timestamp, const int StateNumber)
   {
-    switch (_StateData.getElement(Name, Timestamp, StateNumber).getMean().size())
+    switch (
+        StateData_.getElement(Name, Timestamp, StateNumber).getMean().size())
     {
       case 1:
-        return EstimateCovarianceSigmaPoint<1>(_Graph, _StateData, Name, Timestamp, StateNumber);
+        return EstimateCovarianceSigmaPoint<1>(
+            Graph_, StateData_, Name, Timestamp, StateNumber);
         break;
 
       case 2:
-        return EstimateCovarianceSigmaPoint<2>(_Graph, _StateData, Name, Timestamp, StateNumber);
+        return EstimateCovarianceSigmaPoint<2>(
+            Graph_, StateData_, Name, Timestamp, StateNumber);
         break;
 
       case 3:
-        return EstimateCovarianceSigmaPoint<3>(_Graph, _StateData, Name, Timestamp, StateNumber);
+        return EstimateCovarianceSigmaPoint<3>(
+            Graph_, StateData_, Name, Timestamp, StateNumber);
         break;
 
       case 4:
-        return EstimateCovarianceSigmaPoint<4>(_Graph, _StateData, Name, Timestamp, StateNumber);
+        return EstimateCovarianceSigmaPoint<4>(
+            Graph_, StateData_, Name, Timestamp, StateNumber);
         break;
 
       default:
-        PRINT_ERROR("Sigma Point Covariance for ",
-                    _StateData.getElement(Name, Timestamp, StateNumber).getMean().size(),
+        PRINT_ERROR("Sigma_ Point Covariance for ",
+                    StateData_.getElement(Name, Timestamp, StateNumber).getMean().size(),
                     " dimensions is missing. Add case!");
         break;
     }
     return false;
   }
 
-  void FactorGraph::sampleCost1D(const string StateName,
+  void FactorGraph::sampleCost1D(const string& StateName,
                                  const double Timestamp,
                                  const int Number,
                                  const int PointCount,
                                  const double Range,
                                  StateDataSet &Result)
   {
-    EvaluateCostSurface<1>(_Graph, _StateData.getElement(StateName, Timestamp, Number).getMeanPointer(), PointCount, Range, Result);
+    EvaluateCostSurface<1>(
+        Graph_,
+        StateData_.getElement(StateName, Timestamp, Number).getMeanPointer(), PointCount, Range, Result);
   }
 
-  void FactorGraph::sampleCost2D(const string StateName,
+  void FactorGraph::sampleCost2D(const string& StateName,
                                  const double Timestamp,
                                  const int Number,
                                  const int PointCount,
                                  const double Range,
                                  StateDataSet &Result)
   {
-    EvaluateCostSurface<2>(_Graph, _StateData.getElement(StateName, Timestamp, Number).getMeanPointer(), PointCount, Range, Result);
+    EvaluateCostSurface<2>(
+        Graph_,
+        StateData_.getElement(StateName, Timestamp, Number).getMeanPointer(), PointCount, Range, Result);
+  }
+
+  void FactorGraph::sampleCost3D(const string& StateName,
+                                 const double Timestamp,
+                                 const int Number,
+                                 const int PointCount,
+                                 const double Range,
+                                 StateDataSet &Result)
+  {
+    EvaluateCostSurface<3>(
+        Graph_,
+        StateData_.getElement(StateName, Timestamp, Number).getMeanPointer(), PointCount, Range, Result);
   }
 
   StateDataSet &FactorGraph::getStateData()
   {
-    return _StateData;
+    return StateData_;
   }
 
-  void FactorGraph::removeState(string Name, double Timestamp, int Number)
+  void FactorGraph::removeState(const string& Name, double Timestamp, int Number)
   {
     /** safety check */
-    if (_StateData.checkElement(Name, Timestamp, Number))
+    if (StateData_.checkElement(Name, Timestamp, Number))
     {
       /** remove from internal lists*/
       StateID State(Name, Timestamp, Number);
-      _Structure.removeState(State);
+      Structure_.removeState(State);
 
       /** remove from ceres */
-      _Graph.RemoveParameterBlock(_StateData.getElement(Name, Timestamp, Number).getMeanPointer());
+      Graph_.RemoveParameterBlock(
+          StateData_.getElement(Name, Timestamp, Number).getMeanPointer());
 
       /** remove from our StateDataSet */
-      _StateData.removeElement(Name, Timestamp, Number);
+      StateData_.removeElement(Name, Timestamp, Number);
     }
     else
     {
@@ -505,22 +545,23 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeState(const string Name, const double Timestamp)
+  void FactorGraph::removeState(const string& Name, const double Timestamp)
   {
-    if (_StateData.checkElement(Name, Timestamp))
+    if (StateData_.checkElement(Name, Timestamp))
     {
       /** remove from ceres::problem */
-      for (int StateNumber = _StateData.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
+      for (int StateNumber = StateData_.countElement(Name, Timestamp); StateNumber > 0; --StateNumber)
       {
         /** remove from internal lists*/
         StateID State(Name, Timestamp, StateNumber - 1);
-        _Structure.removeState(State);
+        Structure_.removeState(State);
 
         /** remove from ceres */
-        _Graph.RemoveParameterBlock(_StateData.getElement(Name, Timestamp, StateNumber - 1).getMeanPointer());
+        Graph_.RemoveParameterBlock(
+            StateData_.getElement(Name, Timestamp, StateNumber - 1).getMeanPointer());
 
         /** remove from our StateDataSet */
-        _StateData.removeElement(Name, Timestamp, StateNumber - 1);
+        StateData_.removeElement(Name, Timestamp, StateNumber - 1);
       }
     }
     else
@@ -529,20 +570,20 @@ namespace libRSF
     }
   }
 
-  void FactorGraph::removeStatesOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime)
+  void FactorGraph::removeStatesOutsideWindow(const string& Name, const double TimeWindow, const double CurrentTime)
   {
     const double CutTime = CurrentTime - TimeWindow;
     double Timestamp;
     bool TimestampExists;
 
     /** loop over timestamps */
-    TimestampExists = _StateData.getTimeFirst(Name, Timestamp);
+    TimestampExists = StateData_.getTimeFirst(Name, Timestamp);
     if (TimestampExists)
     {
       while ((Timestamp <= CutTime) && TimestampExists)
       {
         double TimestampTemp = Timestamp;
-        TimestampExists = _StateData.getTimeNext(Name, Timestamp, Timestamp);
+        TimestampExists = StateData_.getTimeNext(Name, Timestamp, Timestamp);
         removeState(Name, TimestampTemp);
       }
     }
@@ -554,7 +595,7 @@ namespace libRSF
 
   void FactorGraph::removeAllStatesOutsideWindow(const double TimeWindow, const double CurrentTime)
   {
-    for (auto const &State : _StateData)
+    for (auto const &State : StateData_)
     {
       removeStatesOutsideWindow(State.first, TimeWindow, CurrentTime);
     }
@@ -562,20 +603,21 @@ namespace libRSF
 
   void FactorGraph::removeFactor(const FactorType CurrentFactorType, const double Timestamp)
   {
-    if (_Structure.checkFactor(CurrentFactorType, Timestamp))
+    if (Structure_.checkFactor(CurrentFactorType, Timestamp))
     {
       /** loop over factors */
       ceres::ResidualBlockId CeresID;
-      for (int FactorNumber = _Structure.countFactor(CurrentFactorType, Timestamp); FactorNumber > 0; FactorNumber--)
+      for (int FactorNumber =
+               Structure_.countFactor(CurrentFactorType, Timestamp); FactorNumber > 0; FactorNumber--)
       {
         FactorID Factor(CurrentFactorType, Timestamp, FactorNumber - 1);
-        _Structure.getResidualID(Factor, CeresID);
+        Structure_.getResidualID(Factor, CeresID);
 
         /** remove factor in ceres */
-        _Graph.RemoveResidualBlock(CeresID);
+        Graph_.RemoveResidualBlock(CeresID);
 
         /** remove factor in libRSF */
-        _Structure.removeFactor(Factor);
+        Structure_.removeFactor(Factor);
       }
     }
     else
@@ -588,7 +630,7 @@ namespace libRSF
   {
     /** find start of the existing factors */
     double FirstTime;
-    _Structure.getTimeFirst(CurrentFactorType, FirstTime);
+    Structure_.getTimeFirst(CurrentFactorType, FirstTime);
 
     /** calculate cut-off time */
     const double TimeWindowEnd = roundToTick(CurrentTime - TimeWindow);
@@ -598,7 +640,7 @@ namespace libRSF
     {
       /** get relevant Timestamps */
       std::vector<double> Timestamps;
-      _Structure.getTimesBelow(CurrentFactorType, TimeWindowEnd, Timestamps);
+      Structure_.getTimesBelow(CurrentFactorType, TimeWindowEnd, Timestamps);
 
       /** remove all */
       for (const double &Time : Timestamps)
@@ -611,18 +653,18 @@ namespace libRSF
   void FactorGraph::removeAllFactorsOutsideWindow(const double TimeWindow, const double CurrentTime)
   {
     std::vector<FactorType> Factors;
-    _Structure.getFactorTypes(Factors);
+    Structure_.getFactorTypes(Factors);
     for (auto const &Factor : Factors)
     {
       removeFactorsOutsideWindow(Factor, TimeWindow, CurrentTime);
     }
   }
 
-  void FactorGraph::setConstantOutsideWindow(const string Name, const double TimeWindow, const double CurrentTime)
+  void FactorGraph::setConstantOutsideWindow(const string& Name, const double TimeWindow, const double CurrentTime)
   {
     /** find start of the current state */
     double Timestamp;
-    bool TimestampExists = _StateData.getTimeFirst(Name, Timestamp);
+    bool TimestampExists = StateData_.getTimeFirst(Name, Timestamp);
 
     /** estimate end */
     const double CutTime = CurrentTime - TimeWindow;
@@ -633,20 +675,20 @@ namespace libRSF
       while ((Timestamp <= CutTime) && TimestampExists)
       {
         setConstant(Name, Timestamp);
-        TimestampExists = _StateData.getTimeNext(Name, Timestamp, Timestamp);
+        TimestampExists = StateData_.getTimeNext(Name, Timestamp, Timestamp);
       }
     }
-    else if (!_StateData.checkID(Name))
+    else if (!StateData_.checkID(Name))
     {
       PRINT_ERROR("State doesn't exist: ", Name);
     }
   }
 
-  void FactorGraph::setVariableInsideWindow(const string Name, const double TimeWindow, const double CurrentTime)
+  void FactorGraph::setVariableInsideWindow(const string& Name, const double TimeWindow, const double CurrentTime)
   {
     /** find end of the current state */
     double Timestamp;
-    bool TimestampExists = _StateData.getTimeLast(Name, Timestamp);
+    bool TimestampExists = StateData_.getTimeLast(Name, Timestamp);
 
     /** estimate end */
     const double CutTime = CurrentTime - TimeWindow;
@@ -657,10 +699,10 @@ namespace libRSF
       while ((Timestamp > CutTime) && TimestampExists)
       {
         setVariable(Name, Timestamp);
-        TimestampExists = _StateData.getTimePrev(Name, Timestamp, Timestamp);
+        TimestampExists = StateData_.getTimePrev(Name, Timestamp, Timestamp);
       }
     }
-    else if (!_StateData.checkID(Name))
+    else if (!StateData_.checkID(Name))
     {
       PRINT_ERROR("State doesn't exist: ", Name);
     }
@@ -668,7 +710,7 @@ namespace libRSF
 
   void FactorGraph::setAllVariableInsideWindow(const double TimeWindow, const double CurrentTime)
   {
-    for (auto const &State : _StateData)
+    for (auto const &State : StateData_)
     {
       setVariableInsideWindow(State.first, TimeWindow, CurrentTime);
     }
@@ -676,17 +718,17 @@ namespace libRSF
 
   void FactorGraph::setAllConstantOutsideWindow(const double TimeWindow, const double CurrentTime)
   {
-    for (auto const &State : _StateData)
+    for (auto const &State : StateData_)
     {
       setConstantOutsideWindow(State.first, TimeWindow, CurrentTime);
     }
   }
 
-  void FactorGraph::setVariable(const string Name)
+  void FactorGraph::setVariable(const string& Name)
   {
     /** find end of the current state */
     double Timestamp;
-    bool TimestampExists = _StateData.getTimeLast(Name, Timestamp);
+    bool TimestampExists = StateData_.getTimeLast(Name, Timestamp);
 
     /** loop over all timestamps */
     if (TimestampExists)
@@ -694,10 +736,10 @@ namespace libRSF
       while (TimestampExists)
       {
         setVariable(Name, Timestamp);
-        TimestampExists = _StateData.getTimePrev(Name, Timestamp, Timestamp);
+        TimestampExists = StateData_.getTimePrev(Name, Timestamp, Timestamp);
       }
     }
-    else if (!_StateData.checkID(Name))
+    else if (!StateData_.checkID(Name))
     {
       PRINT_ERROR("State doesn't exist: ", Name);
     }
@@ -706,7 +748,7 @@ namespace libRSF
   void FactorGraph::setAllVariable()
   {
     /** loop over all state names */
-    for (auto const &State : _StateData)
+    for (auto const &State : StateData_)
     {
       setVariable(State.first);
     }
@@ -715,16 +757,16 @@ namespace libRSF
   double FactorGraph::getSolverDurationAndReset()
   {
     /** reset solver duration before value is returned */
-    const double Duration = _SolverDuration;
-    _SolverDuration = 0.0;
+    const double Duration = SolverDuration_;
+    SolverDuration_ = 0.0;
     return Duration;
   }
 
   double FactorGraph::getCovarianceDurationAndReset()
   {
     /** reset marginalization duration before value is returned */
-    const double Duration = _CovarianceDuration;
-    _CovarianceDuration = 0.0;
+    const double Duration = CovarianceDuration_;
+    CovarianceDuration_ = 0.0;
     return Duration;
   }
 
@@ -732,24 +774,24 @@ namespace libRSF
   double FactorGraph::getMarginalDurationAndReset()
   {
     /** reset marginalization duration before value is returned */
-    const double Duration = _MarginalizationDuration;
-    _MarginalizationDuration = 0.0;
+    const double Duration = MarginalizationDuration_;
+    MarginalizationDuration_ = 0.0;
     return Duration;
   }
 
   int FactorGraph::getSolverIterationsAndReset()
   {
     /** reset marginalization duration before value is returned */
-    const int Iterarions = _SolverIterations;
-    _SolverIterations = 0;
-    return Iterarions;
+    const int Iterations = SolverIterations_;
+    SolverIterations_ = 0;
+    return Iterations;
   }
 
   void FactorGraph::enableErrorModel(FactorType CurrentFactorType)
   {
     /** loop over all models */
     std::vector<ErrorModelBase*> ErrorModels;
-    _Structure.getErrorModels(CurrentFactorType, ErrorModels);
+    Structure_.getErrorModels(CurrentFactorType, ErrorModels);
     for (const auto &ErrorModel : ErrorModels)
     {
       ErrorModel->enable();
@@ -759,7 +801,7 @@ namespace libRSF
   void FactorGraph::disableErrorModel(FactorType CurrentFactorType)
   {
     std::vector<ErrorModelBase*> ErrorModels;
-    _Structure.getErrorModels(CurrentFactorType, ErrorModels);
+    Structure_.getErrorModels(CurrentFactorType, ErrorModels);
     for (const auto &ErrorModel : ErrorModels)
     {
       ErrorModel->disable();
@@ -769,7 +811,7 @@ namespace libRSF
   void FactorGraph::enableErrorModels()
   {
     std::vector<FactorType> Factors;
-    _Structure.getFactorTypes(Factors);
+    Structure_.getFactorTypes(Factors);
     for (const auto &Factor : Factors)
     {
       this->enableErrorModel(Factor);
@@ -779,28 +821,28 @@ namespace libRSF
   void FactorGraph::disableErrorModels()
   {
     std::vector<FactorType> Factors;
-    _Structure.getFactorTypes(Factors);
+    Structure_.getFactorTypes(Factors);
     for (const auto &Factor : Factors)
     {
       this->disableErrorModel(Factor);
     }
   }
 
-  void FactorGraph::getFactorsOfState(const string Name, const double Timestamp, const int Number, std::vector<FactorID> &Factors) const
+  void FactorGraph::getFactorsOfState(const string& Name, const double Timestamp, const int Number, std::vector<FactorID> &Factors) const
   {
     StateID State(Name, Timestamp, Number);
-    _Structure.getFactorsOfState(State, Factors);
+    Structure_.getFactorsOfState(State, Factors);
   }
 
   int FactorGraph::countFactorsOfType(const FactorType CurrentFactorType) const
   {
-    return _Structure.countFactorType(CurrentFactorType);
+    return Structure_.countFactorType(CurrentFactorType);
   }
 
   double FactorGraph::getCost()
   {
     double Cost = 0.0;
-    _Graph.Evaluate(ceres::Problem::EvaluateOptions(), &Cost, nullptr, nullptr, nullptr);
+    Graph_.Evaluate(ceres::Problem::EvaluateOptions(), &Cost, nullptr, nullptr, nullptr);
     return Cost;
   }
 
@@ -808,10 +850,10 @@ namespace libRSF
   {
     /** get residual IDs */
     std::vector<ceres::ResidualBlockId> IDs;
-    _Structure.getResidualIDs(CurrentFactorType, IDs);
+    Structure_.getResidualIDs(CurrentFactorType, IDs);
 
     /** terminate here, if factors are missing */
-    if (IDs.empty() == true)
+    if (IDs.empty())
     {
       PRINT_WARNING("Factors of type ", CurrentFactorType, " are missing!");
       return;
@@ -820,7 +862,7 @@ namespace libRSF
     /** check IDs */
     std::vector<ceres::ResidualBlockId> IDsCeres;
     std::vector<bool> Existence;
-    _Graph.GetResidualBlocks(&IDsCeres);
+    Graph_.GetResidualBlocks(&IDsCeres);
     for (auto const &ID1 : IDs)
     {
       bool Exists = false;
@@ -832,7 +874,7 @@ namespace libRSF
         }
       }
       Existence.push_back(Exists);
-      if (Exists == false)
+      if (!Exists)
       {
         PRINT_ERROR("Found missing ID");
       }
@@ -840,7 +882,7 @@ namespace libRSF
 
     /** configure evaluation */
     ceres::Problem::EvaluateOptions Options;
-    Options.num_threads = std::thread::hardware_concurrency();
+    Options.num_threads = static_cast<int>(std::thread::hardware_concurrency());
     Options.residual_blocks = IDs;
     Options.apply_loss_function = false;
 
@@ -848,22 +890,23 @@ namespace libRSF
     disableErrorModel(CurrentFactorType);
 
     /** compute the errors */
-    _Graph.Evaluate(Options, nullptr, &ErrorData, nullptr, nullptr);
+    Graph_.Evaluate(Options, nullptr, &ErrorData, nullptr, nullptr);
 
     /** re-enable error model */
     enableErrorModel(CurrentFactorType);
 
     /** create factor ID */
     double TimeFirst;
-    _Structure.getTimeFirst(CurrentFactorType, TimeFirst);
+    Structure_.getTimeFirst(CurrentFactorType, TimeFirst);
     FactorID FirstID(CurrentFactorType, TimeFirst, 0);
 
     /** remove unused dimensions */
-    int InputSize, OutputSize;
-    _Structure.getErrorInputSize(FirstID, InputSize);
-    _Structure.getErrorOutputSize(FirstID, OutputSize);
+    int InputSize;
+    int OutputSize;
+    Structure_.getErrorInputSize(FirstID, InputSize);
+    Structure_.getErrorOutputSize(FirstID, OutputSize);
 
-    for (int n = ErrorData.size() - 1; n > 0; n -= OutputSize)
+    for (int n = static_cast<int>(ErrorData.size()) - 1; n > 0; n -= OutputSize)
     {
       for (int m = 0 ; m < (OutputSize - InputSize); m++)
       {
@@ -879,7 +922,7 @@ namespace libRSF
     this->computeUnweightedError(CurrentFactorType, ErrorVector);
 
     /** check for empty vector */
-    if (ErrorVector.size() == 0)
+    if (ErrorVector.empty())
     {
       PRINT_WARNING("Factors of type ", CurrentFactorType, " are missing!");
       return;
@@ -887,11 +930,11 @@ namespace libRSF
 
     /** get the factor IDs */
     std::vector<FactorID> FactorVector;
-    _Structure.getFactorIDs(CurrentFactorType, FactorVector);
+    Structure_.getFactorIDs(CurrentFactorType, FactorVector);
 
     /** get the dimensions */
-    const int Dim = ErrorVector.size() / FactorVector.size();
-    const int Length = FactorVector.size();
+    const int Dim = static_cast<int>(ErrorVector.size() / FactorVector.size());
+    const int Length = static_cast<int>(FactorVector.size());
 
     /** map std vector to matrix */
     ErrorMatrix = Eigen::Map<Matrix, Eigen::Unaligned, Eigen::Stride<1, Dynamic>>(ErrorVector.data(), Dim, Length, Eigen::Stride<1,Dynamic>(1, Dim));
@@ -904,7 +947,7 @@ namespace libRSF
     this->computeUnweightedError(CurrentFactorType, ErrorVector);
 
     /** check for empty vector */
-    if (ErrorVector.size() == 0)
+    if (ErrorVector.empty())
     {
       PRINT_WARNING("Factors of type ", CurrentFactorType, " are missing!");
       return;
@@ -912,11 +955,11 @@ namespace libRSF
 
     /** get the factor IDs */
     std::vector<FactorID> FactorVector;
-    _Structure.getFactorIDs(CurrentFactorType, FactorVector);
+    Structure_.getFactorIDs(CurrentFactorType, FactorVector);
 
     /** get the dimensions */
-    const int Dim = ErrorVector.size() / FactorVector.size();
-    const int Length = FactorVector.size();
+    const int Dim = static_cast<int>(ErrorVector.size() / FactorVector.size());
+    const int Length = static_cast<int>(FactorVector.size());
 
     /** convert to Data */
     switch (Dim)
@@ -984,7 +1027,7 @@ namespace libRSF
   {
 
     /** check */
-    if (_Structure.checkFactor(CurrentFactorType, Time, Number) == false)
+    if (!Structure_.checkFactor(CurrentFactorType, Time, Number))
     {
       PRINT_ERROR("Factor does not exist: ", CurrentFactorType, " ", Time, " ", Number);
       return;
@@ -993,7 +1036,7 @@ namespace libRSF
     /** get internal ceres ID */
     ceres::ResidualBlockId CeresID;
     FactorID OurID(CurrentFactorType, Time, Number);
-    _Structure.getResidualID(OurID, CeresID);
+    Structure_.getResidualID(OurID, CeresID);
 
     std::vector<ceres::ResidualBlockId> CeresIDs;
     CeresIDs.push_back(CeresID);
@@ -1009,14 +1052,14 @@ namespace libRSF
 
     /** compute error */
     std::vector<double> ErrorData;
-    _Graph.Evaluate(Options, nullptr, &ErrorData, nullptr, nullptr);
+    Graph_.Evaluate(Options, nullptr, &ErrorData, nullptr, nullptr);
 
     /** re-enable error model again */
     enableErrorModel(CurrentFactorType);
 
     /** copy to eigen vector */
     int Size;
-    _Structure.getErrorInputSize(OurID, Size);
+    Structure_.getErrorInputSize(OurID, Size);
     Error.resize(Size);
     for (int n = 0; n < Size; n++)
     {
@@ -1024,4 +1067,12 @@ namespace libRSF
     }
   }
 
-}
+    void FactorGraph::setSolverOptions(const ceres::Solver::Options &Options)
+    {
+      SolverOptions_ = Options;
+    }
+    ceres::Solver::Options FactorGraph::getSolverOptions() const
+    {
+      return SolverOptions_;
+    }
+  }

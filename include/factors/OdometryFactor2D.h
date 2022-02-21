@@ -44,10 +44,10 @@ namespace libRSF
       /** construct factor and store measurement */
       OdometryFactor2D(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(3);
-        this->_MeasurementVector = OdometryMeasurement.getMean();
-        this->_DeltaTime = DeltaTime;
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(3);
+        this->MeasurementVector_ = OdometryMeasurement.getMean();
+        this->DeltaTime_ = DeltaTime;
       }
 
       /** geometric error model */
@@ -73,13 +73,13 @@ namespace libRSF
         RelPose(2) = Yaw2[0] - Yaw1[0];
 
         /** subtract odometry */
-        Error = RelPose - (this->_DeltaTime * this->_MeasurementVector).template cast<T>();
+        Error = RelPose - (this->DeltaTime_ * this->MeasurementVector_).template cast<T>();
 
         /** normalize angle error */
         Error(2) = NormalizeAngle<T>(Error(2));
 
         /** transform in measurement (velocity) domain */
-        Error /= T(this->_DeltaTime);
+        Error /= T(this->DeltaTime_);
 
         return Error;
       }
@@ -90,7 +90,7 @@ namespace libRSF
                       const T* const Point2,  const T* const Yaw2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Point1, Yaw1, Point2, Yaw2),
+        return this->Error_.template weight<T>(this->Evaluate(Point1, Yaw1, Point2, Yaw2),
                                                Params...);
       }
 
@@ -105,9 +105,9 @@ namespace libRSF
 
         /** map to rotation */
         const Rotation2DT<double> R1(Yaw1(0));
-        const Rotation2DT<double> ROdom(this->_MeasurementVector(2) * this->_DeltaTime);
+        const Rotation2DT<double> ROdom(this->MeasurementVector_(2) * this->DeltaTime_);
 
-        P2 = P1 + R1 * this->_MeasurementVector.head(2) * this->_DeltaTime;
+        P2 = P1 + R1 * this->MeasurementVector_.head(2) * this->DeltaTime_;
 
         Yaw2(0) = (ROdom * R1).angle();
       }

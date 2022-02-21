@@ -48,22 +48,22 @@ namespace libRSF
 
       void setStdDevSharedDiagonal(double StdDev)
       {
-        _SqrtInformationDiagonal.fill(1.0/StdDev);
+        SqrtInformationDiagonal_.fill(1.0/StdDev);
       }
 
       void setStdDevDiagonal(const VectorStatic<Dim> &StdDev)
       {
-        _SqrtInformationDiagonal = StdDev.cwiseInverse();
+        SqrtInformationDiagonal_ = StdDev.cwiseInverse();
       }
 
       void setCovarianceDiagonal(const VectorStatic<Dim> &Cov)
       {
-        _SqrtInformationDiagonal = Cov.cwiseInverse().cwiseSqrt();
+        SqrtInformationDiagonal_ = Cov.cwiseInverse().cwiseSqrt();
       }
 
       void setSqrtInformationDiagonal(const VectorStatic<Dim> &SqrtInfo)
       {
-        _SqrtInformationDiagonal = SqrtInfo;
+        SqrtInformationDiagonal_ = SqrtInfo;
       }
 
       template <typename T>
@@ -72,10 +72,10 @@ namespace libRSF
         /** wrap raw pointer to vector*/
         VectorRef<T, Dim> ErrorMap(Error);
 
-        if(this->_Enable)
+        if(this->Enable_)
         {
           /** scale with diagonal information matrix */
-          ErrorMap = RawError.cwiseProduct(_SqrtInformationDiagonal.template cast<T>());
+          ErrorMap = RawError.cwiseProduct(SqrtInformationDiagonal_.template cast<T>());
         }
         else
         {
@@ -88,7 +88,7 @@ namespace libRSF
 
   private:
     /** square root information is more efficient to apply than covariance */
-    VectorStatic<Dim> _SqrtInformationDiagonal;
+    VectorStatic<Dim> SqrtInformationDiagonal_;
   };
 
   template <int Dim>
@@ -100,12 +100,12 @@ namespace libRSF
 
       void setCovarianceMatrix(const MatrixStatic<Dim, Dim> &CovMat)
       {
-        _SqrtInformation = InverseSquareRoot<Dim, double>(CovMat);
+        SqrtInformation_ = InverseSquareRoot<Dim, double>(CovMat);
       }
 
       void setSqrtInformationMatrix(const MatrixStatic<Dim, Dim> &SqrtInfoMat)
       {
-        _SqrtInformation = SqrtInfoMat;
+        SqrtInformation_ = SqrtInfoMat;
       }
 
       template <typename T>
@@ -114,10 +114,10 @@ namespace libRSF
         /** wrap raw pointer to vector*/
         VectorRef<T, Dim> ErrorMap(Error);
 
-        if(this->_Enable)
+        if(this->Enable_)
         {
           /** scale with full information matrix */
-          ErrorMap = _SqrtInformation.template cast<T>() * RawError;
+          ErrorMap = SqrtInformation_.template cast<T>() * RawError;
         }
         else
         {
@@ -130,7 +130,7 @@ namespace libRSF
 
   private:
       /** square root information is more efficient to apply than covariance */
-      MatrixStatic<Dim, Dim> _SqrtInformation;
+      MatrixStatic<Dim, Dim> SqrtInformation_;
   };
 }
 

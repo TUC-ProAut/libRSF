@@ -42,9 +42,9 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      ConstantValueFactorBase(ErrorType &Error)
+      explicit ConstantValueFactorBase(ErrorType &Error)
       {
-        this->_Error = Error;
+        this->Error_ = Error;
       }
 
       /** geometric error model */
@@ -63,7 +63,7 @@ namespace libRSF
                       const T* const ValueNew,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(ValueOld,
+        return this->Error_.template weight<T>(this->Evaluate(ValueOld,
                                                ValueNew),
                                                Params...);
 

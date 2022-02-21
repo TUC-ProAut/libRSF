@@ -44,10 +44,10 @@ namespace libRSF
       /** construct factor and store measurement */
       IMUFactor(ErrorType &Error, const Data &IMUMeasurement, double DeltaTime)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(6);
-        this->_MeasurementVector = IMUMeasurement.getMean();
-        this->_DeltaTime = DeltaTime;
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(6);
+        this->MeasurementVector_ = IMUMeasurement.getMean();
+        this->DeltaTime_ = DeltaTime;
       }
 
       /** geometric error model */
@@ -92,11 +92,11 @@ namespace libRSF
                       const T* const PointNew, const T* const QuatNew, const T* const SpeedBiasNew,
                       T* Error) const
       {
-        this->_Error.weight(this->Evaluate(PointOld, QuatOld, SpeedBiasOld,
+        this->Error_.weight(this->Evaluate(PointOld, QuatOld, SpeedBiasOld,
                                            PointNew, QuatNew, SpeedBiasNew,
-                                           this->_MeasurementVector.segment(0, 3),
-                                           this->_MeasurementVector.segment(3, 3),
-                                           this->_DeltaTime),
+                                           this->MeasurementVector_.segment(0, 3),
+                                           this->MeasurementVector_.segment(3, 3),
+                                           this->DeltaTime_),
                             Error);
         return true;
       }
@@ -110,9 +110,9 @@ namespace libRSF
                                        StatePointers[3],
                                        StatePointers[4],
                                        StatePointers[5],
-                                       this->_MeasurementVector.head(3),
-                                       this->_MeasurementVector.tail(3),
-                                       this->_DeltaTime);
+                                       this->MeasurementVector_.head(3),
+                                       this->MeasurementVector_.tail(3),
+                                       this->DeltaTime_);
       }
   };
 

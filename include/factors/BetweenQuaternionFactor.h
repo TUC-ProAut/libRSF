@@ -44,9 +44,9 @@ namespace libRSF
       /** construct factor and store measurement */
       BetweenQuaternionFactor(ErrorType &Error, const Data &QuaternionMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(4);
-        this->_MeasurementVector = QuaternionMeasurement.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(4);
+        this->MeasurementVector_ = QuaternionMeasurement.getMean();
       }
 
       /** geometric error model */
@@ -71,9 +71,9 @@ namespace libRSF
                       const T* const Quat2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Quat1,
+        return this->Error_.template weight<T>(this->Evaluate(Quat1,
                                                               Quat2,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };

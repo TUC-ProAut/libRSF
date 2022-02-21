@@ -42,9 +42,9 @@ namespace libRSF
   {
     public:
       /** construct factor and store error model */
-      RepellingFactor(ErrorType &Error)
+      explicit RepellingFactor(ErrorType &Error)
       {
-        this->_Error = Error;
+        this->Error_ = Error;
       }
 
       /** geometric error model */
@@ -66,7 +66,7 @@ namespace libRSF
                       const T* const Pos2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pos1, Pos2),
+        return this->Error_.template weight<T>(this->Evaluate(Pos1, Pos2),
                                                Params...);
 
       }

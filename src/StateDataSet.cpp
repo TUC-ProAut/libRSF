@@ -29,18 +29,18 @@ namespace libRSF
     addElement(Element.getName(),Element);
   }
 
-  void StateDataSet::addElement(std::string Name, Data &Element)
+  void StateDataSet::addElement(const std::string& Name, Data &Element)
   {
     if (!this->checkID(Name))
     {
       ObjectStream TempStream;
-      _DataStreams.emplace(Name, TempStream);
+      DataStreams.emplace(Name, TempStream);
     }
 
-    _DataStreams[Name].emplace(Element.getTimestamp(), Element);
+    DataStreams[Name].emplace(Element.getTimestamp(), Element);
   }
 
-  void StateDataSet::addElement(std::string Name, DataType Type, double Timestamp)
+  void StateDataSet::addElement(const std::string& Name, DataType Type, double Timestamp)
   {
     Data Element(Type, Timestamp);
     addElement(Name, Element);

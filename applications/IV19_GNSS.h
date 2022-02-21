@@ -25,8 +25,8 @@
 
 #include "libRSF.h"
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 /** pre-defined state names */
 #define POSITION_STATE "Position"

@@ -40,20 +40,20 @@ namespace libRSF
   class StateDataSet : public DataSet<std::string, Data>
   {
     public:
-      StateDataSet() {};
-      ~StateDataSet() {};
+      StateDataSet() = default;
+      ~StateDataSet() override = default;
 
       /** add an element according to its internal type and timestamp*/
       void addElement(Data &Element);
       /** use external name */
-      void addElement(std::string Name, Data &Element);
+      void addElement(const std::string& Name, Data &Element);
       /** add an empty element*/
-      void addElement(std::string Name, DataType Type, double Timestamp);
+      void addElement(const std::string& Name, DataType Type, double Timestamp);
 
       using DataSet<std::string, Data>::addElement;
   };
 
-  typedef StateDataSet::UniqueID StateID;
+  using StateID = StateDataSet::UniqueID;
 
   std::ostream& operator << (std::ostream& Os, const StateID& ID);
 }

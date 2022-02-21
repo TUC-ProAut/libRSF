@@ -12,7 +12,7 @@ function [] = exportPlot(Handle, Path, Name)
     end
     
     % concat filname
-    FullFile = Path + Name;
+    FullFile = fullfile(Path, Name);
     FullFilePDF = FullFile + ".pdf";
     FullFilePNG = FullFile + ".png";
     FullFileFig = FullFile + ".fig";

@@ -42,8 +42,8 @@
 namespace libRSF
 {
   /** angular conversion */
-  double deg2rad(const double Deg);
-  double rad2deg(const double Rad);
+  double deg2rad(double Deg);
+  double rad2deg(double Rad);
 
   /** 2D */
   template <typename T>
@@ -68,7 +68,6 @@ namespace libRSF
   }
 
   /** 3D */
-
   template<typename T>
   MatrixT<T,3,3> SkewSymmetricMatrix (const VectorT<T, 3> &Omega)
   {
@@ -162,8 +161,8 @@ namespace libRSF
    * \return 3x1 vector of the manifold error (related to an angular velocity)
    *
    */
-  Vector3 QuaternionError(const Quaternion Q1,
-                          const Quaternion Q2,
+  Vector3 QuaternionError(const Quaternion& Q1,
+                          const Quaternion& Q2,
                           Matrix34 *Jacobian1 = nullptr,
                           Matrix34 *Jacobian2 = nullptr);
 
@@ -177,7 +176,7 @@ namespace libRSF
     return Quat;
   }
 
-  /** \brief Converts a quaterion to Tait–Bryan angles
+  /** \brief Converts a quaternion to Tait–Bryan angles
    *
    * \param Quat eigen quaternion with ordering x,y,z,w
    * \return [Roll, Pitch, Yaw]

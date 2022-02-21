@@ -46,9 +46,9 @@ namespace libRSF
       /** construct factor and store measurement */
       BetweenBearingRange2Factor(ErrorType &Error, const Data &Measurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(2);
-        this->_MeasurementVector = Measurement.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(2);
+        this->MeasurementVector_ = Measurement.getMean();
       }
 
       /** deterministic error model */
@@ -70,7 +70,7 @@ namespace libRSF
         EstimatedBR(0) = NormalizeAngle(ceres::atan2(RelativeTrans(1), RelativeTrans(0)) - Angle1(0));
         EstimatedBR(1) = RelativeTrans.norm();
 
-        return EstimatedBR - this->_MeasurementVector;
+        return EstimatedBR - this->MeasurementVector_;
       }
 
       /** combine probabilistic and deterministic model */
@@ -80,7 +80,7 @@ namespace libRSF
                       const T* const Point2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Point1, Yaw1, Point2),
+        return this->Error_.template weight<T>(this->Evaluate(Point1, Yaw1, Point2),
                                                Params...);
       }
 
@@ -92,10 +92,10 @@ namespace libRSF
         const libRSF::Rotation2D Rot1(StatePointers.at(1)[0]);
         VectorRef<double, 2> Point2(StatePointers.at(2));
 
-        /** seperate measurement */
+        /** separate measurement */
         libRSF::Vector2 PointRange;
-        PointRange << this->_MeasurementVector(1), 0.0;
-        const libRSF::Rotation2D RotBearing(this->_MeasurementVector(0));
+        PointRange << this->MeasurementVector_(1), 0.0;
+        const libRSF::Rotation2D RotBearing(this->MeasurementVector_(0));
 
         /** convert to Cartesian position */
         Point2 = Point1 + Rot1 * RotBearing * PointRange;

@@ -34,15 +34,15 @@ namespace libRSF
     return Rad * 180.0 / M_PI;
   }
 
-  Vector3 QuaternionError(const Quaternion Q1,
-                          const Quaternion Q2,
+  Vector3 QuaternionError(const Quaternion& Q1,
+                          const Quaternion& Q2,
                           Matrix34 *Jacobian1,
                           Matrix34 *Jacobian2)
   {
     if(Jacobian1 != nullptr && Jacobian2 != nullptr)
     {
       /** we want both jacobians */
-      typedef ceres::Jet<double, 8> JetType;
+      using JetType = ceres::Jet<double, 8>;
 
       /** init jets */
       QuaternionT<JetType> Q1Jet = Q1.template cast<JetType>();
@@ -59,7 +59,7 @@ namespace libRSF
       /** apply transformation */
       const VectorT<JetType,3> ErrorJet = QuaternionError<JetType>(Q1Jet, Q2Jet);
 
-      /** extract jacobians */
+      /** extract Jacobians */
       Jacobian1->row(0) = ErrorJet(0).v.head(4);
       Jacobian1->row(1) = ErrorJet(1).v.head(4);
       Jacobian1->row(2) = ErrorJet(2).v.head(4);
@@ -73,7 +73,7 @@ namespace libRSF
       Error << ErrorJet(0).a, ErrorJet(1).a, ErrorJet(2).a;
       return Error;
     }
-    else if(Jacobian1 != nullptr && Jacobian2 == nullptr)
+    else if(Jacobian1 != nullptr)
     {
       /** we want just jacobian 1 */
       typedef ceres::Jet<double, 4> JetType;
@@ -99,7 +99,7 @@ namespace libRSF
       return Error;
 
     }
-    else if(Jacobian1 == nullptr && Jacobian2 != nullptr)
+    else if(Jacobian2 != nullptr)
     {
       /** we want just jacobian 2 */
       typedef ceres::Jet<double, 4> JetType;

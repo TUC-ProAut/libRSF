@@ -59,15 +59,15 @@ namespace libRSF
     Vector1 MeanLOS;
 
     this->sortComponentsByWeight();
-    double MinimumWeight = std::min(_Mixture.at(0).getWeight()(0), 0.2);
+    double MinimumWeight = std::min(Mixture_.at(0).getWeight()(0), 0.2);
 
     /** remove offset of the first "LOS" component */
     this->sortComponentsByMean();
     for(int i = 0; i < NumberOfComponents; ++i)
     {
-      if(_Mixture.at(i).getWeight()(0) >= MinimumWeight)
+      if(Mixture_.at(i).getWeight()(0) >= MinimumWeight)
       {
-        MeanLOS = _Mixture.at(i).getMean();
+        MeanLOS = Mixture_.at(i).getMean();
         break;
       }
     }
@@ -81,16 +81,16 @@ namespace libRSF
   Vector1 GaussianMixture<1>::removeOffset()
   {
     const int NumberOfComponents = this->getNumberOfComponents();
-    const double MinimumWeight = 1.0/_Mixture.size()*0.8;
+    const double MinimumWeight = 1.0/ Mixture_.size()*0.8;
 
     /** remove offset of the first "LOS" component */
     this->sortComponentsByMean();
     Vector1 MeanLOS;
     for(int i = 0; i < NumberOfComponents; ++i)
     {
-      if(_Mixture.at(i).getWeight()(0) >= MinimumWeight)
+      if(Mixture_.at(i).getWeight()(0) >= MinimumWeight)
       {
-        MeanLOS = _Mixture.at(i).getMean();
+        MeanLOS = Mixture_.at(i).getMean();
         break;
       }
     }
@@ -110,9 +110,9 @@ namespace libRSF
     Vector Weights(NumberOfComponents);
     for(int i = 0; i < NumberOfComponents; ++i)
     {
-      Means(i) = _Mixture.at(i).getMean()[0];
-      StdDevs(i) = 1/_Mixture.at(i).getSqrtInformation()[0];
-      Weights(i) = _Mixture.at(i).getWeight()[0];
+      Means(i) = Mixture_.at(i).getMean()[0];
+      StdDevs(i) = 1/ Mixture_.at(i).getSqrtInformation()[0];
+      Weights(i) = Mixture_.at(i).getWeight()[0];
     }
 
     /** this function is TODO */
@@ -170,6 +170,6 @@ namespace libRSF
         break;
     }
 
-    return Data();
+    return {};
   }
 }

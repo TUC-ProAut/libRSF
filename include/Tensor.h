@@ -44,10 +44,10 @@ namespace libRSF
   class Tensor
   {
     public:
-      Tensor() : _Size(std::pow(Size, Dim))
+      Tensor() : Size_(std::pow(Size_, Dim))
       {
-        _Grid.resize(_Size);
-        _Grid.fill(NAN_DOUBLE);
+        Grid_.resize(Size_);
+        Grid_.fill(NAN_DOUBLE);
       }
       ~Tensor() = default;
 
@@ -58,17 +58,17 @@ namespace libRSF
         static_assert(sizeof...(IndicesTemplate) == Dim, "Number of provided indices have to be equal to the number of dimensions!");
 
         /** get value */
-        return _Grid(_Index(Indices...));
+        return Grid_(Index_(Indices...));
       }
 
       double get(const VectorStatic<Dim> Indices) const
       {
-        return _Grid(_Index(Indices));
+        return Grid_(Index_(Indices));
       }
 
       void set(const double Value, const VectorStatic<Dim> Indices)
       {
-        _Grid(_Index(Indices)) = Value;
+        Grid_(Index_(Indices)) = Value;
       }
 
       template<typename... IndicesTemplate>
@@ -77,28 +77,25 @@ namespace libRSF
         /** check parameter number */
         static_assert(sizeof...(IndicesTemplate) == Dim, "Number of provided indices have to be equal to the number of dimensions!");
 
-        /** get Index */
-        int Index = _Index(Indices...);
-
-        _Grid(_Index(Indices...)) = Value;
+        Grid_(Index_(Indices...)) = Value;
       }
 
       void print() const
       {
-        PRINT_LOGGING(_Grid.transpose());
+        PRINT_LOGGING(Grid_.transpose());
       }
 
     private:
 
       /** convert index for parameter pack*/
       template<typename... IndicesTemplate>
-      int _Index(const int Index, IndicesTemplate... Indices) const
+      int Index_(const int Index, IndicesTemplate... Indices) const
       {
-        return Index + _Index(Indices...) * Size;
+        return Index + Index_(Indices...) * Size_;
       }
-      int _Index(const int Index) const
+      [[nodiscard]] int Index_(const int Index) const
       {
-        if(Index >= _Size)
+        if(Index >= Size_)
         {
           PRINT_ERROR("Index exceed tensor size!");
         }
@@ -107,16 +104,16 @@ namespace libRSF
       }
 
       /** convert index from vector */
-      int _Index(const VectorStatic<Dim> Indices) const
+      int Index_(const VectorStatic<Dim> Indices) const
       {
         int Index = 0;
         for (int n = Dim-1; n >=0 ; n--)
         {
-          Index *= Size;
+          Index *= Size_;
           Index += Indices(n);
         }
 
-        if(Index >= _Size)
+        if(Index >= Size_)
         {
           PRINT_ERROR("Index exceed tensor size!");
         }
@@ -125,8 +122,8 @@ namespace libRSF
       }
 
       /** storage for grid points */
-      Vector _Grid;
-      const int _Size;
+      Vector Grid_;
+      const int Size_;
   };
 
 }

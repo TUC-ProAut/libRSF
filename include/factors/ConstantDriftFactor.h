@@ -44,8 +44,8 @@ namespace libRSF
       /** construct factor and store measurement */
       ConstantDriftFactorBase(ErrorType &Error, double DeltaTime)
       {
-        this->_Error = Error;
-        this->_DeltaTime = DeltaTime;
+        this->Error_ = Error;
+        this->DeltaTime_ = DeltaTime;
       }
 
       /** geometric error model */
@@ -60,7 +60,7 @@ namespace libRSF
 
         VectorT<T, Dim * 2> Error;
 
-        Error.template head<Dim>() = V2 - V1 - (D1 * this->_DeltaTime);
+        Error.template head<Dim>() = V2 - V1 - (D1 * this->DeltaTime_);
         Error.template tail<Dim>() = D2 - D1;
 
         return Error;
@@ -72,7 +72,7 @@ namespace libRSF
                       const T* const ValueNew, const T* const DriftNew,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(ValueOld, DriftOld,
+        return this->Error_.template weight<T>(this->Evaluate(ValueOld, DriftOld,
                                                               ValueNew, DriftNew),
                                                Params...);
       }
@@ -85,7 +85,7 @@ namespace libRSF
         VectorRef<double, Dim> V2(StatePointers.at(2));
         VectorRef<double, Dim> D2(StatePointers.at(3));
 
-        V2 = V1 + (D1 * this->_DeltaTime);
+        V2 = V1 + (D1 * this->DeltaTime_);
         D2 = D1;
       }
   };

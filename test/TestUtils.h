@@ -37,14 +37,14 @@
 namespace libRSF
 {
   /**< maximum component-wise absolute difference between two datasets */
-  double MaxAbsError(const DataType TypeGT,
+  double MaxAbsError(DataType TypeGT,
                      const SensorDataSet &GT,
                      const std::string &TypeEstimate,
                      const StateDataSet &Estimate,
-                     const DataElement Element);
+                     DataElement Element);
 
   /** RMSE of the euclidean distance of means */
-  double ATE(const DataType TypeGT,
+  double ATE(DataType TypeGT,
              const SensorDataSet &GT,
              const std::string &TypeEstimate,
              const StateDataSet &Estimate);

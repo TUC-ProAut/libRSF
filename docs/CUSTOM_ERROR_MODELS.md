@@ -107,7 +107,7 @@ Below you can see an example for a 2D Gaussian:
       void setCovarianceMatrix(const Matrix22 &CovMat)
       {
         /** square root information is more efficient to apply */
-        _SqrtInformation = InverseSquareRoot<Dim, double>(CovMat);
+        SqrtInformation_ = InverseSquareRoot<Dim, double>(CovMat);
       }
 
       template <typename T>
@@ -116,10 +116,10 @@ Below you can see an example for a 2D Gaussian:
         /** wrap raw pointer to vector*/
         VectorRef<T, 2> ErrorMap(WeightedError);
 
-        if(this->_Enable)
+        if(this->Enable_)
         {
           /** scale with full information matrix */
-          ErrorMap = _SqrtInformation.template cast<T>() * RawError;
+          ErrorMap = SqrtInformation_.template cast<T>() * RawError;
         }
         else
         {
@@ -130,7 +130,7 @@ Below you can see an example for a 2D Gaussian:
       }
      
   private:
-      Matrix22 _SqrtInformation;
+      Matrix22 SqrtInformation_;
   };
 ```
 

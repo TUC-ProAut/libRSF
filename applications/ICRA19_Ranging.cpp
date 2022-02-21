@@ -133,12 +133,12 @@ void AddRangeMeasurements2D(libRSF::FactorGraph &Graph,
       break;
 
     case libRSF::ErrorModelType::GMM:
-      if (Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+      if (Config.Ranging.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
       {
         static libRSF::MaxMix1 NoiseRangeMaxMix(GMM);
         Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRangeMaxMix);
       }
-      else if (Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+      else if (Config.Ranging.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
       {
         static libRSF::SumMix1 NoiseRangeSumMix(GMM);
         Graph.addFactor<libRSF::FactorType::Range2>(ListRange, Range, NoiseRangeSumMix);
@@ -171,7 +171,7 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
                     int NumberOfComponents)
 {
   libRSF::GaussianMixture<1> GMM;
-  if(Config.Ranging.ErrorModel.TuningType == libRSF::ErrorModelTuningType::EM)
+  if(Config.Ranging.ErrorModel.GMM.TuningType == libRSF::ErrorModelTuningType::EM)
   {
     /** fill empty GMM */
     if(GMM.getNumberOfComponents() == 0)
@@ -198,12 +198,12 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
     GMM.estimate(ErrorData, GMMConfig);
 
     /** apply error model */
-    if(Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+    if(Config.Ranging.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
     {
       libRSF::SumMix1 NewSMModel(GMM);
       Graph.setNewErrorModel(libRSF::FactorType::Range2, NewSMModel);
     }
-    else if(Config.Ranging.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+    else if(Config.Ranging.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
     {
       libRSF::MaxMix1 NewMMModel(GMM);
       Graph.setNewErrorModel(libRSF::FactorType::Range2, NewMMModel);
@@ -213,44 +213,44 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
 
 bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config)
 {
-  if(ErrorModel.compare("gauss") == 0)
+  if(ErrorModel == "gauss")
   {
     Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::Gaussian;
-    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.Ranging.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("dcs") == 0)
+  else if(ErrorModel == "dcs")
   {
     Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::DCS;
-    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.Ranging.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("cdce") == 0)
+  else if(ErrorModel == "cdce")
   {
     Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::cDCE;
-    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.Ranging.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("sm") == 0)
+  else if(ErrorModel == "sm")
   {
     Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
-    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.Ranging.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.Ranging.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("mm") == 0)
+  else if(ErrorModel == "mm")
   {
     Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
-    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.Ranging.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.Ranging.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("stsm") == 0)
+  else if(ErrorModel == "stsm")
   {
     Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
-    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+    Config.Ranging.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.Ranging.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::EM;
   }
-  else if(ErrorModel.compare("stmm") == 0)
+  else if(ErrorModel == "stmm")
   {
     Config.Ranging.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.Ranging.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
-    Config.Ranging.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+    Config.Ranging.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.Ranging.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::EM;
   }
   else
   {
@@ -275,7 +275,7 @@ int main(int argc, char** argv)
   Config.OutputFile = Arguments.at(1);
 
   /** parse the error model string */
-  if (ParseErrorModel(Arguments.at(3), Config) == false)
+  if (!ParseErrorModel(Arguments.at(3), Config))
   {
     return 1;
   }
@@ -287,7 +287,7 @@ int main(int argc, char** argv)
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
   SolverOptions.max_num_iterations = 1000;
-  SolverOptions.num_threads = std::thread::hardware_concurrency();
+  SolverOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
   SolverOptions.max_solver_time_in_seconds = 0.25;
 
   const int NumberOfComponents = 2;

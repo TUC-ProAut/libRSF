@@ -46,9 +46,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(3);
-        this->_MeasurementVector = PriorMeasurement.getMean().head(3);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(3);
+        this->MeasurementVector_ = PriorMeasurement.getMean().head(3);
       }
 
       /** geometric error model */
@@ -65,8 +65,8 @@ namespace libRSF
       bool operator()(const T* const PositionState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
-                                                              this->_MeasurementVector),
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };
@@ -79,9 +79,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(5);
-        this->_MeasurementVector << PriorMeasurement.getMean().head(3), PriorMeasurement.getMean().tail(2);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(5);
+        this->MeasurementVector_ << PriorMeasurement.getMean().head(3), PriorMeasurement.getMean().tail(2);
       }
 
       /** geometric error model */
@@ -105,9 +105,9 @@ namespace libRSF
                       const T* const RotationState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
                                                               RotationState,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };
@@ -120,9 +120,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionDimFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(6);
-        this->_MeasurementVector << PriorMeasurement.getMean().head(3), PriorMeasurement.getMean().segment(6,3);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(6);
+        this->MeasurementVector_ << PriorMeasurement.getMean().head(3), PriorMeasurement.getMean().segment(6,3);
       }
 
       /** geometric error model */
@@ -146,9 +146,9 @@ namespace libRSF
                       const T* const BoxDimState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
                                                               BoxDimState,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };
@@ -161,9 +161,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionVelFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(6);
-        this->_MeasurementVector = PriorMeasurement.getMean().head(6);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(6);
+        this->MeasurementVector_ = PriorMeasurement.getMean().head(6);
       }
 
       /** geometric error model */
@@ -187,9 +187,9 @@ namespace libRSF
                       const T* const VelocityState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
                                                               VelocityState,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };
@@ -202,9 +202,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionDimRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(8);
-        this->_MeasurementVector << PriorMeasurement.getMean().head(3), PriorMeasurement.getMean().tail(5);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(8);
+        this->MeasurementVector_ << PriorMeasurement.getMean().head(3), PriorMeasurement.getMean().tail(5);
       }
 
       /** geometric error model */
@@ -231,10 +231,10 @@ namespace libRSF
                       const T* const RotationState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
                                                               BoxDimState,
                                                               RotationState,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };
@@ -247,9 +247,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionVelRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(8);
-        this->_MeasurementVector << PriorMeasurement.getMean().head(6), PriorMeasurement.getMean().tail(2);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(8);
+        this->MeasurementVector_ << PriorMeasurement.getMean().head(6), PriorMeasurement.getMean().tail(2);
       }
 
       /** geometric error model */
@@ -276,10 +276,10 @@ namespace libRSF
                       const T* const RotationState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
                                                               VelocityState,
                                                               RotationState,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };
@@ -292,9 +292,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionVelDimFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(9);
-        this->_MeasurementVector = PriorMeasurement.getMean().head(9);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(9);
+        this->MeasurementVector_ = PriorMeasurement.getMean().head(9);
       }
 
       /** geometric error model */
@@ -321,10 +321,10 @@ namespace libRSF
                       const T* const BoxDimState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
                                                               VelocityState,
                                                               BoxDimState,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };
@@ -337,9 +337,9 @@ namespace libRSF
       /** construct factor and store error model */
       TrackingDetectionVelDimRotFactor(ErrorType &Error, const Data &PriorMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(11);
-        this->_MeasurementVector = PriorMeasurement.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(11);
+        this->MeasurementVector_ = PriorMeasurement.getMean();
       }
 
       /** geometric error model */
@@ -369,11 +369,11 @@ namespace libRSF
                       const T* const RotationState,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(PositionState,
+        return this->Error_.template weight<T>(this->Evaluate(PositionState,
                                                               VelocityState,
                                                               BoxDimState,
                                                               RotationState,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
   };

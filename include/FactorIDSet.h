@@ -39,13 +39,13 @@
 
 namespace libRSF
 {
-  typedef ceres::ResidualBlockId CeresFactorID;
+  using CeresFactorID = ceres::ResidualBlockId;
 
   class FactorIDSet : public DataSet<FactorType, CeresFactorID>
   {
     public:
-      FactorIDSet() {};
-      ~FactorIDSet() {};
+      FactorIDSet() = default;
+      ~FactorIDSet() override = default;
 
       /** specialized hash for FactorType enum */
       struct HashGlobalID
@@ -63,7 +63,7 @@ namespace libRSF
       using DataSet<FactorType, CeresFactorID>::addElement;
   };
 
-  typedef FactorIDSet::UniqueID FactorID;
+  using FactorID = FactorIDSet::UniqueID;
 
   std::ostream& operator << (std::ostream& Os, const FactorID& ID);
 }

@@ -90,10 +90,10 @@ namespace libRSF
     BoundingBox3,                                         /**< bounding boxes from object detection */
     ClockError, ClockDrift,                               /**< GNSS receiver clock error */
     IMUBias,                                              /**< IMU Speedbias [Vel, B_Acc, B_Gyr] */
-    GMM, Switch, Covariance1,                             /**< dynamic error models */
+    GMM, Switch, Covariance1, Covariance2,                /**< dynamic error models */
     Range2, Range3,                                       /**< range to fixed point */
     Pseudorange3, Pseudorange2,                           /**< GNSS pseudo-range */
-    Odom2, Odom3, Odom2Diff,                              /**< wheel based dometry */
+    Odom2, Odom3, Odom2Diff,                              /**< wheel based odometry */
     Odom3Radar, Odom3Laser, Odom3VIO,                     /**< odometry based on other sensors */
     Point2Radar,                                          /**< point with doppler velocity*/
     Point1Set, Point2Set, Point3Set,                      /**< two corresponding points */
@@ -119,14 +119,15 @@ namespace libRSF
                            IterationSolver, IterationAdaptive};
 
   /** store the configuration of each data type in a global variable */
-  typedef DataConfig<DataType, DataElement> DataTypeConfig;
+  using DataTypeConfig = DataConfig<DataType, DataElement>;
   extern const DataTypeConfig GlobalDataConfig;
 
-  /** cout enums */
+  /** print enums */
   std::ostream& operator << (std::ostream& Os, const DataType& Type);
   std::ostream& operator << (std::ostream& Os, const FactorType& Type);
   std::ostream& operator << (std::ostream& Os, const SolutionType& Type);
   std::ostream& operator << (std::ostream& Os, const ErrorModelType& Type);
+  std::ostream& operator << (std::ostream& Os, const ErrorModelTuningType& Type);
 
   /** dictionary to translate factor types into related sensor types */
   const std::map<FactorType, DataType> FactorSensorDict =

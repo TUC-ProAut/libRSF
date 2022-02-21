@@ -45,7 +45,7 @@ namespace libRSF
     const Vector B = -Jacobian.transpose() * Residual;
 
     /** calculate size of the linear system */
-    const int SizeTotal = Hessian.cols();
+    const int SizeTotal = static_cast<int>(Hessian.cols());
     const int SizeRemain = SizeTotal - SizeMarginal;
 
     /** select sub matrices  */

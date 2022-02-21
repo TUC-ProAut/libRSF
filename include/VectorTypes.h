@@ -38,7 +38,7 @@
 namespace libRSF
 {
    /** index for matrix types */
-  typedef Eigen::Index Index;
+  using Index = Eigen::Index;
   const Index Dynamic = Eigen::Dynamic;
 
   /** generic matrix */
@@ -56,40 +56,40 @@ namespace libRSF
   using VectorStatic = VectorT<double, Row>;
 
   /** double dynamic types */
-  typedef VectorStatic<Dynamic> Vector;
-  typedef MatrixStatic<Dynamic, Dynamic> Matrix;
+  using Vector = VectorStatic<Dynamic>;
+  using Matrix = MatrixStatic<Dynamic, Dynamic>;
 
   /** double static fixed types */
-  typedef VectorStatic<1> Vector1;
-  typedef VectorStatic<2> Vector2;
-  typedef VectorStatic<3> Vector3;
-  typedef VectorStatic<4> Vector4;
-  typedef VectorStatic<5> Vector5;
-  typedef VectorStatic<6> Vector6;
-  typedef VectorStatic<7> Vector7;
-  typedef VectorStatic<8> Vector8;
-  typedef VectorStatic<9> Vector9;
-  typedef VectorStatic<10> Vector10;
-  typedef VectorStatic<11> Vector11;
-  typedef VectorStatic<12> Vector12;
-  typedef VectorStatic<13> Vector13;
-  typedef VectorStatic<14> Vector14;
-  typedef VectorStatic<15> Vector15;
+  using Vector1 = VectorStatic<1>;
+  using Vector2 = VectorStatic<2>;
+  using Vector3 = VectorStatic<3>;
+  using Vector4 = VectorStatic<4>;
+  using Vector5 = VectorStatic<5>;
+  using Vector6 = VectorStatic<6>;
+  using Vector7 = VectorStatic<7>;
+  using Vector8 = VectorStatic<8>;
+  using Vector9 = VectorStatic<9>;
+  using Vector10 = VectorStatic<10>;
+  using Vector11 = VectorStatic<11>;
+  using Vector12 = VectorStatic<12>;
+  using Vector13 = VectorStatic<13>;
+  using Vector14 = VectorStatic<14>;
+  using Vector15 = VectorStatic<15>;
 
-  typedef MatrixStatic<1, 1> Matrix11;
-  typedef MatrixStatic<2, 2> Matrix22;
-  typedef MatrixStatic<3, 3> Matrix33;
-  typedef MatrixStatic<3, 4> Matrix34;
-  typedef MatrixStatic<4, 3> Matrix43;
-  typedef MatrixStatic<4, 4> Matrix44;
-  typedef MatrixStatic<6, 6> Matrix66;
-  typedef MatrixStatic<7, 7> Matrix77;
-  typedef MatrixStatic<8, 8> Matrix88;
-  typedef MatrixStatic<9, 9> Matrix99;
-  typedef MatrixStatic<10, 10> Matrix1010;
+  using Matrix11 = MatrixStatic<1, 1>;
+  using Matrix22 = MatrixStatic<2, 2>;
+  using Matrix33 = MatrixStatic<3, 3>;
+  using Matrix34 = MatrixStatic<3, 4>;
+  using Matrix43 = MatrixStatic<4, 3>;
+  using Matrix44 = MatrixStatic<4, 4>;
+  using Matrix66 = MatrixStatic<6, 6>;
+  using Matrix77 = MatrixStatic<7, 7>;
+  using Matrix88 = MatrixStatic<8, 8>;
+  using Matrix99 = MatrixStatic<9, 9>;
+  using Matrix1010 = MatrixStatic<10, 10>;
 
-  typedef MatrixStatic<2, Dynamic> Matrix2X;
-  typedef MatrixStatic<3, Dynamic> Matrix3X;
+  using Matrix2X = MatrixStatic<2, Dynamic>;
+  using Matrix3X = MatrixStatic<3, Dynamic>;
 
   /** reference wrappers */
   template <typename T, int Row, int Col>
@@ -109,7 +109,7 @@ namespace libRSF
   template <typename T>
   using Rotation2DT = Eigen::Rotation2D<T>;
 
-  typedef Rotation2DT<double> Rotation2D;
+  using Rotation2D = Rotation2DT<double>;
 
   /** 3D quaternions */
   template <typename T>
@@ -121,7 +121,7 @@ namespace libRSF
   template <typename T>
   using QuaternionRefConst = Eigen::Map<const QuaternionT<T>>;
 
-  typedef QuaternionT<double> Quaternion;
+  using Quaternion = QuaternionT<double>;
 
   template <typename T>
   QuaternionT<T> VectorToQuaternion(const VectorT<T,4> &Vec)
@@ -134,9 +134,9 @@ namespace libRSF
   template <typename T>
   using AngleAxisT = Eigen::AngleAxis<T>;
 
-  typedef AngleAxisT<double> AngleAxis;
+  using AngleAxis = AngleAxisT<double>;
 
-  /** safe STL contatianer */
+  /** safe STL container */
   template <int Row, int Col>
   using MatrixVectorSTL = std::vector<MatrixT<double, Row, Col>, Eigen::aligned_allocator<MatrixT<double, Row, Col>>>;
 

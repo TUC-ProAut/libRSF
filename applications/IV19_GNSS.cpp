@@ -124,7 +124,7 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
         static libRSF::GaussianMixture<1> GMM;
         if (GMM.getNumberOfComponents() == 0)
         {
-          if (Config.GNSS.ErrorModel.TuningType == libRSF::ErrorModelTuningType::VBI)
+          if (Config.GNSS.ErrorModel.GMM.TuningType == libRSF::ErrorModelTuningType::VBI)
           {
             GMM.initSpread(2, 10);/**< number of components is unknown, so choose 2 */
           }
@@ -134,12 +134,12 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
           }
         }
 
-        if (Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+        if (Config.GNSS.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
         {
           static libRSF::MaxMix1 NoisePseudorangeMaxMix(GMM);
           Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorangeMaxMix);
         }
-        else if (Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+        else if (Config.GNSS.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
         {
           static libRSF::SumMix1 NoisePseudorangeSumMix(GMM);
           Graph.addFactor<libRSF::FactorType::Pseudorange3_ECEF>(ListPseudorange, Pseudorange, NoisePseudorangeSumMix);
@@ -168,13 +168,13 @@ void AddPseudorangeMeasurements(libRSF::FactorGraph &Graph,
 void TuneErrorModel(libRSF::FactorGraph &Graph,
                     libRSF::FactorGraphConfig &Config)
 {
-  if(Config.GNSS.ErrorModel.TuningType != libRSF::ErrorModelTuningType::None)
+  if(Config.GNSS.ErrorModel.GMM.TuningType != libRSF::ErrorModelTuningType::None)
   {
-    /** compute resudiuals of the factor graph */
+    /** compute residuals of the factor graph */
     libRSF::Matrix ErrorData;
     Graph.computeUnweightedErrorMatrix(libRSF::FactorType::Pseudorange3_ECEF, ErrorData);
 
-    if(Config.GNSS.ErrorModel.TuningType == libRSF::ErrorModelTuningType::EM)
+    if(Config.GNSS.ErrorModel.GMM.TuningType == libRSF::ErrorModelTuningType::EM)
     {
       /** fill empty GMM */
       libRSF::GaussianMixture<1> GMM;
@@ -188,26 +188,26 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       libRSF::GaussianMixture<1>::EstimationConfig GMMConfig;
       GMMConfig.EstimationAlgorithm = libRSF::ErrorModelTuningType::EM;
       GMMConfig.RemoveSmallComponents = false;
-      GMMConfig.MergeSimiliarComponents = false;
+      GMMConfig.MergeSimilarComponents = false;
       GMM.estimate(ErrorData, GMMConfig);
 
       /** remove offset of the first "LOS" component */
       GMM.removeOffsetLegacy();
 
       /** apply error model */
-      if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+      if(Config.GNSS.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
       {
         libRSF::SumMix1 NewSMModel(GMM);
         Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3_ECEF, NewSMModel);
       }
-      else if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+      else if(Config.GNSS.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
       {
         libRSF::MaxMix1 NewMMModel(GMM);
         Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3_ECEF, NewMMModel);
       }
 
     }
-    else if(Config.GNSS.ErrorModel.TuningType == libRSF::ErrorModelTuningType::VBI)
+    else if(Config.GNSS.ErrorModel.GMM.TuningType == libRSF::ErrorModelTuningType::VBI)
     {
       /** initialize GMM */
       static libRSF::GaussianMixture<1> GMMAdaptive;
@@ -238,7 +238,7 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       libRSF::GaussianMixture<1>::EstimationConfig GMMConfig;
       GMMConfig.EstimationAlgorithm = libRSF::ErrorModelTuningType::VBI;
       GMMConfig.RemoveSmallComponents = true;
-      GMMConfig.MergeSimiliarComponents = false;
+      GMMConfig.MergeSimilarComponents = false;
       GMMConfig.PriorWishartDOF = VBI_NU;
       GMMAdaptive.estimate(ErrorData, GMMConfig);
 
@@ -246,12 +246,12 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
       GMMAdaptive.removeOffsetLegacy();
 
       /** apply error model */
-      if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+      if(Config.GNSS.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
       {
         libRSF::SumMix1 NewSMModel(GMMAdaptive);
         Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3_ECEF, NewSMModel);
       }
-      else if(Config.GNSS.ErrorModel.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+      else if(Config.GNSS.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
       {
         libRSF::MaxMix1 NewMMModel(GMMAdaptive);
         Graph.setNewErrorModel(libRSF::FactorType::Pseudorange3_ECEF, NewMMModel);
@@ -262,56 +262,56 @@ void TuneErrorModel(libRSF::FactorGraph &Graph,
 
 bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &Config)
 {
-  if(ErrorModel.compare("gauss") == 0)
+  if(ErrorModel == "gauss")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::Gaussian;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("dcs") == 0)
+  else if(ErrorModel == "dcs")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::DCS;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("cdce") == 0)
+  else if(ErrorModel == "cdce")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::cDCE;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("sm") == 0)
+  else if(ErrorModel == "sm")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.GNSS.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("mm") == 0)
+  else if(ErrorModel == "mm")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::None;
+    Config.GNSS.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::None;
   }
-  else if(ErrorModel.compare("stsm") == 0)
+  else if(ErrorModel == "stsm")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+    Config.GNSS.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::EM;
   }
-  else if(ErrorModel.compare("stmm") == 0)
+  else if(ErrorModel == "stmm")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::EM;
+    Config.GNSS.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::EM;
   }
-  else if(ErrorModel.compare("stsm_vbi") == 0)
+  else if(ErrorModel == "stsm_vbi")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::VBI;
+    Config.GNSS.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::SumMix;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::VBI;
   }
-  else if(ErrorModel.compare("stmm_vbi") == 0)
+  else if(ErrorModel == "stmm_vbi")
   {
     Config.GNSS.ErrorModel.Type = libRSF::ErrorModelType::GMM;
-    Config.GNSS.ErrorModel.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
-    Config.GNSS.ErrorModel.TuningType = libRSF::ErrorModelTuningType::VBI;
+    Config.GNSS.ErrorModel.GMM.MixtureType = libRSF::ErrorModelMixtureType::MaxMix;
+    Config.GNSS.ErrorModel.GMM.TuningType = libRSF::ErrorModelTuningType::VBI;
   }
   else
   {
@@ -331,10 +331,10 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   /** read filenames */
   Config.InputFile = Arguments.at(0);
   Config.OutputFile = Arguments.at(1);
-  OutputFile = Config.OutputFile; // for call by refrence "return-value"
+  OutputFile = Config.OutputFile; // for call by reference "return-value"
 
   /** parse the error model string */
-  if (ParseErrorModel(Arguments.at(3), Config) == false)
+  if (!ParseErrorModel(Arguments.at(3), Config))
   {
     return 1;
   }
@@ -345,7 +345,7 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   SolverOptions.use_nonmonotonic_steps = true;
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
-  SolverOptions.num_threads = std::thread::hardware_concurrency();
+  SolverOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
   SolverOptions.max_num_iterations = 100;
 
   /** read input data */
@@ -383,7 +383,7 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   /** hard coded constant clock error drift (CCED) model noise properties */
   libRSF::Vector2 StdCCED;
 
-  if(Config.InputFile.compare("Chemnitz_Input.txt") == 0)
+  if(Config.InputFile == "Chemnitz_Input.txt")
   {
     StdCCED << 0.1, 0.009; /** set CCED standard deviation for Chemnitz City dataset */
   }

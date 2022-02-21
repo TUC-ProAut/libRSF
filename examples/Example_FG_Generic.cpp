@@ -45,7 +45,7 @@ int main(int ArgC, char** ArgV)
   ceres::Solver::Options SolverOptions;
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
-  SolverOptions.num_threads = std::thread::hardware_concurrency();
+  SolverOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
   SolverOptions.minimizer_progress_to_stdout = true;
 
   /** add states to graph */

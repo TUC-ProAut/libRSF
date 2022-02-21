@@ -42,15 +42,15 @@ namespace libRSF
   {
     public:
 
-      DynamicCovarianceEstimation(){}
+      DynamicCovarianceEstimation() = default;
 
-      explicit DynamicCovarianceEstimation(const VectorStatic<Dim> &CovMinDiagonal): _CovMin(CovMinDiagonal)
+      explicit DynamicCovarianceEstimation(const VectorStatic<Dim> &CovMinDiagonal): CovMin_(CovMinDiagonal)
       {}
 
       template <typename T>
       bool weight(const VectorT<T, Dim> &RawError, const T* const Covariance, T* Error) const
       {
-        if (this->_Enable)
+        if (this->Enable_)
         {
           /** map error to matrix */
           VectorRef <T, Dim+1> ErrorMap(Error);
@@ -62,7 +62,7 @@ namespace libRSF
           ErrorMap.template head<Dim>() = RawError.template head<Dim>().array() / CovMap.array().sqrt();
 
           /** add nonlinear prior prior */
-          ErrorMap(Dim) = sqrt(log(CovMap.prod() / (_CovMin.prod() - 1e-6))) * 2.0;
+          ErrorMap(Dim) = sqrt(log(CovMap.prod() / (CovMin_.prod() - 1e-6))) * 2.0;
         }
         else
         {
@@ -78,7 +78,7 @@ namespace libRSF
       }
 
     private:
-      VectorStatic<Dim> _CovMin;
+      VectorStatic<Dim> CovMin_;
   };
 }
 

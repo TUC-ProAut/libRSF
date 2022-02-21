@@ -56,26 +56,26 @@ namespace libRSF
 
       MaxMixture()
       {
-        _Normalization = std::numeric_limits<double>::lowest();
+        Normalization_ = std::numeric_limits<double>::lowest();
       }
 
       virtual ~MaxMixture() = default;
 
-      explicit MaxMixture(const MixtureType &Mixture)
+      explicit MaxMixture(const MixtureType &Mixture) : Normalization_(std::numeric_limits<double>::lowest())
       {
-        this->addMixture(Mixture);
+        this->addMixture_(Mixture);
       }
 
       void clear()
       {
-        _Normalization = std::numeric_limits<double>::lowest();
-        _Mixture.clear();
+        Normalization_ = std::numeric_limits<double>::lowest();
+        Mixture_.clear();
       }
 
       template <typename T>
       bool weight(const VectorT<T, Dim> &RawError, T* Error) const
       {
-        if(this->_Enable)
+        if(this->Enable_)
         {
           /** map the error pointer to a matrix */
           VectorRef<T, Dim+1> ErrorMap(Error);
@@ -84,13 +84,13 @@ namespace libRSF
 
           MatrixT<T, Dim + 1, 1> ErrorShadow, ErrorShadowBest;
 
-          const int NumberOfComponents = _Mixture.getNumberOfComponents();
+          const int NumberOfComponents = Mixture_.getNumberOfComponents();
 
           /** calculate Log-Likelihood for each Gaussian component */
           for(int nComponent = 0; nComponent < NumberOfComponents; ++nComponent)
           {
-            ErrorShadow << _Mixture.template getExponentialPartOfComponent<T>(nComponent, RawError),
-                           sqrt(ceres::fmax(-2.0 * T(log(_Mixture.template getLinearPartOfComponent<T>(nComponent, RawError) / _Normalization)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
+            ErrorShadow << Mixture_.template getExponentialPartOfComponent<T>(nComponent, RawError),
+                           sqrt(ceres::fmax(-2.0 * T(log(Mixture_.template getLinearPartOfComponent<T>(nComponent, RawError) / Normalization_)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
 
             /** keep only the most likely component */
             if(ErrorShadow.squaredNorm() < Loglike || ceres::IsNaN(Loglike))
@@ -116,35 +116,33 @@ namespace libRSF
 
     private:
 
-      void addMixture(const MixtureType &Mixture)
+      void addMixture_(const MixtureType &Mixture)
       {
-        _Mixture = Mixture;
-
-        const int NumberOfComponents = _Mixture.getNumberOfComponents();
+        Mixture_ = Mixture;
+        const int NumberOfComponents = Mixture.getNumberOfComponents();
 
         if (NumberOfComponents > 0)
         {
-          _Normalization = _Mixture.getMaximumOfComponent(0);
+          Normalization_ = Mixture.getMaximumOfComponent(0);
           for(int nComponent = 1; nComponent < NumberOfComponents; ++nComponent)
           {
-            _Normalization = std::max(_Normalization, _Mixture.getMaximumOfComponent(nComponent));
+            Normalization_ = std::max(Normalization_, Mixture.getMaximumOfComponent(nComponent));
           }
         }
       }
 
-      MixtureType _Mixture;
-      double _Normalization;
-
+      MixtureType Mixture_;
+      double Normalization_;
   };
 
-  typedef MaxMixture<1, GaussianMixture<1>> MaxMix1;
-  typedef MaxMixture<2, GaussianMixture<2>> MaxMix2;
-  typedef MaxMixture<3, GaussianMixture<3>> MaxMix3;
-  typedef MaxMixture<5, GaussianMixture<5>> MaxMix5;
-  typedef MaxMixture<6, GaussianMixture<6>> MaxMix6;
-  typedef MaxMixture<8, GaussianMixture<8>> MaxMix8;
-  typedef MaxMixture<9, GaussianMixture<9>> MaxMix9;
-  typedef MaxMixture<11, GaussianMixture<11>> MaxMix11;
+  using MaxMix1 = MaxMixture<1, GaussianMixture<1>>;
+  using MaxMix2 = MaxMixture<2, GaussianMixture<2>>;
+  using MaxMix3 = MaxMixture<3, GaussianMixture<3>>;
+  using MaxMix5 = MaxMixture<5, GaussianMixture<5>>;
+  using MaxMix6 = MaxMixture<6, GaussianMixture<6>>;
+  using MaxMix8 = MaxMixture<8, GaussianMixture<8>>;
+  using MaxMix9 = MaxMixture<9, GaussianMixture<9>>;
+  using MaxMix11 = MaxMixture<11, GaussianMixture<11>>;
 }
 
 #endif // MAXMIXTURE_H

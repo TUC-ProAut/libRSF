@@ -38,7 +38,7 @@
 namespace libRSF
 {
   /** round the timestamp to ticks-precision */
-  double roundToTick(const double Time);
+  double roundToTick(double Time);
 
   /** stream of objects with ticked timestamps */
   template<typename ObjectType>
@@ -49,12 +49,12 @@ namespace libRSF
       virtual ~DataStream() = default;
 
       /** define base class */
-      typedef typename std::multimap<double, ObjectType> BaseClass;
+      using BaseClass = typename std::multimap<double, ObjectType>;
 
       /** use the types of the base class */
-      typedef typename BaseClass::iterator iterator;
-      typedef typename BaseClass::const_iterator const_iterator;
-      typedef typename BaseClass::size_type size_type;
+      using iterator = typename BaseClass::iterator;
+      using const_iterator = typename BaseClass::const_iterator;
+      using size_type = typename BaseClass::size_type;
 
       /** implement all functions with a fixed tick size for the double keys */
       iterator find (const double &Time)

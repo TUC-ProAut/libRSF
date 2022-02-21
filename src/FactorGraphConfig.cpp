@@ -24,24 +24,21 @@
 
 namespace libRSF
 {
-
-  bool GetSubYAML(string Key, const YAML::Node &Node, YAML::Node &Subnode)
+  bool GetSubYAML(const std::string& Key, const YAML::Node &Node, YAML::Node &Subnode)
   {
     if(Node[Key].IsDefined())
     {
       Subnode = Node[Key];
       return true;
     }
-    else
-    {
-      PRINT_ERROR("Node \"", Key, "\" is not defined!");
-      return false;
-    }
+
+    PRINT_ERROR("Node \"", Key, "\" is not defined!");
+    return false;
   }
 
-  Vector FactorGraphConfig::ParseVectorFromYAML(YAML::Node VectorNode)
+  Vector FactorGraphConfig::ParseVectorFromYAML_(const YAML::Node &VectorNode)
   {
-    int Length = VectorNode.size();
+    int Length = static_cast<int>(VectorNode.size());
     Vector Vec(Length);
 
     if(Length == 0)
@@ -65,7 +62,7 @@ namespace libRSF
     SolverConfig.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
     SolverConfig.linear_solver_type = ceres::LinearSolverType::SPARSE_NORMAL_CHOLESKY;
     SolverConfig.use_nonmonotonic_steps = true;
-    SolverConfig.num_threads = std::thread::hardware_concurrency();
+    SolverConfig.num_threads = static_cast<int>(std::thread::hardware_concurrency());
     SolverConfig.max_num_iterations = 100;
     SolverConfig.max_solver_time_in_seconds = 10.0;
     SolverConfig.minimizer_progress_to_stdout = true;
@@ -76,10 +73,10 @@ namespace libRSF
     #endif // NDEBUG
   }
 
-  bool FactorGraphConfig::ParseErrorModelFromYAML(YAML::Node ErrorModelNode, ErrorModelConfig &Model)
+  bool FactorGraphConfig::ParseErrorModelFromYAML_(YAML::Node ErrorModelNode, ErrorModelConfig &Model)
   {
     /** read error model type */
-    std::string ErrorTypeString = ErrorModelNode["type"].as<std::string>();
+    auto ErrorTypeString = ErrorModelNode["type"].as<std::string>();
 
     if(!TranslateSafe(ErrorModelTypeDict, ErrorTypeString, Model.Type))
     {
@@ -91,83 +88,70 @@ namespace libRSF
     switch(Model.Type)
     {
       case ErrorModelType::SC:
-        Model.Parameter.resize(1);
-        Model.Parameter(0) = ErrorModelNode["parameter"].as<double>();
-        break;
-
       case ErrorModelType::DCS:
-        Model.Parameter.resize(1);
-        Model.Parameter(0) = ErrorModelNode["parameter"].as<double>();
+        Model.Parameter = ErrorModelNode["parameter"].as<double>();
         break;
 
       case ErrorModelType::GMM:
         {
-          std::string MixtureString = ErrorModelNode["mixture_type"].as<std::string>();
-          std::string TuningString = ErrorModelNode["tuning_type"].as<std::string>();
+          auto MixtureString = ErrorModelNode["mixture_type"].as<std::string>();
+          auto TuningString = ErrorModelNode["tuning_type"].as<std::string>();
 
-          if(!TranslateSafe(ErrorModelMixtureTypeDict, MixtureString, Model.MixtureType))
+          if(!TranslateSafe(ErrorModelMixtureTypeDict, MixtureString, Model.GMM.MixtureType))
           {
             PRINT_ERROR("Wrong mixture model type: ", MixtureString);
             return false;
           }
 
-          if(!TranslateSafe(ErrorModelTuningTypeDict, TuningString, Model.TuningType))
+          if(!TranslateSafe(ErrorModelTuningTypeDict, TuningString, Model.GMM.TuningType))
           {
             PRINT_ERROR("Wrong tuning model type: ", TuningString);
             return false;
           }
 
           /** read parameter depending on tuning type */
-          switch(Model.TuningType)
+          switch(Model.GMM.TuningType)
           {
             case ErrorModelTuningType::None:
-              {
-                /** get params */
-                Vector MeanVect, WeightVect, StdDevVect;
-                MeanVect = ParseVectorFromYAML(ErrorModelNode["mean"]);
-                StdDevVect = ParseVectorFromYAML(ErrorModelNode["std_dev"]);
-                WeightVect = ParseVectorFromYAML(ErrorModelNode["weight"]);
-
-                /** write to vector */
-                Model.Parameter.resize(MeanVect.size() + StdDevVect.size() + WeightVect.size());
-                Model.Parameter << MeanVect , StdDevVect , WeightVect;
-                break;
-              }
+              /** get fixed params */
+              Model.GMM.Mean = ParseVectorFromYAML_(ErrorModelNode["mean"]);
+              Model.GMM.StdDev = ParseVectorFromYAML_(ErrorModelNode["std_dev"]);
+              Model.GMM.Weight = ParseVectorFromYAML_(ErrorModelNode["weight"]);
+              break;
 
             case ErrorModelTuningType::EM:
-              Model.Parameter.resize(2);
-              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
-              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
-
-              Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
-
+              Model.GMM.NumberComponents = static_cast<int>(ErrorModelNode["components"].as<double>());
+              Model.GMM.BaseStandardDeviation = ErrorModelNode["std_dev"].as<double>();
+              Model.GMM.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
               break;
 
             case ErrorModelTuningType::EM_MAP:
-              Model.Parameter.resize(2);
-              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
-              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
-
-              Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
-
+              Model.GMM.NumberComponents = static_cast<int>(ErrorModelNode["components"].as<double>());
+              Model.GMM.BaseStandardDeviation = ErrorModelNode["std_dev"].as<double>();
+              Model.GMM.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
+              /** prior parameters */
+              Model.GMM.PriorDirichletConcentration = ErrorModelNode["dir_conc"].as<double>();
+              Model.GMM.PriorNormalInfoScaling = ErrorModelNode["nw_scale"].as<double>();
+              Model.GMM.PriorWishartDOF = ErrorModelNode["nw_dof"].as<double>();
               break;
 
             case ErrorModelTuningType::VBI:
-              Model.Parameter.resize(3);
-              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
-              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
-              Model.Parameter(2) = ErrorModelNode["nu"].as<double>();
-
-              Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
+              Model.GMM.NumberComponents = static_cast<int>(ErrorModelNode["components"].as<double>());
+              Model.GMM.BaseStandardDeviation = ErrorModelNode["std_dev"].as<double>();
+              Model.GMM.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
+              /** prior parameters */
+              Model.GMM.PriorNormalInfoScaling = ErrorModelNode["nw_scale"].as<double>();
+              Model.GMM.PriorWishartDOF = ErrorModelNode["nw_dof"].as<double>();
               break;
 
             case ErrorModelTuningType::VBI_Full:
-              Model.Parameter.resize(3);
-              Model.Parameter(0) = ErrorModelNode["components"].as<double>();
-              Model.Parameter(1) = ErrorModelNode["std_dev"].as<double>();
-              Model.Parameter(2) = ErrorModelNode["nu"].as<double>();
-
-              Model.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
+              Model.GMM.NumberComponents = static_cast<int>(ErrorModelNode["components"].as<double>());
+              Model.GMM.BaseStandardDeviation = ErrorModelNode["std_dev"].as<double>();
+              Model.GMM.IncrementalTuning = ErrorModelNode["incremental"].as<bool>();
+              /** prior parameters */
+              Model.GMM.PriorDirichletConcentration = ErrorModelNode["dir_conc"].as<double>();
+              Model.GMM.PriorNormalInfoScaling = ErrorModelNode["nw_scale"].as<double>();
+              Model.GMM.PriorWishartDOF = ErrorModelNode["nw_dof"].as<double>();
               break;
 
             default:
@@ -186,7 +170,7 @@ namespace libRSF
     return true;
   }
 
-  bool FactorGraphConfig::ReadYAMLOptions(const string YAMLFile)
+  bool FactorGraphConfig::ReadYAMLOptions(const std::string& YAMLFile)
   {
     /** check if file available */
     if (FILE *File = fopen(YAMLFile.c_str(), "r"))
@@ -206,7 +190,7 @@ namespace libRSF
     const YAML::Node YAMLConfig  = YAMLComplete["config"];
 
     /** solution */
-    string SolTypeString = YAMLConfig["solution"]["solver_mode"].as<std::string>();
+    auto SolTypeString = YAMLConfig["solution"]["solver_mode"].as<std::string>();
     if(!TranslateSafe(SolutionTypeDict, SolTypeString, Solution.Type))
     {
       PRINT_ERROR("Wrong solution type: ", SolTypeString);
@@ -218,7 +202,7 @@ namespace libRSF
     case SolutionType::Batch:
         SolverConfig.minimizer_progress_to_stdout = false;
 
-        SolverConfig.max_num_iterations = YAMLConfig["solution"]["max_iterations"].as<double>();
+        SolverConfig.max_num_iterations = static_cast<int>(YAMLConfig["solution"]["max_iterations"].as<double>());
         SolverConfig.max_solver_time_in_seconds = YAMLConfig["solution"]["max_time"].as<double>();
 
         Solution.EstimateCov = YAMLConfig["solution"]["estimate_cov"].as<bool>();
@@ -227,7 +211,7 @@ namespace libRSF
     case SolutionType::Smoother:
         SolverConfig.minimizer_progress_to_stdout = false;
 
-        SolverConfig.max_num_iterations = YAMLConfig["solution"]["max_iterations"].as<double>();
+        SolverConfig.max_num_iterations = static_cast<int>(YAMLConfig["solution"]["max_iterations"].as<double>());
         SolverConfig.max_solver_time_in_seconds = YAMLConfig["solution"]["max_time"].as<double>();
 
         Solution.EstimateCov = YAMLConfig["solution"]["estimate_cov"].as<bool>();
@@ -236,7 +220,7 @@ namespace libRSF
     case SolutionType::SmootherRT:
         SolverConfig.minimizer_progress_to_stdout = false;
 
-        SolverConfig.max_num_iterations = YAMLConfig["solution"]["max_iterations"].as<double>();
+        SolverConfig.max_num_iterations = static_cast<int>(YAMLConfig["solution"]["max_iterations"].as<double>());
         SolverConfig.max_solver_time_in_seconds = YAMLConfig["solution"]["max_time"].as<double>();
         Solution.WindowLength = YAMLConfig["solution"]["window_length"].as<double>();
 
@@ -246,7 +230,7 @@ namespace libRSF
     case SolutionType::Window:
         SolverConfig.minimizer_progress_to_stdout = false;
 
-        SolverConfig.max_num_iterations = YAMLConfig["solution"]["max_iterations"].as<double>();
+        SolverConfig.max_num_iterations = static_cast<int>(YAMLConfig["solution"]["max_iterations"].as<double>());
         SolverConfig.max_solver_time_in_seconds = YAMLConfig["solution"]["max_time"].as<double>();
 
         Solution.WindowLength = YAMLConfig["solution"]["window_length"].as<double>();
@@ -265,7 +249,7 @@ namespace libRSF
         SolverConfig.dogleg_type = ceres::DoglegType::TRADITIONAL_DOGLEG;
         SolverConfig.num_threads = 1;
 
-        SolverConfig.max_num_iterations = YAMLConfig["solution"]["max_iterations"].as<double>();
+        SolverConfig.max_num_iterations = static_cast<int>(YAMLConfig["solution"]["max_iterations"].as<double>());
         SolverConfig.max_solver_time_in_seconds = YAMLConfig["solution"]["max_time"].as<double>();
 
         Solution.EstimateCov = YAMLConfig["solution"]["estimate_cov"].as<bool>();
@@ -288,7 +272,7 @@ namespace libRSF
     }
     else
     {
-      std::string SyncTypeString = YAMLConfig["graph"]["sync_sensor"]["type"].as<std::string>();
+      auto SyncTypeString = YAMLConfig["graph"]["sync_sensor"]["type"].as<std::string>();
       FactorType SyncFactor;
       if(!TranslateSafe(FactorTypeDict, SyncTypeString, SyncFactor))
       {
@@ -306,7 +290,7 @@ namespace libRSF
       Factor.IsActive = true;
 
       /** read type */
-      string FactorTypeString = YAMLConfig["factors"][nFactor]["type"].as<std::string>();
+      auto FactorTypeString = YAMLConfig["factors"][nFactor]["type"].as<std::string>();
       if(!TranslateSafe(FactorTypeDict, FactorTypeString, Factor.Type))
       {
         PRINT_ERROR("Wrong factor type: ", FactorTypeString);
@@ -314,7 +298,7 @@ namespace libRSF
       }
 
       /** read error model */
-      if(!ParseErrorModelFromYAML(YAMLConfig["factors"][nFactor]["error"], Factor.ErrorModel))
+      if(!ParseErrorModelFromYAML_(YAMLConfig["factors"][nFactor]["error"], Factor.ErrorModel))
       {
         PRINT_ERROR("Read error model went wrong!");
         return false;
@@ -326,17 +310,17 @@ namespace libRSF
         switch(Factor.Type)
         {
           case FactorType::ConstDrift1:
-            Factor.Parameter = ParseVectorFromYAML(YAMLConfig["factors"][nFactor]["std_dev"]);
+            Factor.Parameter = ParseVectorFromYAML_(YAMLConfig["factors"][nFactor]["std_dev"]);
             break;
 
           case FactorType::ConstVal1:
-            Factor.Parameter = ParseVectorFromYAML(YAMLConfig["factors"][nFactor]["std_dev"]);
+            Factor.Parameter = ParseVectorFromYAML_(YAMLConfig["factors"][nFactor]["std_dev"]);
             break;
 
           case FactorType::Prior3:
             Factor.Parameter.resize(6);
-            Factor.Parameter.head(3) = ParseVectorFromYAML(YAMLConfig["factors"][nFactor]["mean"]);
-            Factor.Parameter.tail(3) = ParseVectorFromYAML(YAMLConfig["factors"][nFactor]["sqrt_info"]);
+            Factor.Parameter.head(3) = ParseVectorFromYAML_(YAMLConfig["factors"][nFactor]["mean"]);
+            Factor.Parameter.tail(3) = ParseVectorFromYAML_(YAMLConfig["factors"][nFactor]["sqrt_info"]);
             break;
 
           case FactorType::IMUSimple:
@@ -346,7 +330,7 @@ namespace libRSF
             Factor.Parameter(2) = YAMLConfig["factors"][nFactor]["noise_b_acc"].as<double>();
             Factor.Parameter(3) = YAMLConfig["factors"][nFactor]["noise_b_tr"].as<double>();
             Factor.Parameter(4) = YAMLConfig["factors"][nFactor]["noise_dyn"].as<double>();
-            Factor.Parameter(5) = YAMLConfig["factors"][nFactor]["iterpolation_time"].as<double>();
+            Factor.Parameter(5) = YAMLConfig["factors"][nFactor]["interpolation_time"].as<double>();
             break;
 
           case FactorType::IMUPretintegration:
@@ -368,7 +352,7 @@ namespace libRSF
       }
 
       /** read name */
-      std::string FactorName = YAMLConfig["factors"][nFactor]["name"].as<std::string>();
+      auto FactorName = YAMLConfig["factors"][nFactor]["name"].as<std::string>();
 
       /** save config based on the factors type */
       AbstractFactorType FactorClass;
@@ -440,7 +424,7 @@ namespace libRSF
 
   bool FactorGraphConfig::ReadCommandLineOptions(const int argc, char** argv, std::vector<std::string> * const Arguments)
   {
-    /** assign all arguments to string vector*/
+    /** assign all arguments to std::string vector*/
     std::vector<std::string> Args;
     Args.assign(argv+1, argv + argc);
 
@@ -460,10 +444,8 @@ namespace libRSF
       {
         return ReadYAMLOptions(ConfigFile);
       }
-      else
-      {
-        return true;
-      }
+      return true;
+
     }
     else
     {

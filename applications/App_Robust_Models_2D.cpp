@@ -32,7 +32,6 @@
 #include "App_Robust_Models_2D.h"
 
 int CreateGraphAndSolve(std::vector<std::string> &Arguments,
-                       libRSF::FactorGraphConfig &Config,
                        libRSF::StateDataSet &CostSurfaceData,
                        libRSF::StateDataSet &PreOptimizationData,
                        libRSF::StateDataSet &PostOptimizationData,
@@ -103,35 +102,35 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   SimpleGraph.addState(POSITION_STATE, libRSF::DataType::Point2, 0.0);
 
   /** add factor to graph */
-  if (ErrorModel.compare("Gaussian") == 0)
+  if (ErrorModel == "Gaussian")
   {
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise);
   }
-  else if (ErrorModel.compare("MaxMix") == 0)
+  else if (ErrorModel == "MaxMix")
   {
     libRSF::MaxMix2 MixtureNoiseMM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseMM);
   }
-  else if (ErrorModel.compare("SumMix") == 0)
+  else if (ErrorModel == "SumMix")
   {
     libRSF::SumMix2 MixtureNoiseSM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseSM);
   }
-  else if (ErrorModel.compare("SumMixSpecial") == 0)
+  else if (ErrorModel == "SumMixSpecial")
   {
     libRSF::SumMix2Special MixtureNoiseSMSpecial(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseSMSpecial);
   }
-  else if (ErrorModel.compare("MaxSumMix") == 0)
+  else if (ErrorModel == "MaxSumMix")
   {
     libRSF::MaxSumMix2 MixtureNoiseMSM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseMSM);
   }
-  else if (ErrorModel.compare("DCS") == 0)
+  else if (ErrorModel == "DCS")
   {
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(ScalingDCS));
   }
-  else if (ErrorModel.compare("cDCE") == 0)
+  else if (ErrorModel == "cDCE")
   {
     SimpleGraph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, NoiseIdentity, new libRSF::cDCELoss(StdDev1(0)));
   }
@@ -203,7 +202,7 @@ int main(int argc, char** argv)
   libRSF::StateDataSet PostOptimizationData;
   libRSF::StateDataSet SolverData;
 
-  if (CreateGraphAndSolve(Arguments,Config,CostSurfaceData,PreOptimizationData,PostOptimizationData,SolverData))
+  if (CreateGraphAndSolve(Arguments,CostSurfaceData,PreOptimizationData,PostOptimizationData,SolverData) != 0)
   {
     return 1;
   }

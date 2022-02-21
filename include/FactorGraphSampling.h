@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef ROBUSTOPTIMIZATION_H
-#define ROBUSTOPTIMIZATION_H
+#ifndef FACTORGRAPHSAMPLING_H
+#define FACTORGRAPHSAMPLING_H
 
 #include "StateDataSet.h"
 
@@ -40,25 +40,25 @@
 namespace libRSF
 {
   void EvaluateCostSurfacePoints(ceres::Problem &Graph,
-                                 double * const StatePointer,
-                                 const int Dim,
-                                 const VectorVectorSTL<Dynamic> Points,
+                                 double * StatePointer,
+                                 int Dim,
+                                 const VectorVectorSTL<Dynamic>& Points,
                                  std::vector<double> &Costs);
 
 
   template<int Dim>
   void EvaluateCostSurface(ceres::Problem &Graph,
-                           double * const StatePointer,
+                           double * StatePointer,
                            const int Points,
                            const double Range,
                            StateDataSet &Result)
   {
-    typedef VectorStatic<Dim> SizedVector;
+    using SizedVector = VectorStatic<Dim>;
 
     /** configure evaluation */
     ceres::Problem::EvaluateOptions Options;
     Options.apply_loss_function = true;
-    Options.num_threads = std::thread::hardware_concurrency();
+    Options.num_threads = static_cast<int>(std::thread::hardware_concurrency());
     Options.parameter_blocks = {StatePointer};
 
     /** save original value */
@@ -83,7 +83,7 @@ namespace libRSF
     }
 
     /** loop over grid */
-    for (uint64_t n = 0; n < std::pow(Points,Dim); ++n)
+    for (uint64_t n = 0; n < static_cast<uint64_t>(std::pow(Points,Dim)); ++n)
     {
       /** write point */
       for (int nDim = 0; nDim < Dim; ++nDim)
@@ -158,4 +158,4 @@ namespace libRSF
   }
 }
 
-#endif // ROBUSTOPTIMIZATION_H
+#endif // FACTORGRAPHSAMPLING_H

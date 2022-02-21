@@ -44,14 +44,14 @@ namespace libRSF
     public:
 
       /** define types that store the configuration */
-      typedef std::vector<std::pair<ElementEnum, int>> ConfigType;
-      typedef struct
+      using ConfigType = std::vector<std::pair<ElementEnum, int>>;
+      using InitType = struct
       {
-        std::string _Name;
-        TypeEnum _Type;
-        ConfigType _Elements;
-      } InitType;
-      typedef std::vector<InitType> InitVect;
+        std::string Name;
+        TypeEnum Type;
+        ConfigType Elements;
+      };
+      using InitVect = std::vector<InitType>;
 
       /** disable the default constructor construction */
       DataConfig() = delete;
@@ -61,9 +61,9 @@ namespace libRSF
       {
         for (InitType &Init : InitialConfig)
         {
-          _TypeMap.emplace(Init._Type, Init._Elements);
-          _NameTypeMap.emplace(Init._Name, Init._Type);
-          _TypeNameMap.emplace(Init._Type, Init._Name);
+          TypeMap_.emplace(Init.Type, Init.Elements);
+          NameTypeMap_.emplace(Init.Name, Init.Type);
+          TypeNameMap_.emplace(Init.Type, Init.Name);
         }
       }
 
@@ -73,40 +73,40 @@ namespace libRSF
       /** query string */
       std::string getName(TypeEnum Type) const
       {
-        return _TypeNameMap.at(Type);
+        return TypeNameMap_.at(Type);
       }
 
       TypeEnum getType(std::string Name) const
       {
-        return _NameTypeMap.at(Name);
+        return NameTypeMap_.at(Name);
       }
 
       /** check type or string */
-      bool checkName(std::string Name) const
+      [[nodiscard]] bool checkName(std::string Name) const
       {
-        return (_NameTypeMap.count(Name) > 0);
+        return (NameTypeMap_.count(Name) > 0);
       }
 
       bool checkType(TypeEnum Type) const
       {
-        return (_TypeNameMap.count(Type) > 0);
+        return (TypeNameMap_.count(Type) > 0);
       }
 
       /** query config */
       const ConfigType &getConfig(std::string ID) const
       {
-        return _TypeMap.at(_NameTypeMap.at(ID));
+        return TypeMap_.at(NameTypeMap_.at(ID));
       }
 
       const ConfigType &getConfig(TypeEnum Type) const
       {
-        return _TypeMap.at(Type);
+        return TypeMap_.at(Type);
       }
 
     private:
-      std::map<std::string, TypeEnum> _NameTypeMap;
-      std::map<TypeEnum, std::string> _TypeNameMap;
-      std::map<TypeEnum, ConfigType> _TypeMap;
+      std::map<std::string, TypeEnum> NameTypeMap_;
+      std::map<TypeEnum, std::string> TypeNameMap_;
+      std::map<TypeEnum, ConfigType> TypeMap_;
   };
 }
 

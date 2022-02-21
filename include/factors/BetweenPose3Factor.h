@@ -45,9 +45,9 @@ namespace libRSF
       /** construct factor and store measurement */
       BetweenPose3Factor(ErrorType &Error, const Data &PoseMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(7);
-        this->_MeasurementVector = PoseMeasurement.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(7);
+        this->MeasurementVector_ = PoseMeasurement.getMean();
       }
 
       /** geometric error model */
@@ -55,9 +55,9 @@ namespace libRSF
       VectorT<T, 6> Evaluate(const T* const Pos1, const T* const Quat1,
                              const T* const Pos2, const T* const Quat2) const
       {
-        /** store measurement seperatly */
-        const Vector3 Translation = this->_MeasurementVector.head(3);
-        const Quaternion QuatRot = VectorToQuaternion<double>(this->_MeasurementVector.tail(4));
+        /** store measurement separately */
+        const Vector3 Translation = this->MeasurementVector_.head(3);
+        const Quaternion QuatRot = VectorToQuaternion<double>(this->MeasurementVector_.tail(4));
 
         /** estimate measurements*/
         VectorT<T, 3> TransEst;
@@ -80,7 +80,7 @@ namespace libRSF
                       const T* const Pos2, const T* const Quat2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pos1, Quat1,
+        return this->Error_.template weight<T>(this->Evaluate(Pos1, Quat1,
                                                               Pos2, Quat2),
                                                Params...);
       }
@@ -92,8 +92,8 @@ namespace libRSF
                                                  StatePointers[1],
                                                  StatePointers[2],
                                                  StatePointers[3],
-                                                 this->_MeasurementVector.head(3),
-                                                 VectorToQuaternion<double>(this->_MeasurementVector.tail(4)));
+                                                 this->MeasurementVector_.head(3),
+                                                 VectorToQuaternion<double>(this->MeasurementVector_.tail(4)));
       }
   };
 

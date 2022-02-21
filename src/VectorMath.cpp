@@ -30,7 +30,7 @@ namespace libRSF
     Eigen::SelfAdjointEigenSolver<Matrix> SAES(Mat);
 
     /** compute tolerance (idea from OKVIS) */
-    double Tolerance = std::numeric_limits<double>::epsilon() * Mat.cols() * SAES.eigenvalues().array().maxCoeff();
+    double Tolerance = std::numeric_limits<double>::epsilon() * static_cast<double>(Mat.cols()) * SAES.eigenvalues().array().maxCoeff();
 
     /** set small eigen values to zero */
     Vector EigVal = Vector((SAES.eigenvalues().array() > Tolerance).select(SAES.eigenvalues().array(), 0));
@@ -46,8 +46,10 @@ namespace libRSF
       int numRows = Matrix.rows();
       int numCols = Matrix.cols()-1;
 
-      if( ColToRemove < numCols )
+      if( ColToRemove < numCols ) 
+      {
           Matrix.block(0,ColToRemove,numRows,numCols-ColToRemove) = Matrix.rightCols(numCols-ColToRemove);
+      }
 
       Matrix.conservativeResize(numRows,numCols);
   }

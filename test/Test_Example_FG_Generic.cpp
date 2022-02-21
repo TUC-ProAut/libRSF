@@ -45,7 +45,7 @@ TEST(Example, FG_Generic)
   ceres::Solver::Options SolverOptions;
   SolverOptions.trust_region_strategy_type = ceres::TrustRegionStrategyType::DOGLEG;
   SolverOptions.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
-  SolverOptions.num_threads = std::thread::hardware_concurrency();
+  SolverOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
   SolverOptions.minimizer_progress_to_stdout = true;
 
   /** add states to graph */
@@ -116,7 +116,7 @@ TEST(Example, FG_Generic)
   Expected.addElement(libRSF::Data("point2 2.0 42.0 42.0 2.0 0.25 0.25 5.0"));
   Expected.addElement(libRSF::Data("point2 3.0 42.0 42.0 3.0 0.25 0.25 6.0"));
 
-  /** calculate maximum componentwise absolute difference between solution and expected (mean and covariance) */
+  /** calculate maximum component-wise absolute difference between solution and expected (mean and covariance) */
   const double maxAbsErrorMean = libRSF::MaxAbsError(libRSF::DataType::Point2,
                                                      Expected,
                                                      POSITION_STATE,

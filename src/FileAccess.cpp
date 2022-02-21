@@ -26,7 +26,7 @@
 namespace libRSF
 {
 
-  void ReadDataFromFile(const string Filename,
+  void ReadDataFromFile(const string& Filename,
                         SensorDataSet& SensorData)
   {
     string Buffer;
@@ -44,15 +44,17 @@ namespace libRSF
     File.close();
   }
 
-  void WriteDataToFile(const string Filename,
-                       const string DataName,
+  void WriteDataToFile(const string& Filename,
+                       const string& DataName,
                        const StateDataSet& SensorData,
                        const bool Append)
   {
     double Timestamp;
 
     if(!SensorData.getTimeFirst(DataName,Timestamp))
+    {
       return;
+    }
 
     std::ofstream File;
 

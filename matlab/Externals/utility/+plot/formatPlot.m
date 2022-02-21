@@ -31,7 +31,13 @@ function [] = formatPlot(hFig, Config)
     set(hAxis,'LineWidth',Config.Axis.Width);
     set(hAxis,'GridLineStyle',Config.Axis.Grid.Style);
     set(hAxis,'layer','top');
-    set(hAxis, 'XColor', Config.Axis.Color, 'YColor', Config.Axis.Color)
+    
+    % format only if there is a single y axis for each subplot
+    if numel([hAxis(:).YAxis]) == numel(hAxis)
+        set(hAxis, 'XColor', Config.Axis.Color, 'YColor', Config.Axis.Color)
+    else
+        set(hAxis, 'XColor', Config.Axis.Color)
+    end
 
     if isfield(Config.Axis,'YLimit')
         ylim(hAxis, Config.Axis.YLimit);

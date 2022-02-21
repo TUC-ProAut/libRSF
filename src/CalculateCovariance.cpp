@@ -34,7 +34,7 @@ namespace libRSF
     /** create covariance object */
     ceres::Covariance::Options CovOptions;
     CovOptions.algorithm_type = ceres::CovarianceAlgorithmType::SPARSE_QR;
-    CovOptions.num_threads = std::thread::hardware_concurrency();
+    CovOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
     CovOptions.apply_loss_function = true;
     ceres::Covariance Covariance(CovOptions);
 
@@ -46,15 +46,15 @@ namespace libRSF
       /** make pairs of pointers to each state variable */
       do
       {
-        CovarianceBlocks.push_back(std::make_pair(States.getElement(Type, Timestamp).getMeanPointer(),
-                                   States.getElement(Type, Timestamp).getMeanPointer()));
+        CovarianceBlocks.emplace_back(States.getElement(Type, Timestamp).getMeanPointer(),
+                                   States.getElement(Type, Timestamp).getMeanPointer());
       }
       while (States.getTimeNext(Type, Timestamp, Timestamp));
 
       /** at first we try the more efficient algorithm */
       bool Success = Covariance.Compute(CovarianceBlocks, &Graph);
 
-      if (Success == true)
+      if (Success)
       {
         /** read covariance values to vector */
         States.getTimeFirst(Type, Timestamp);
@@ -90,7 +90,7 @@ namespace libRSF
 
     /** create covariance object */
     ceres::Covariance::Options CovOptions;
-    CovOptions.num_threads = std::thread::hardware_concurrency();
+    CovOptions.num_threads = static_cast<int>(std::thread::hardware_concurrency());
     CovOptions.apply_loss_function = true;
     ceres::Covariance Covariance(CovOptions);
 
@@ -106,7 +106,7 @@ namespace libRSF
       bool Success = Covariance.Compute(ParameterBlock, &Graph);
 
       /** if it fails, we use the more robust SVD */
-      if (Success == true)
+      if (Success)
       {
         /** read covariance values to vector */
         Covariance.GetCovarianceBlock(States.getElement(Type, Timestamp, StateNumber).getMeanPointer(),
@@ -125,7 +125,7 @@ namespace libRSF
 
         /** try to compute again */
         Success = CovarianceSVD.Compute(ParameterBlock, &Graph);
-        if (Success == true)
+        if (Success)
         {
           /** read covariance values to vector */
           CovarianceSVD.GetCovarianceBlock(States.getElement(Type, Timestamp, StateNumber).getMeanPointer(),
@@ -138,7 +138,7 @@ namespace libRSF
         PRINT_WARNING("Jacobian related to state ", Type, " at time ", Timestamp, "s is rank-deficient. Can't use SVD because problem is to big.");
       }
 
-      if (Success == false)
+      if (!Success)
       {
         PRINT_ERROR("Covariance computation of ", Type, " at time ", Timestamp, "s went wrong.");
         return false;

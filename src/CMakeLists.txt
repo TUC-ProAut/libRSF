@@ -149,7 +149,7 @@ configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/../cmake/libRSFConfig.cm
     INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
 )
 
-# install the config, configversion and custom find modules
+# install the Config, ConfigVersion and custom find modules
 install(FILES
     ${CMAKE_CURRENT_LIST_DIR}/../cmake/FindGeographicLib.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/libRSFConfig.cmake

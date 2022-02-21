@@ -39,7 +39,7 @@
 namespace libRSF
 {
   /** sample measurements down */
-  std::vector<Data> SampleMeasurementsDown(const std::vector<Data> &Input, const double SampleTime);
+  std::vector<Data> SampleMeasurementsDown(const std::vector<Data> &Input, double SampleTime);
 
   Data AverageMeasurement(const std::vector<Data> &Input);
 }

@@ -31,35 +31,35 @@ namespace libRSF
 
   void OdometryIntegrator::reset()
   {
-    this->_Time = 0;
+    this->Time_ = 0;
 
-    this->_Translation.setZero();
-    this->_Rotation.setIdentity();
+    this->Translation_.setZero();
+    this->Rotation_.setIdentity();
 
     /** small initial Cov to avoid rank deficiency*/
-    this->_PoseCov = Matrix77::Identity() * 1e-8;
+    this->PoseCov_ = Matrix77::Identity() * 1e-8;
   }
 
   double OdometryIntegrator::getTime() const
   {
-    return this->_Time;
+    return this->Time_;
   }
 
   void OdometryIntegrator::getPose(Vector3 &Translation, Quaternion &Rotation) const
   {
-    Translation = this->_Translation;
-    Rotation = this->_Rotation;
+    Translation = this->Translation_;
+    Rotation = this->Rotation_;
   }
 
   void OdometryIntegrator::getCov(Matrix33 &TranslationCov, Matrix44 &RotationCov) const
   {
-    TranslationCov = this->_PoseCov.topLeftCorner<3,3>();
-    RotationCov = this->_PoseCov.bottomRightCorner<4,4>();
+    TranslationCov = this->PoseCov_.topLeftCorner<3,3>();
+    RotationCov = this->PoseCov_.bottomRightCorner<4,4>();
   }
 
   Vector7 OdometryIntegrator::getJointPose() const
   {
-    return (Vector7() << this->_Translation, this->_Rotation.coeffs()).finished();
+    return (Vector7() << this->Translation_, this->Rotation_.coeffs()).finished();
   }
 
   Matrix66 OdometryIntegrator::getJointCovOnManifold() const
@@ -78,12 +78,12 @@ namespace libRSF
   void OdometryIntegrator::getCovOnManifold(Matrix33 &TranslationCov, Matrix33 &RotationCov) const
   {
     /** translation stays the same */
-    TranslationCov = this->_PoseCov.topLeftCorner<3,3>();
+    TranslationCov = this->PoseCov_.topLeftCorner<3,3>();
 
     /** rotation has to be projected on the manifold */
     Matrix34 JacQuat;
-    QuaternionError(this->_Rotation, this->_Rotation, &JacQuat, nullptr);
-    RotationCov = JacQuat * this->_PoseCov.bottomRightCorner<4,4>() * JacQuat.transpose();
+    QuaternionError(this->Rotation_, this->Rotation_, &JacQuat, nullptr);
+    RotationCov = JacQuat * this->PoseCov_.bottomRightCorner<4,4>() * JacQuat.transpose();
   }
 
   void OdometryIntegrator::addMeasurement(const libRSF::Data &Odom, const double DeltaTime)
@@ -98,15 +98,15 @@ namespace libRSF
                                               const double DeltaTime)
   {
     /** define basic autodiff type [Quat1, Vel, TR] */
-    typedef ceres::Jet<double, 13> JetType;
+    using JetType = ceres::Jet<double, 13>;
 
     /** old states */
-    VectorT<JetType,3> Point1Jet = this->_Translation.template cast<JetType>();
+    VectorT<JetType,3> Point1Jet = this->Translation_.template cast<JetType>();
     Point1Jet.x().v(0) = 1;
     Point1Jet.y().v(1) = 1;
     Point1Jet.z().v(2) = 1;
 
-    QuaternionT<JetType> Quat1Jet = this->_Rotation.template cast<JetType>();
+    QuaternionT<JetType> Quat1Jet = this->Rotation_.template cast<JetType>();
     Quat1Jet.x().v(3) = 1;
     Quat1Jet.y().v(4) = 1;
     Quat1Jet.z().v(5) = 1;
@@ -133,14 +133,14 @@ namespace libRSF
                                              VelocityJet, TurnRateJet, DeltaTime);
 
     /** store mean */
-    this->_Translation.x() = Point2Jet.x().a;
-    this->_Translation.y() = Point2Jet.y().a;
-    this->_Translation.z() = Point2Jet.z().a;
+    this->Translation_.x() = Point2Jet.x().a;
+    this->Translation_.y() = Point2Jet.y().a;
+    this->Translation_.z() = Point2Jet.z().a;
 
-    this->_Rotation.x() = Quat2Jet.x().a;
-    this->_Rotation.y() = Quat2Jet.y().a;
-    this->_Rotation.z() = Quat2Jet.z().a;
-    this->_Rotation.w() = Quat2Jet.w().a;
+    this->Rotation_.x() = Quat2Jet.x().a;
+    this->Rotation_.y() = Quat2Jet.y().a;
+    this->Rotation_.z() = Quat2Jet.z().a;
+    this->Rotation_.w() = Quat2Jet.w().a;
 
     /** extract jacobian */
     MatrixStatic<7,13> Jacobian;
@@ -157,12 +157,12 @@ namespace libRSF
     /** build full covariance */
     MatrixStatic<13,13> Covariance;
     Covariance.setZero();
-    Covariance.topLeftCorner<7,7>() = this->_PoseCov;
+    Covariance.topLeftCorner<7,7>() = this->PoseCov_;
     Covariance.bottomRightCorner<6,6>().topLeftCorner<3,3>() = VelocityCov.asDiagonal();
     Covariance.bottomRightCorner<3,3>() = TurnRateCov.asDiagonal();
 
     /** propagate covariance */
-    this->_PoseCov = Jacobian*Covariance*Jacobian.transpose();
-    this->_Time += DeltaTime;
+    this->PoseCov_ = Jacobian*Covariance*Jacobian.transpose();
+    this->Time_ += DeltaTime;
   }
 }

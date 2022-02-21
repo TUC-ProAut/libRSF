@@ -55,6 +55,18 @@ namespace libRSF
     return Os;
   }
 
+  std::ostream& operator << (std::ostream& Os, const ErrorModelTuningType& Type)
+  {
+    for (const auto &Entry : ErrorModelTuningTypeDict)
+    {
+      if(Entry.second == Type)
+      {
+        Os << Entry.first;
+      }
+    }
+    return Os;
+  }
+
   std::ostream &operator << (std::ostream& Os, const SolutionType& Type)
   {
     /** print numeric value */
@@ -243,8 +255,16 @@ namespace libRSF
         {DataElement::Covariance, 1}
       }
     },
+    {
+      "cov2", DataType::Covariance2,
+      {
+        {DataElement::Timestamp, 1},
+        {DataElement::Mean, 2},
+        {DataElement::Covariance, 4}
+      }
+    },
 
-    /** gaussian mixtures */
+    /** Gaussian mixtures */
     {
       "gmm", DataType::GMM,
       {
@@ -544,7 +564,6 @@ namespace libRSF
         {DataElement::Covariance, 1}
       }
     },
-
   };
 
   /** init the config based on the given list */

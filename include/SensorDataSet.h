@@ -41,16 +41,16 @@ namespace libRSF
   class SensorDataSet : public DataSet<DataType, Data>
   {
     public:
-      SensorDataSet() {};
-      ~SensorDataSet() {};
+      SensorDataSet() = default;
+      ~SensorDataSet() override = default;
 
       /** add an element according to its internal type and timestamp*/
-      void addElement(Data Element);
+      void addElement(const Data& Element);
 
       using DataSet<DataType, Data>::addElement;
   };
 
-  typedef SensorDataSet::UniqueID MeasurementID;
+  using MeasurementID = SensorDataSet::UniqueID;
 
   std::ostream& operator << (std::ostream& Os, const MeasurementID& ID);
 }

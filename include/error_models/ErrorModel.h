@@ -44,16 +44,16 @@ namespace libRSF
 
       void enable()
       {
-        _Enable = true;
+        Enable_ = true;
       }
 
       void disable()
       {
-        _Enable = false;
+        Enable_ = false;
       }
 
     protected:
-      bool _Enable = true;
+      bool Enable_ = true;
   };
 
 
@@ -62,7 +62,7 @@ namespace libRSF
   {
     public:
       ErrorModel() = default;
-      virtual ~ErrorModel() = default;
+      ~ErrorModel() override = default;
 
       /** static access to dimensions*/
       static const int InputDim = InputDimTemp;

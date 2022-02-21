@@ -45,9 +45,9 @@ namespace libRSF
       /** construct factor and store measurement */
       BetweenPose2Factor(ErrorType &Error, const Data &PoseMeasurement)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(3);
-        this->_MeasurementVector = PoseMeasurement.getMean();
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(3);
+        this->MeasurementVector_ = PoseMeasurement.getMean();
       }
 
       /** geometric error model */
@@ -77,10 +77,10 @@ namespace libRSF
                       const T* const Pos2, const T* const Yaw2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(
+        return this->Error_.template weight<T>(this->Evaluate(
                                                               Pos1, Yaw1,
                                                               Pos2, Yaw2,
-                                                              this->_MeasurementVector),
+                                                              this->MeasurementVector_),
                                                Params...);
       }
 
@@ -88,8 +88,8 @@ namespace libRSF
       void predict(const std::vector<double*> &StatePointers) const
       {
         /** split pose measurement */
-        const Vector2 Trans = this->_MeasurementVector.head(2);
-        const Rotation2D Rot(this->_MeasurementVector(2));
+        const Vector2 Trans = this->MeasurementVector_.head(2);
+        const Rotation2D Rot(this->MeasurementVector_(2));
 
         /** apply forward model */
         RelativePose2Model<double>::applyForward(StatePointers.at(0), StatePointers.at(1),

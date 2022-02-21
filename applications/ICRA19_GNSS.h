@@ -25,8 +25,8 @@
 
 #include "libRSF.h"
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #define POSITION_STATE "Position"
 #define ORIENTATION_STATE "Orientation"

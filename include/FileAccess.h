@@ -37,7 +37,7 @@
 
 #include <ceres/ceres.h>
 
-#include <math.h>
+#include <cmath>
 
 #include <cstdio>
 #include <vector>
@@ -53,13 +53,13 @@ using std::ofstream;
 
 namespace libRSF
 {
-  void ReadDataFromFile(const string Filename,
+  void ReadDataFromFile(const string& Filename,
                         SensorDataSet& Data);
 
-  void WriteDataToFile(const string Filename,
-                       const string DataName,
+  void WriteDataToFile(const string& Filename,
+                       const string& DataName,
                        const StateDataSet& Data,
-                       const bool Append = false);
+                       bool Append = false);
 }
 
 #endif // FILEACCESS_H

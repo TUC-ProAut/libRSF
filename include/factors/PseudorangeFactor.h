@@ -54,10 +54,10 @@ namespace libRSF
       /** construct factor and store measurement */
       PseudorangeFactorBase(ErrorType &Error, const Data &Pseudorange)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(Dim + 1);
-        this->_MeasurementVector[0] = Pseudorange.getMean()[0];
-        this->_MeasurementVector.tail(Dim) = Pseudorange.getValue(DataElement::SatPos);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(Dim + 1);
+        this->MeasurementVector_[0] = Pseudorange.getMean()[0];
+        this->MeasurementVector_.tail(Dim) = Pseudorange.getValue(DataElement::SatPos);
       }
 
       /** geometric error model */
@@ -80,10 +80,10 @@ namespace libRSF
                       const T* const Offset,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Position,
+        return this->Error_.template weight<T>(this->Evaluate(Position,
                                                Offset,
-                                               this->_MeasurementVector.tail(Dim),
-                                               this->_MeasurementVector(0)),
+                                               this->MeasurementVector_.tail(Dim),
+                                               this->MeasurementVector_(0)),
                                                Params...);
       }
   };
@@ -95,10 +95,10 @@ namespace libRSF
       /** construct factor and store measurement */
       PseudorangeSagnacFactorBase(ErrorType &Error, const Data &Pseudorange)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(Dim + 1);
-        this->_MeasurementVector[0] = Pseudorange.getMean()[0];
-        this->_MeasurementVector.tail(Dim) = Pseudorange.getValue(DataElement::SatPos);
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(Dim + 1);
+        this->MeasurementVector_[0] = Pseudorange.getMean()[0];
+        this->MeasurementVector_.tail(Dim) = Pseudorange.getValue(DataElement::SatPos);
       }
 
       /** geometric error model */
@@ -122,9 +122,9 @@ namespace libRSF
                       const T* const Offset,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Position, Offset,
-                                               this->_MeasurementVector.tail(Dim),
-                                               this->_MeasurementVector(0)),
+        return this->Error_.template weight<T>(this->Evaluate(Position, Offset,
+                                               this->MeasurementVector_.tail(Dim),
+                                               this->MeasurementVector_(0)),
                                                Params...);
       }
   };

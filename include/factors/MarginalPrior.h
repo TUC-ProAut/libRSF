@@ -50,20 +50,20 @@ namespace libRSF
                     const Matrix &J,
                     const Vector &R);
 
-      virtual ~MarginalPrior() = default;
+      ~MarginalPrior() override = default;
 
-      virtual bool Evaluate(double const* const* parameters,
+      bool Evaluate(double const* const* parameters,
                             double* residuals,
-                            double** jacobians) const;
+                            double** jacobians) const override;
     private:
-      std::vector<int> _LocalSize;
-      std::vector<int> _GlobalSize;
-      std::vector<DataType> _StateTypes;
-      int _GlobalSizeSum;
-      int _LocalSizeSum;
-      Vector _LinearizationPoints;
-      Vector _LinearResidual;
-      Matrix _LinearJacobian;
+      std::vector<int> LocalSize_;
+      std::vector<int> GlobalSize_;
+      std::vector<DataType> StateTypes_;
+      int GlobalSizeSum_;
+      int LocalSizeSum_;
+      Vector LinearizationPoints_;
+      Vector LinearResidual_;
+      Matrix LinearJacobian_;
   };
 }
 

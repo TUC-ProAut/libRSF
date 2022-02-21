@@ -44,11 +44,11 @@ namespace libRSF
       /** construct factor and store measurement */
       OdometryFactor2DDifferential(ErrorType &Error, const Data &OdometryMeasurement, double DeltaTime)
       {
-        this->_Error = Error;
-        this->_MeasurementVector.resize(4);
-        this->_MeasurementVector.head(3) = OdometryMeasurement.getMean();
-        this->_MeasurementVector.tail(1) = OdometryMeasurement.getValue(DataElement::WheelBase);
-        this->_DeltaTime = DeltaTime;
+        this->Error_ = Error;
+        this->MeasurementVector_.resize(4);
+        this->MeasurementVector_.head(3) = OdometryMeasurement.getMean();
+        this->MeasurementVector_.tail(1) = OdometryMeasurement.getValue(DataElement::WheelBase);
+        this->DeltaTime_ = DeltaTime;
       }
 
       /** geometric error model */
@@ -57,8 +57,8 @@ namespace libRSF
                              const T* const Pos2, const T* const Yaw2) const
       {
         /** get odometry information */
-        const double WheelBase = this->_MeasurementVector(3);
-        const Vector3 Odometry = this->_MeasurementVector.head(3);
+        const double WheelBase = this->MeasurementVector_(3);
+        const Vector3 Odometry = this->MeasurementVector_.head(3);
 
         /** calculate Error */
         VectorT<T, 3> Displacement, Error;
@@ -75,7 +75,7 @@ namespace libRSF
         Error[1] = Wheels(1, 0);
         Error[2] = Displacement(1, 0);
 
-        Error /= T(this->_DeltaTime);
+        Error /= T(this->DeltaTime_);
         Error -= Odometry.template cast<T>();
 
         return Error;
@@ -87,7 +87,7 @@ namespace libRSF
                       const T* const Pos2, const T* const Yaw2,
                       ParamsType... Params) const
       {
-        return this->_Error.template weight<T>(this->Evaluate(Pos1, Yaw1,
+        return this->Error_.template weight<T>(this->Evaluate(Pos1, Yaw1,
                                                               Pos2, Yaw2),
                                                Params...);
       }
@@ -102,17 +102,17 @@ namespace libRSF
         VectorRef<double, 1>      Yaw2(StatePointers.at(3));
 
         /** get odometry information */
-        const double WheelBase = this->_MeasurementVector(3);
-        const Vector3 Odometry = this->_MeasurementVector.head(3);
+        const double WheelBase = this->MeasurementVector_(3);
+        const Vector3 Odometry = this->MeasurementVector_.head(3);
 
         /** predict translation */
         Vector2 POdom;
         POdom << (Odometry(1) + Odometry(0)) / 2.0, Odometry(2);
-        POdom = RotationMatrix2D(Yaw1(0)) * POdom * this->_DeltaTime;
+        POdom = RotationMatrix2D(Yaw1(0)) * POdom * this->DeltaTime_;
         P2 = P1 + POdom;
 
         /** predict rotation */
-        Yaw2(0) = NormalizeAngle(Yaw1(0) + (Odometry(1) - Odometry(0)) / (WheelBase * 2.0) * this->_DeltaTime);
+        Yaw2(0) = NormalizeAngle(Yaw1(0) + (Odometry(1) - Odometry(0)) / (WheelBase * 2.0) * this->DeltaTime_);
       }
   };
 

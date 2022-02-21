@@ -44,9 +44,9 @@ namespace libRSF
     /** construct factor and store measurement */
     PressureDifferenceFactorBase(ErrorType &Error, const Data &PressureMeasurement)
     {
-      this->_Error = Error;
-      this->_MeasurementVector.resize(1);
-      this->_MeasurementVector = PressureMeasurement.getMean();
+      this->Error_ = Error;
+      this->MeasurementVector_.resize(1);
+      this->MeasurementVector_ = PressureMeasurement.getMean();
     }
 
     /** deterministic error model */
@@ -57,7 +57,7 @@ namespace libRSF
       VectorT<T,1> EstimatedPressureDiff;
       EstimatedPressureDiff(0) = HeightToPressure(Point2[Dim-1]) - HeightToPressure(Point1[Dim-1]);
 
-      return  EstimatedPressureDiff - this->_MeasurementVector.template cast<T>();
+      return  EstimatedPressureDiff - this->MeasurementVector_.template cast<T>();
     }
 
     /** combine probabilistic and deterministic model */
@@ -66,7 +66,7 @@ namespace libRSF
                     const T* const Point2,
                     ParamsType... Params) const
     {
-      return this->_Error.template weight<T>(this->Evaluate(Point1, Point2),
+      return this->Error_.template weight<T>(this->Evaluate(Point1, Point2),
                                              Params...);
     }
 
@@ -77,7 +77,7 @@ namespace libRSF
   //        VectorRefConst<double, Dim> State1(StatePointers.at(0));
   //        VectorRef<double, Dim> State2(StatePointers.at(1));
   //
-  //        State2 = State1 + this->_MeasurementVector;
+  //        State2 = State1 + this->MeasurementVector_;
   //      }
   };
 

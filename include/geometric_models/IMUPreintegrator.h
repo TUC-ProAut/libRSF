@@ -77,62 +77,62 @@ namespace libRSF
   {
     public:
       IMUPreintegrator(const Vector3 &BiasAcc, const Vector3 &BiasTR,
-                       const double RandomWalkAcc, const double RandomWalkGyro,
-                       const double CurrentTime);
+                       double RandomWalkAcc, double RandomWalkGyro,
+                       double CurrentTime);
 
       IMUPreintegrator(const Vector3 &BiasAcc, const Vector3 &BiasTR,
-                       const double NoiseDensityAcc, const double NoiseDensityGyro,
-                       const double RandomWalkAcc, const double RandomWalkGyro,
-                       const double CurrentTime);
+                       double NoiseDensityAcc, double NoiseDensityGyro,
+                       double RandomWalkAcc, double RandomWalkGyro,
+                       double CurrentTime);
 
       virtual ~IMUPreintegrator() = default;
 
       void addMeasurement(const Data &IMUMeasurement);
-      void integrateToTime(const double Timestamp);
+      void integrateToTime(double Timestamp);
       void updateBias(const Vector3 &BiasAcc, const Vector3 &BiasTR);
 
       PreintegratedIMUResult getPreintegratedState();
 
     private:
-      void initialize();
-      void integrateSingleMeasurement(const int Index, const double Timestamp);
-      void integrateFull(const double Timestamp);
+      void initialize_();
+      void integrateSingleMeasurement_(int Index, double Timestamp);
+      void integrateFull_(double Timestamp);
 
       /** measurements */
-      std::vector<libRSF::Data> _Measurements;
+      std::vector<libRSF::Data> Measurements_;
 
       /** time stamp that marks the end of the integration */
-      double _CurrentTime;
+      double CurrentTime_;
 
       /** IMU Noise parameters */
-      const double _NoiseDensityAcc;
-      const double _NoiseDensityGyro;
-      const double _RandomWalkAcc;
-      const double _RandomWalkGyro;
+      const double NoiseDensityAcc_;
+      const double NoiseDensityGyro_;
+      const double RandomWalkAcc_;
+      const double RandomWalkGyro_;
 
       /** measurement biases (fixed during integration) */
-      Vector3 _BiasAcc;
-      Vector3 _BiasTR;
+      Vector3 BiasAcc_;
+      Vector3 BiasTR_;
 
       /** pre-integration objects (no direct physical meaning)*/
-      Vector3 _Translation;
-      Vector3 _Velocity;
-      Quaternion _Rotation;
+      Vector3 Translation_;
+      Vector3 Velocity_;
+      Quaternion Rotation_;
 
       /** pre-integrated covariance matrix [Translation, Velocity, Rotation]*/
-      Matrix1010 _TVRCov;
+      Matrix1010 TVRCov_;
 
       /** Jacobians of the pre-integrated objects w.r.t. the measurement biases*/
-      Matrix33 _JacTransBiasAcc;
-      Matrix33 _JacTransBiasTR;
+      Matrix33 JacTransBiasAcc_;
+      Matrix33 JacTransBiasTR_;
 
-      Matrix33 _JacVelBiasAcc;
-      Matrix33 _JacVelBiasTR;
+      Matrix33 JacVelBiasAcc_;
+      Matrix33 JacVelBiasTR_;
 
-      Matrix43 _JacRotBiasTR;
+      Matrix43 JacRotBiasTR_;
 
       /** complete length of the pre-integrated trajectory [s] */
-      double _DeltaTime;
+      double DeltaTime_ = 0;
   };
 }
 
