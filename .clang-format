@@ -1,0 +1,20 @@
+Language: Cpp
+BasedOnStyle: Google
+Standard: c++17
+
+# indentation
+NamespaceIndentation: All
+
+# arguments
+ColumnLimit: 0
+BinPackArguments: false
+BinPackParameters: false
+
+# pointer and references
+PointerAlignment: Middle
+DerivePointerAlignment: false
+ReferenceAlignment: Right
+
+# braces
+BreakBeforeBraces: Allman
+

@@ -1,0 +1,38 @@
+Checks: 'bugprone-*,
+         misc-*,
+         modernize-*,
+         performance-*,
+         portability-*,
+         readability-*,
+         -modernize-use-trailing-return-type,
+         -modernize-pass-by-value,
+         -modernize-return-braced-init-list,
+         -modernize-avoid-c-arrays,
+         -bugprone-narrowing-conversions,
+         -bugprone-easily-swappable-parameters,
+         -performance-move-const-arg,
+         -readability-magic-numbers,
+         -readability-identifier-length,
+         -readability-named-parameter,
+         -readability-function-cognitive-complexity,
+         -readability-isolate-declaration,
+         -misc-non-private-member-variables-in-classes,
+         google-default-arguments,google-explicit-constructor,google-runtime-operator,
+         hicpp-multiway-paths-covered, hicpp-signed-bitwise, hicpp-exception-baseclass,
+         cppcoreguidelines-interfaces-global-init, cppcoreguidelines-narrowing-conversions, 
+         cppcoreguidelines-pro-type-member-init, cppcoreguidelines-pro-type-static-cast-downcast,
+         cppcoreguidelines-slicing'
+
+HeaderFilterRegex: "(include/|src/|applications/|examples/|test/).*\\.(h|cpp)$"
+
+CheckOptions:
+  - { key: readability-identifier-naming.NamespaceCase,          value: aNy_CasE }
+  - { key: readability-identifier-naming.ClassCase,              value: aNy_CasE }
+  - { key: readability-identifier-naming.PrivateMemberSuffix,    value: _        }
+  - { key: readability-identifier-naming.PrivateMethodSuffix,    value: _        }
+  - { key: readability-identifier-naming.StructCase,             value: CamelCase }
+  - { key: readability-identifier-naming.FunctionCase,           value: aNy_CasE }
+  - { key: readability-identifier-naming.VariableCase,           value: aNy_CasE }
+  - { key: readability-identifier-naming.GlobalConstantCase,  	 value: aNy_CasE }
+  - { key: readability-identifier-naming.TemplateParameterCase,  value: CamelCase }
+  - { key: cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion,  value: 0 }
