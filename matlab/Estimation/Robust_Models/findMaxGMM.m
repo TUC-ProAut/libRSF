@@ -17,6 +17,9 @@ switch NumDim
     case 2
         [X,Y] = meshgrid(Samples1D, Samples1D);
         Samples = [X(:), Y(:)];
+    case 3
+        [X, Y, Z] = meshgrid(Samples1D, Samples1D, Samples1D);
+        Samples = [X(:), Y(:), Z(:)];
     otherwise
         error(['No mode estimation for ' num2str(NumDim) 'D implemented!']);
 end

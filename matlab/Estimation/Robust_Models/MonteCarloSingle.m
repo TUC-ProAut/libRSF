@@ -21,8 +21,12 @@ switch Config.NumDim
         for n = Config.NumModel:-1:1
             [~, GMM{n}, Result{n}, Metric{n}] = CompareRobustModels2D(Config.ErrorModels, Config.RangePoints, floor(sqrt(Config.NumPoints)), Models(n), false, false);
         end
+    case 3
+        for n = Config.NumModel:-1:1
+            [~, GMM{n}, Result{n}, Metric{n}] = CompareRobustModels3D(Config.ErrorModels, Config.RangePoints, floor(sqrt(Config.NumPoints)), Models(n), false, false);
+        end
     otherwise
-        error(['No comparison for ' num2str(GMM.NumDim) 'D implemented!']);
+        error(['No comparison for ' num2str(Config.NumDim) 'D implemented!']);
 end
 
 %% combined evaluation

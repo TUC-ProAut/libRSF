@@ -43,6 +43,19 @@ switch NumDim
         % search over both dimensions
         PeaksAll = imregionalmax(log(Like), 4);
         
+    case 3
+        
+        % create grid
+        [X, Y, Z] = meshgrid(Samples1D, Samples1D, Samples1D);
+        Samples = [X(:), Y(:), Z(:)];
+        
+        % sample
+        Like = pdf(GMMDist, Samples);
+        Like = reshape(Like, [NumSamplesPerDim NumSamplesPerDim NumSamplesPerDim]);
+
+        % search over both dimensions
+        PeaksAll = imregionalmax(log(Like), 6);
+        
     otherwise
         error(['No mode estimation for ' num2str(NumDim) 'D implemented!']);
 end

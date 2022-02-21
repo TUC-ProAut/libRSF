@@ -33,6 +33,7 @@ Config.NumPoints = 100;
 Config.RangePoints = 8;
 
 CombinedMetric = {};
+
 %% Case 1 (1D Sym)
 Config.NumDim = 1;
 Config.SymmetricGMM = true;
@@ -50,6 +51,16 @@ CombinedMetric{end+1} = MonteCarloSingle(Config);
 
 %% Case 4 (2D Asym)
 Config.NumDim = 2;
+Config.SymmetricGMM = false;
+CombinedMetric{end+1} = MonteCarloSingle(Config);
+
+%% Case 5 (3D Sym)
+Config.NumDim = 3;
+Config.SymmetricGMM = true;
+CombinedMetric{end+1} = MonteCarloSingle(Config);
+
+%% Case 6 (3D Asym)
+Config.NumDim = 3;
 Config.SymmetricGMM = false;
 CombinedMetric{end+1} = MonteCarloSingle(Config);
 
