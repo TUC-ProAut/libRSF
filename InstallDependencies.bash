@@ -52,7 +52,7 @@ install_if_not_exist ()
 }
 
 # Bugfix for Ubuntu Jammy
-if [ "$linux_version" == "22.04" ]
+if [ "$linux_version" == "22.04" ]; then
   install_if_not_exist libunwind-dev
 fi
 
