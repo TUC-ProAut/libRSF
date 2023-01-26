@@ -44,7 +44,7 @@ namespace libRSF
 
       DynamicCovarianceEstimation() = default;
 
-      explicit DynamicCovarianceEstimation(const VectorStatic<Dim> &CovMinDiagonal): CovMin_(CovMinDiagonal)
+      explicit DynamicCovarianceEstimation(const VectorStatic<Dim> &CovMinDiagonal) : LogSqrtDetCovMin_(log(sqrt(CovMinDiagonal.prod())))
       {}
 
       template <typename T>
@@ -61,8 +61,8 @@ namespace libRSF
           /** apply sqrt info */
           ErrorMap.template head<Dim>() = RawError.template head<Dim>().array() / CovMap.array().sqrt();
 
-          /** add nonlinear prior prior */
-          ErrorMap(Dim) = sqrt(log(CovMap.prod() / (CovMin_.prod() - 1e-6))) * 2.0;
+          /** add nonlinear prior */
+          ErrorMap(Dim) = sqrt(log(sqrt(CovMap.prod())) - LogSqrtDetCovMin_ + 1e-4) * sqrt(2.0);
         }
         else
         {
@@ -78,7 +78,7 @@ namespace libRSF
       }
 
     private:
-      VectorStatic<Dim> CovMin_;
+      double LogSqrtDetCovMin_ = 1.0;
   };
 }
 
