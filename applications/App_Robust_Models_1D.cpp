@@ -136,9 +136,39 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
     libRSF::MaxSumMix1 MixtureNoiseMSM(GMM);
     SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, MixtureNoiseMSM);
   }
+  else if (ErrorModel == "SC")
+  {
+    /**add switch variable */
+    SimpleGraph.addState("Switch", libRSF::DataType::Switch, 0.0);
+    libRSF::SwitchableConstraints<1, libRSF::GaussianDiagonal<1>> SC(Noise, MEstimatorParam);
+
+    /** add factor*/
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0),
+                                                      libRSF::StateID("Switch", 0.0, 0),
+                                                      AbsoluteMeasurement, SC);
+  }
   else if (ErrorModel == "DCS")
   {
     SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0), AbsoluteMeasurement, Noise, new libRSF::DCSLoss(MEstimatorParam));
+  }
+  else if (ErrorModel == "DCE")
+  {
+    /**add covariance variable */
+    SimpleGraph.addState("Covariance", libRSF::DataType::Covariance1, 0.0);
+
+    /** set initial value */
+    SimpleGraph.getStateData().getElement("Covariance", 0.0).setMean(StdDev1*StdDev1);
+
+    /** set lower bound */
+    SimpleGraph.setLowerBound("Covariance", 0.0, 0, StdDev1*StdDev1);
+
+    /** create Dynamic Covariance Estimation error model */
+    libRSF::DynamicCovarianceEstimation<1> DCE(StdDev1*StdDev1);
+
+    /** add factor*/
+    SimpleGraph.addFactor<libRSF::FactorType::Prior1>(libRSF::StateID(POSITION_STATE, 0.0, 0),
+                                                      libRSF::StateID("Covariance", 0.0, 0),
+                                                      AbsoluteMeasurement, DCE);
   }
   else if (ErrorModel == "cDCE")
   {
@@ -180,7 +210,14 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
 
   /** sample cost surface around the zero to get cost an gradient */
   SimpleGraph.getStateData().getElement(POSITION_STATE, 0.0).setMean(libRSF::Vector1::Zero());
-  SimpleGraph.sampleCost1D(POSITION_STATE, 0.0, 0, NumberPoints, Range, CostSurfaceData);
+  if (ErrorModel == "SC" || ErrorModel == "DCE")
+  {
+    SimpleGraph.sampleCost1D(POSITION_STATE, 0.0, 0, NumberPoints, Range, CostSurfaceData, true);
+  }
+  else
+  {
+    SimpleGraph.sampleCost1D(POSITION_STATE, 0.0, 0, NumberPoints, Range, CostSurfaceData, false);
+  }
 
   /** loop over points */
   for (int nPoint = 0; nPoint < NumberPoints; nPoint++)

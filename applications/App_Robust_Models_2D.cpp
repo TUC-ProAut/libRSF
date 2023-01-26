@@ -73,6 +73,10 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
   SolverOptions.max_solver_time_in_seconds = 1.0;
   SolverOptions.minimizer_progress_to_stdout = false;
 
+  /** decrease tolerances for an accurate result */
+  SolverOptions.function_tolerance = 1e-8;
+  SolverOptions.gradient_tolerance = SolverOptions.function_tolerance * 1e-4;
+
   /** configure Gaussian error model */
   libRSF::GaussianFull<2> Noise;
   Noise.setCovarianceMatrix(StdDev1.transpose()*StdDev1);
