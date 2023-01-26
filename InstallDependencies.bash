@@ -51,6 +51,11 @@ install_if_not_exist ()
   fi
 }
 
+# Bugfix for Ubuntu Jammy
+if [ "$linux_version" == "22.04" ]
+  install_if_not_exist libunwind-dev
+fi
+
 # install libRSF dependencies
 install_if_not_exist build-essential
 install_if_not_exist cmake
