@@ -1,6 +1,6 @@
 The Chemnitz City Dataset
 
-Copyright 2012-2020 by Niko Sünderhauf, Marcus Obst, Tim Pfeifer (TU Chemnitz)
+Copyright 2012-2022 by Niko Sünderhauf, Marcus Obst, Tim Pfeifer (TU Chemnitz)
 
 ### The whole Dataset is licensed under a Creative Commons Attribution Share Alike 4.0 International license. ###
 
@@ -22,8 +22,10 @@ Every column holds an measurement element corresponding to its identifier:
 6 - satellite position ECEF-Y [m]
 7 - satellite position ECEF-Z [m]
 8 - satellite ID
-9 - satellite elevation angle [deg]
-10 - carrier-to-noise density ratio [dBHz] WARNING: There was no CNR recorded for this dataset!
+9 - satellite System (1:GPS 2:SBAS 4:GLONASS 8:Galileo 16:QZSS 32:BeiDou)
+10 - satellite elevation angle [deg]
+11 - carrier-to-noise density ratio [dBHz] WARNING: There was no CNR recorded for this dataset!
+
 
 ## odometry ##
 1 - "odom3" [string]
