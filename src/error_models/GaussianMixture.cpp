@@ -81,11 +81,11 @@ namespace libRSF
   Vector1 GaussianMixture<1>::removeOffset()
   {
     const int NumberOfComponents = this->getNumberOfComponents();
-    const double MinimumWeight = 1.0/ Mixture_.size()*0.8;
+    const double MinimumWeight = 1.0 / Mixture_.size()*0.8;
 
     /** remove offset of the first "LOS" component */
     this->sortComponentsByMean();
-    Vector1 MeanLOS;
+    Vector1 MeanLOS = Vector1::Zero();
     for(int i = 0; i < NumberOfComponents; ++i)
     {
       if(Mixture_.at(i).getWeight()(0) >= MinimumWeight)
@@ -106,70 +106,19 @@ namespace libRSF
 
     /** save to vectors */
     Vector Means(NumberOfComponents);
-    Vector StdDevs(NumberOfComponents);
+    Vector Covs(NumberOfComponents);
     Vector Weights(NumberOfComponents);
     for(int i = 0; i < NumberOfComponents; ++i)
     {
       Means(i) = Mixture_.at(i).getMean()[0];
-      StdDevs(i) = 1/ Mixture_.at(i).getSqrtInformation()[0];
+      Covs(i) = Mixture_.at(i).getCovariance()[0];
       Weights(i) = Mixture_.at(i).getWeight()[0];
     }
 
-    /** this function is TODO */
-    PRINT_ERROR(Timestamp);
-
-    switch(NumberOfComponents)
-    {
-//      case 1:
-//        {
-//          Data GMMState(DataType::GM1, Timestamp);
-//          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
-//          return GMMState;
-//        }
-//        break;
-//      case 2:
-//        {
-//          Data GMMState(DataType::GM2, Timestamp);
-//          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
-//          return GMMState;
-//        }
-//        break;
-//      case 3:
-//        {
-//          Data GMMState(DataType::GM3, Timestamp);
-//          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
-//          return GMMState;
-//        }
-//        break;
-//      case 4:
-//        {
-//          Data GMMState(DataType::GM4, Timestamp);
-//          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
-//          return GMMState;
-//        }
-//        break;
-//      case 5:
-//        {
-//          Data GMMState(DataType::GM5, Timestamp);
-//          GMMState.setMean(Means);
-//          GMMState.setValue(libRSF::DataElement::GMM_StdDev, StdDevs);
-//          GMMState.setValue(libRSF::DataElement::GMM_Weight, Weights);
-//          return GMMState;
-//        }
-//        break;
-      default:
-          std::cerr << "Error in Data GaussianMixture<1>::exportToStateData: wrong number of GMM components: " << NumberOfComponents << std::endl;
-        break;
-    }
-
-    return {};
+    Data GMMState(DataType::GMM1, Timestamp);
+    GMMState.setMean(Means);
+    GMMState.setValue(libRSF::DataElement::Covariance, Covs);
+    GMMState.setValue(libRSF::DataElement::Weight, Weights);
+    return GMMState;
   }
 }

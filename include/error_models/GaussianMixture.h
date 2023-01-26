@@ -71,12 +71,12 @@ namespace libRSF
         double MinimalSamples = 15;
 
         /** hyper-priors */
-        double PriorDirichletConcentration = 1e-4;
+        double PriorDirichletConcentration = 1e-3;
 
-        double PriorNormalInfoScaling = 1e-6;
+        double PriorNormalInfoScaling = 1e-4;
         VectorStatic<Dim> PriorNormalMean = VectorStatic<Dim>::Zero();
 
-        double PriorWishartDOF = Dim + 1;
+        double PriorWishartDOF = Dim;
         MatrixStatic<Dim, Dim> PriorWishartScatter = MatrixStatic<Dim, Dim>::Identity();
 
         /** remove components if the number of assigned samples is too low */
@@ -116,21 +116,24 @@ namespace libRSF
         {
           case ErrorModelTuningType::None:
             {
-              /** init with static parameterization */
-              GaussianComponent<Dim> Comp1, Comp2;
-              MatrixStatic<Dim, Dim> Cov1, Cov2;
+              /** find number of components */
+              const int NumComp = Config.Weight.size();
 
-              Cov1 << Config.StdDev.head(Dim*Dim);
-              Cov1 = Cov1.transpose()*Cov1;
+              /** add components */
+              for(int n = 0; n < NumComp; n++)
+              {
+                GaussianComponent<Dim> Comp;
+                MatrixStatic<Dim, Dim> Cov;
+                VectorStatic<Dim> Mean;
 
-              Cov2 << Config.StdDev.tail(Dim*Dim);
-              Cov2 = Cov2.transpose()*Cov2;
+                Mean = Config.Mean.template segment<Dim>(n*Dim);
+                Cov << Config.StdDev.template segment<Dim*Dim>(n*Dim*Dim).transpose(); /** transpose for row-first*/
+                Cov = Cov.transpose()*Cov;
 
-              Comp1.setParamsCovariance(Cov1, Config.Mean.head(Dim), Config.Weight.head(1));
-              Comp2.setParamsCovariance(Cov2, Config.Mean.tail(Dim), Config.Weight.tail(1));
 
-              this->addComponent(Comp1);
-              this->addComponent(Comp2);
+                Comp.setParamsCovariance(Cov, Mean, Config.Weight.template segment<1>(n));
+                this->addComponent(Comp);
+              }
             }
             break;
 
@@ -591,7 +594,7 @@ namespace libRSF
           /** update mean posterior */
           VBIState.InfoMean.at(m) = Beta0 + InfoEx * SumLike(m);
 
-          if (Config.EstimateMean == true)
+          if (Config.EstimateMean)
           {
             VBIState.MeanMean.at(m) = Inverse(VBIState.InfoMean.at(m)) * InfoEx * SumLikeX.row(m).transpose();
           }
@@ -749,7 +752,10 @@ namespace libRSF
           SumAlpha += VBIState.AlphaWeight.at(k);
 
           VBIState.BetaMean.at(k) = Beta0 + N(k);
-          VBIState.MeanMean.at(k) = 1.0/VBIState.BetaMean.at(k) * (Beta0*Mean0 + N(k)*MeanX.row(k).transpose());
+          if (Config.EstimateMean)
+          {
+            VBIState.MeanMean.at(k) = 1.0/VBIState.BetaMean.at(k) * (Beta0*Mean0 + N(k)*MeanX.row(k).transpose());
+          }
 
           const MatrixStatic<Dim,Dim> WInfoInv = W0Inv
                                                + N(k)*S.at(k)

@@ -50,14 +50,14 @@ namespace libRSF
   {
     public:
 
-      MaxSumMixture(): Normalization_(0)
+      MaxSumMixture()
       {
         this->clear();
       }
 
       virtual ~MaxSumMixture() = default;
 
-      explicit MaxSumMixture(const MixtureType &Mixture): Normalization_(0)
+      explicit MaxSumMixture(const MixtureType &Mixture)
       {
         this->addMixture_(Mixture);
       }
@@ -144,7 +144,7 @@ namespace libRSF
       }
 
       MixtureType Mixture_;
-      double Normalization_;
+      double Normalization_{0};
   };
 
   using MaxSumMix1 = MaxSumMixture<1, GaussianMixture<1>>;
