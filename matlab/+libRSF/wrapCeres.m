@@ -26,7 +26,6 @@ if isempty(BuildDir)
     error('Did not find build directory for libRSF binary!');
 end
 
-
 %% find right binary subfolder
 PathToBinaryExample = [filesep 'examples' filesep];
 PathToBinaryApplication = [filesep 'applications' filesep];
@@ -37,12 +36,20 @@ else
     PathToBinary = [BuildDir PathToBinaryExample];
 end
 
+%% handle parallel execution
+Task = getCurrentTask();
+if isempty(Task)
+    WorkerID = '';
+else
+    WorkerID = ['_' num2str(Task.ID)];
+end
+
 %% set filenames
-DataFile = [DataSetName '_Input.txt'];
-GTFile = [DataSetName '_GT.txt'];
-OutputFile = [DataSetName '_Output.txt'];
-ConfigFile = [DataSetName '_Config.yaml'];
-RefFile = [DataSetName '_Reference.yaml'];
+DataFile = [DataSetName WorkerID '_Input.txt'];
+GTFile = [DataSetName WorkerID '_GT.txt'];
+OutputFile = [DataSetName WorkerID '_Output.txt'];
+ConfigFile = [DataSetName WorkerID '_Config.yaml'];
+RefFile = [DataSetName WorkerID '_Reference.yaml'];
 
 %% write config
 if RewriteYAML
@@ -54,13 +61,7 @@ end
 %% write data to file
 if RewriteData
     disp('Starting to write the sensor data to file...')
-    % parse sensor data struct to cell
-    [MeasurementCell, GTCell] = libRSF.parseToCell(Data);
-    % write to file
-    writecell_fast(MeasurementCell,[PathToBinary DataFile]);
-    
-    % write ground truth
-    writecell_fast(GTCell,[PathToBinary GTFile]);
+    libRSF.writeData(Data, PathToBinary, DataFile, GTFile);
 end
 
 %% save reference Data
@@ -68,7 +69,7 @@ libRSF.writeYamlReference(Data, [PathToBinary RefFile]);
 
 %% call ceres
 % check for application
-if ~isfile([PathToBinary ExecutableFile])
+if ~isfile(fullfile(PathToBinary, ExecutableFile))
     error(['Could not find file: ' PathToBinary ExecutableFile]);
 end
 
@@ -115,14 +116,4 @@ Result.Dump = libRSF.parseCeresDump(PathToBinary);
 if ~isfield(Result, 'SolverSummary')
     Result.SolverSummary = struct([]);
 end
-end
-
-%% 10 times faster than matlabs writecell
-function [] = writecell_fast(Cell, Filename)
-    fileID = fopen(Filename,'w');
-    Format = ['%s ' repmat('%.14g ',1,size(Cell,2)-1) '\n'];
-    for n = 1:size(Cell,1)
-        fprintf(fileID, Format, Cell{n,:});
-    end
-    fclose(fileID);
 end

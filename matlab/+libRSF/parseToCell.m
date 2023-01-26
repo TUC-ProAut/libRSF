@@ -199,6 +199,27 @@ if isfield(Data,'Range3')
     Range3Cell(:,9)                          = num2cell(Data.Range3.SNR);
 end
 
+%% Range SLAM
+RangeLM2Cell = cell(0,MaxCellWidth);
+if isfield(Data,'RangeLM2')
+    [RangeLM2Cell{1:length(Data.RangeLM2.Time),1}]    = deal('range_lm2');
+    RangeLM2Cell(:,2)                          = num2cell(Data.RangeLM2.Time);
+    RangeLM2Cell(:,3)                          = num2cell(Data.RangeLM2.Mean);
+    RangeLM2Cell(:,4)                          = num2cell(Data.RangeLM2.Cov);
+    RangeLM2Cell(:,5)                          = num2cell(Data.RangeLM2.ModuleID);
+    RangeLM2Cell(:,6)                          = num2cell(Data.RangeLM2.SNR);
+end
+
+RangeLM3Cell = cell(0,MaxCellWidth);
+if isfield(Data,'RangeLM3')
+    [RangeLM3Cell{1:length(Data.RangeLM3.Time),1}]    = deal('range_lm3');
+    RangeLM3Cell(:,2)                          = num2cell(Data.RangeLM3.Time);
+    RangeLM3Cell(:,3)                          = num2cell(Data.RangeLM3.Mean);
+    RangeLM3Cell(:,4)                          = num2cell(Data.RangeLM3.Cov);
+    RangeLM3Cell(:,5)                          = num2cell(Data.RangeLM3.ModuleID);
+    RangeLM3Cell(:,6)                          = num2cell(Data.RangeLM3.SNR);
+end
+
 %% GNSS
 Pseudorange2Cell = cell(0,MaxCellWidth);
 if isfield(Data,'Pseudorange2')
@@ -213,8 +234,9 @@ if isfield(Data,'Pseudorange3')
     Pseudorange3Cell(:,4)                          = num2cell(Data.Pseudorange3.Cov);
     Pseudorange3Cell(:,5:7)                        = num2cell(Data.Pseudorange3.SatPos);
     Pseudorange3Cell(:,8)                          = num2cell(Data.Pseudorange3.SatID);
-    Pseudorange3Cell(:,9)                          = num2cell(Data.Pseudorange3.SatElevation);
-    Pseudorange3Cell(:,10)                         = num2cell(Data.Pseudorange3.SNR);
+    Pseudorange3Cell(:,9)                          = num2cell(Data.Pseudorange3.SatSysNum);
+    Pseudorange3Cell(:,10)                          = num2cell(Data.Pseudorange3.SatElevation);
+    Pseudorange3Cell(:,11)                         = num2cell(Data.Pseudorange3.SNR);
 end
 
 %% raw Laser
@@ -259,6 +281,16 @@ if isfield(Data,'GT_Position2')
     GT2Cell(:,5:8)                          = num2cell(zeros(numel(Data.GT_Position2.Time),4));
 end
 
+GTPose2Cell = cell(0,MaxCellWidth);
+if isfield(Data,'GT_Pose2')
+    [GTPose2Cell{1:length(Data.GT_Position2.Time),1}]    = deal('pose2');
+    GTPose2Cell(:,2)                            = num2cell(Data.GT_Pose2.Time);
+    GTPose2Cell(:,3)                            = num2cell(Data.GT_Pose2.X);
+    GTPose2Cell(:,4)                            = num2cell(Data.GT_Pose2.Y);
+    GTPose2Cell(:,5)                            = num2cell(Data.GT_Pose2.Yaw);
+    GTPose2Cell(:,6:14)                         = num2cell(zeros(numel(Data.GT_Pose2.Time),9));
+end
+
 GT3Cell = cell(0,MaxCellWidth);
 if isfield(Data,'GT_Position3')
     [GT3Cell{1:length(Data.GT_Position3.Time),1}]    = deal('point3');
@@ -276,11 +308,11 @@ MeasurementCell = [ Pos3Cell;Pos2Cell; PosID2Cell; PosConfID2Cell; BoundingBox3C
                     PressureCell;...
                     Odom2Cell; Odom2DiffCell; Odom3Cell;...
                     Odom3RadarCell; Odom3LaserCell; Odom3VIOCell;...
-                    Range2Cell; Range3Cell;...
+                    Range2Cell; Range3Cell; RangeLM2Cell; RangeLM3Cell;...
                     Pseudorange2Cell; Pseudorange3Cell;...
                     LoopCell; BearingRangeID2Cell];
                 
-GTCell = [GT2Cell; GT3Cell];
+GTCell = [GT2Cell; GTPose2Cell; GT3Cell];
 
 end
 

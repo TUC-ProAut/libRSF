@@ -1,8 +1,8 @@
-function [YamlOut, Lables] = translateToYaml(Config)
+function [YamlOut, Labels] = translateToYaml(Config)
 %TRANSLATETOYAML Summary of this function goes here
 %   Detailed explanation goes here
 
-Lables = {};
+Labels = {};
 YamlOut = {};
 
 for nError = 1:numel(Config.ErrorModel)
@@ -15,63 +15,67 @@ for nError = 1:numel(Config.ErrorModel)
             Solution = Config.Solution{nSolution};
             
             %% create lable
-            Lables{end+1} = '';
+            Labels{end+1} = '';
             for nSensor = 1:numel(SensorConfig)
                 Sensor = SensorConfig{nSensor};
                 
                 if nSensor > 1 && ~strcmp(Sensor, 'cced') && ~strcmp(Sensor, 'cce')
-                    Lables{end} = [Lables{end} ' + '];
+                    Labels{end} = [Labels{end} ' + '];
                 end
                 
                 switch Sensor
                     case 'odom'
-                        Lables{end} = [Lables{end} 'Odom'];
+                        Labels{end} = [Labels{end} 'Odom'];
                     case 'odom_ecef'
-                        Lables{end} = [Lables{end} 'Odom'];
+                        Labels{end} = [Labels{end} 'Odom'];
                     case 'odom2'
-                        Lables{end} = [Lables{end} 'Odom 2D'];
+                        Labels{end} = [Labels{end} 'Odom 2D'];
                     case 'odom4'
-                        Lables{end} = [Lables{end} 'Odom'];
+                        Labels{end} = [Labels{end} 'Odom'];
                     case 'odom6'
-                        Lables{end} = [Lables{end} 'Odom'];
+                        Labels{end} = [Labels{end} 'Odom'];
                     case 'odom_int'
-                        Lables{end} = [Lables{end} 'Odom Int.'];
+                        Labels{end} = [Labels{end} 'Odom Int.'];
                     case 'odom_radar'
-                        Lables{end} = [Lables{end} 'Radar-Odom'];
+                        Labels{end} = [Labels{end} 'Radar-Odom'];
                     case 'odom4_radar'
-                        Lables{end} = [Lables{end} 'Radar-Odom'];
+                        Labels{end} = [Labels{end} 'Radar-Odom'];
                     case 'odom_lidar'
-                        Lables{end} = [Lables{end} 'Lidar-Odom'];
+                        Labels{end} = [Labels{end} 'Lidar-Odom'];
                     case 'imu'
-                        Lables{end} = [Lables{end} 'IMU'];
+                        Labels{end} = [Labels{end} 'IMU'];
                     case 'imu_pre'
-                        Lables{end} = [Lables{end} 'IMU Pre-Int.'];
+                        Labels{end} = [Labels{end} 'IMU Pre-Int.'];
                     case 'uwb'
-                        Lables{end} = [Lables{end} 'UWB'];
+                        Labels{end} = [Labels{end} 'UWB'];
                     case 'range'
-                        Lables{end} = [Lables{end} 'Ranging'];
+                        Labels{end} = [Labels{end} 'Ranging'];
+                    case 'range_lm'
+                        Labels{end} = [Labels{end} 'Ranging'];
                     case 'gnss'
-                        Lables{end} = [Lables{end} 'GNSS'];
+                        Labels{end} = [Labels{end} 'GNSS'];
                     case 'gnss_ecef'
-                        Lables{end} = [Lables{end} 'GNSS'];
+                        Labels{end} = [Labels{end} 'GNSS'];
+                    case 'gnss_bias'
+                        Labels{end} = [Labels{end} 'GNSS'];                        
                     case 'cced'
                         %do nothing
                     case 'cce'
                         %do nothing
                     case 'loop'
-                        Lables{end} = [Lables{end} 'Loop Closure 2D'];
+                        Labels{end} = [Labels{end} 'Loop Closure 2D'];
                     case 'radar'
-                        Lables{end} = [Lables{end} 'Radar Registration 2D'];
+                        Labels{end} = [Labels{end} 'Radar Registration 2D'];
                     case 'ground'
-                        Lables{end} = [Lables{end} 'Ground Prior'];
+                        Labels{end} = [Labels{end} 'Ground Prior'];
                     case 'pressure'
-                        Lables{end} = [Lables{end} 'Pressure'];
+                        Labels{end} = [Labels{end} 'Pressure'];
                     otherwise
-                        Lables{end} = [Lables{end} Sensor];
-                        warning(['No Lable for sensor: ' Sensor]);
+                        Labels{end} = [Labels{end} Sensor];
+                        warning(['No Label for sensor: ' Sensor]);
                 end
             end
-            Lables{end} = [Lables{end} ' + ' ErrorModel ' + ' Config.Solution{nSolution}];
+            Labels{end} = [Labels{end} ' + ' ErrorModel ' + ' Config.Solution{nSolution}];
             
             
             %% select default yaml file
@@ -92,7 +96,10 @@ for nError = 1:numel(Config.ErrorModel)
                           'Frankfurt_Westend_Tower_RTK'}
                         DefaultFile = 'Default_smartLoc';
                         
-                    case {'Hongkong_Loop_Small', 'Hongkong_Loop_Large'}
+                    case {'Hongkong_Loop_Small', 'Hongkong_Loop_Large',...
+                          'UrbanNav_HK_1','UrbanNav_HK_2',...
+                          'UrbanNav_HK_Light','UrbanNav_HK_Medium','UrbanNav_HK_Dense',...
+                          'UrbanNav_TK_Shinjuku','UrbanNav_TK_Obaida'}
                         DefaultFile = 'Default_HK';
                         
                     case {'Radar_Synth', 'Radar_Synth_Cluster', 'Radar_Synth_Cluster_Far', 'Radar_Synth_Outlier', 'Radar_Synth_Cluster_Outlier', 'Radar_Synth_Outrange_Outlier', 'Radar_Turmbau_1', 'Radar_Synth_RAL', 'Radar_Synth_RAL_100'}
@@ -101,22 +108,6 @@ for nError = 1:numel(Config.ErrorModel)
                     otherwise
                         DefaultFile = 'Default';
                 end
-            end
-            
-            %% overwrite default options
-            if strcmp(Config.DatasetName, 'Chemnitz') || ...
-                    strcmp(Config.DatasetName, 'Berlin_Potsdamer_Platz') || ...
-                    strcmp(Config.DatasetName, 'Berlin_Gendarmenmarkt') || ...
-                    strcmp(Config.DatasetName, 'Frankfurt_Main_Tower') || ...
-                    strcmp(Config.DatasetName, 'Frankfurt_Westend_Tower') || ...
-                    strcmp(Config.DatasetName, 'Berlin_Potsdamer_Platz_RTK') || ...
-                    strcmp(Config.DatasetName, 'Berlin_Gendarmenmarkt_RTK') || ...
-                    strcmp(Config.DatasetName, 'Frankfurt_Main_Tower_RTK') || ...
-                    strcmp(Config.DatasetName, 'Frankfurt_Westend_Tower_RTK') || ...
-                    strcmp(Config.DatasetName, 'Hongkong_Loop_Small') || ...
-                    strcmp(Config.DatasetName, 'Hongkong_Loop_Large')
-                
-                Config.IsSync = true;
             end
             
             %% translate the config using the actual YAML file
@@ -170,6 +161,7 @@ for nError = 1:numel(Config.ErrorModel)
                 % overwrite with selected error model
                 if strcmp(Sensor, 'gnss') ||...
                     strcmp(Sensor, 'gnss_ecef') ||...
+                    strcmp(Sensor, 'gnss_bias') ||...
                     strcmp(Sensor, 'uwb') ||...
                     strcmp(Sensor, 'loop') ||...
                     strcmp(Sensor, 'range') ||...
