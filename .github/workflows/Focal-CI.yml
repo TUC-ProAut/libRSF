@@ -32,7 +32,7 @@ jobs:
     steps:
       # checkout repo
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       # install dependencies
       - name: Install dependencies
@@ -58,7 +58,7 @@ jobs:
         run: sudo make uninstall
         
       # save build for test
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: restore-build
         with:
           path: |
@@ -77,14 +77,14 @@ jobs:
     steps:
       # checkout repo
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       
       # checkout ceres and eigen
       - name: Checkout submodules
         run: git submodule update --init --recursive
         
       # get cached build
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: restore-build
         with:
           path: |

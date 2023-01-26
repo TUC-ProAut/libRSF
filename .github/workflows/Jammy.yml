@@ -1,4 +1,4 @@
-name: Bionic CI
+name: Jammy CI
 on: 
   push:
     paths-ignore:
@@ -25,9 +25,9 @@ on:
     - cron: '0 0 1 * *'
     
 jobs:
-  Bionic-Build:
+  Jammy-Build:
     name: Build libRSF
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     
     steps:
       # checkout repo
@@ -64,12 +64,12 @@ jobs:
           path: |
             build
             externals
-          key: ${{ github.workflow }}-${{ github.sha }}-${{ github.run_id }}-${{ env.cache-name }}-bionic
+          key: ${{ github.workflow }}-${{ github.sha }}-${{ github.run_id }}-${{ env.cache-name }}-jammy
         
-  Bionic-Test:
+  Jammy-Test:
     name: Test libRSF
-    runs-on: ubuntu-18.04
-    needs: [Bionic-Build]
+    runs-on: ubuntu-22.04
+    needs: [Jammy-Build]
     
     env:
       CTEST_OUTPUT_ON_FAILURE: ON
@@ -90,7 +90,7 @@ jobs:
           path: |
             build
             externals
-          key: ${{ github.workflow }}-${{ github.sha }}-${{ github.run_id }}-${{ env.cache-name }}-bionic
+          key: ${{ github.workflow }}-${{ github.sha }}-${{ github.run_id }}-${{ env.cache-name }}-jammy
           
       # install dependencies
       - name: Install dependencies
