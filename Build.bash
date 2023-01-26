@@ -27,5 +27,5 @@ set -e
 
 # build libRSF
 mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release - ..
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
 make all -j$(getconf _NPROCESSORS_ONLN)
