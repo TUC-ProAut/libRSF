@@ -62,7 +62,7 @@ find_package(Threads REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 # geographic lib for coordinate frame conversions
-find_package(GeographicLib REQUIRED)
+find_package(GeographicLib 1.49 REQUIRED)
 
 # google test
 if(LIBRSF_BUILD_TEST)
