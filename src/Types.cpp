@@ -266,13 +266,22 @@ namespace libRSF
 
     /** Gaussian mixtures */
     {
-      "gmm", DataType::GMM,
+      "gmm1", DataType::GMM1,
       {
         {DataElement::Timestamp, 1},
         {DataElement::Mean, 1},
         {DataElement::Covariance, 1},
         {DataElement::Weight, 1}
       }
+    },
+    {
+        "gmm2", DataType::GMM2,
+        {
+            {DataElement::Timestamp, 1},
+            {DataElement::Mean, 2},
+            {DataElement::Covariance, 4},
+            {DataElement::Weight, 1}
+        }
     },
 
     /** odometry */
@@ -359,6 +368,7 @@ namespace libRSF
         {DataElement::Covariance , 1},
         {DataElement::SatPos, 3},
         {DataElement::SatID , 1},
+        {DataElement::SatSys , 1},
         {DataElement::SatElevation , 1},
         {DataElement::SNR , 1}
       }
@@ -372,7 +382,8 @@ namespace libRSF
         {DataElement::Mean, 1},
         {DataElement::Covariance , 1},
         {DataElement::SatPos, 2},
-        {DataElement::SatID , 1}
+        {DataElement::SatID , 1},
+            {DataElement::SNR , 1}
       }
     },
     {
@@ -385,6 +396,28 @@ namespace libRSF
         {DataElement::SatID , 1},
         {DataElement::SNR , 1}
       }
+    },
+
+    /** range SLAM */
+    {
+        "range_lm2", DataType::RangeLM2,
+        {
+            {DataElement::Timestamp, 1},
+            {DataElement::Mean, 1},
+            {DataElement::Covariance , 1},
+            {DataElement::SatID , 1},
+            {DataElement::SNR , 1}
+        }
+    },
+    {
+        "range_lm3", DataType::RangeLM3,
+        {
+            {DataElement::Timestamp, 1},
+            {DataElement::Mean, 1},
+            {DataElement::Covariance , 1},
+            {DataElement::SatID , 1},
+            {DataElement::SNR , 1}
+        }
     },
 
     /** points from radar sensor */
@@ -563,7 +596,7 @@ namespace libRSF
         {DataElement::Mean, 1},
         {DataElement::Covariance, 1}
       }
-    },
+    }
   };
 
   /** init the config based on the given list */

@@ -20,42 +20,7 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-/**
- * @file StateDataSet.h
- * @author Tim Pfeifer
- * @date 18.09.2018
- * @brief A class that stores multiple streams of state variables with timestamps.
- * @copyright GNU Public License.
- *
- */
-
-#ifndef STATEDATASET_H
-#define STATEDATASET_H
-
-#include "Data.h"
-#include "DataSet.h"
+#include "factors/ConstantQuaternionFactor.h"
 
 namespace libRSF
-{
-  class StateDataSet : public DataSet<std::string, Data>
-  {
-    public:
-      StateDataSet() = default;
-      ~StateDataSet() override = default;
-
-      /** add an element according to its internal type and timestamp*/
-      void addElement(Data &Element);
-      /** use external name */
-      void addElement(const std::string& Name, const Data &Element);
-      /** add an empty element*/
-      void addElement(const std::string& Name, DataType Type, double Timestamp);
-
-      using DataSet<std::string, Data>::addElement;
-  };
-
-  using StateID = StateDataSet::UniqueID;
-
-  std::ostream& operator << (std::ostream& Os, const StateID& ID);
-}
-
-#endif // STATEDATASET_H
+{}

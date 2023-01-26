@@ -341,6 +341,11 @@ namespace libRSF
             Factor.Parameter(3) = YAMLConfig["factors"][nFactor]["noise_b_tr"].as<double>();
             break;
 
+          case FactorType::Pseudorange3_Bias:
+            Factor.Parameter.resize(1);
+            Factor.Parameter(0) = YAMLConfig["factors"][nFactor]["isb_std_dev"].as<double>();
+            break;
+
           default:
 //          PRINT_WARNING("Factor not handled: ", FactorTypeString);
             break;

@@ -100,13 +100,11 @@ namespace libRSF
     /** factor configuration */
     struct FactorConfig
     {
-      FactorConfig():IsActive(false){};
-
       FactorType Type;
       Vector Parameter;
       ErrorModelConfig ErrorModel;
 
-      bool IsActive;
+      bool IsActive{false};
     }Ranging, GNSS, ClockModel, MotionModel, Odom, IMU, Laser, Radar, Vision, LoopClosure, Tracking, Prior, Pressure;
 
     /** special properties */

@@ -23,12 +23,14 @@
   factors/BaseFactor.cpp
   factors/ConstantValueFactor.cpp
   factors/ConstantDriftFactor.cpp
+  factors/ConstantQuaternionFactor.cpp
   factors/BetweenValueFactor.cpp
   factors/BetweenPose2Factor.cpp
   factors/BetweenPose3Factor.cpp
   factors/BetweenQuaternionFactor.cpp
   factors/PriorFactor.cpp
   factors/RangeFactor.cpp
+  factors/RangeToPointFactor.cpp
   factors/PseudorangeFactor.cpp
   factors/OdometryFactor2D.cpp
   factors/OdometryFactor2DDifferential.cpp

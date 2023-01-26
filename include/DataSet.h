@@ -85,7 +85,7 @@ namespace libRSF
     {
       if (this->checkElement(ID, Timestamp, Number))
       {
-        auto It = DataStreams.at(ID).find(Timestamp);
+        auto It = DataStreams.at(ID).lower_bound(Timestamp);
         std::advance(It, Number);
         DataStreams.at(ID).erase(It);
 
@@ -166,7 +166,7 @@ namespace libRSF
     {
       if (checkElement(ID, Timestamp, Number))
       {
-        auto It = DataStreams.at(ID).find(Timestamp);
+        auto It = DataStreams.at(ID).lower_bound(Timestamp);
         std::advance(It, Number);
         return It->second;
       }
@@ -179,7 +179,7 @@ namespace libRSF
     {
       if (checkElement(ID, Timestamp, Number))
       {
-        auto It = DataStreams.at(ID).find(Timestamp);
+        auto It = DataStreams.at(ID).lower_bound(Timestamp);
         std::advance(It, Number);
         Element = It->second;
         return true;
@@ -192,7 +192,7 @@ namespace libRSF
     {
       if (checkElement(ID, Timestamp, Number))
       {
-        auto It = DataStreams.at(ID).find(Timestamp);
+        auto It = DataStreams.at(ID).lower_bound(Timestamp);
         std::advance(It, Number);
         It->second = Element;
         return true;
@@ -270,27 +270,14 @@ namespace libRSF
 
     bool getTimePrev(const KeyType &ID, const double Timestamp, double &PrevTimeStamp) const
     {
-      int NextElements = countElement(ID, Timestamp);
-
-      if (NextElements > 0)
+      /** check if element exists */
+      if(!this->checkElement(ID, Timestamp))
       {
-        auto It = DataStreams.at(ID).find(Timestamp);
-        std::advance(It, -(NextElements - 1));
-
-        if (It != DataStreams.at(ID).begin())
-        {
-          std::advance(It, -1);
-          PrevTimeStamp = It->first;
-        }
-        else
-        {
-          return false;
-        }
-        return true;
+        PRINT_ERROR("Previous element does not exist: ", ID, " at: ", Timestamp);
       }
 
-      PRINT_ERROR("Key does not exist: ", ID);
-      return false;
+      /** re-use function*/
+      return this->getTimeBelow(ID, Timestamp, PrevTimeStamp);
     }
 
     bool getTimeAboveOrEqual(const KeyType &ID, const double TimeIn, double &TimeOut) const
@@ -363,7 +350,7 @@ namespace libRSF
       /** catch equal case at first */
       if (DataStreams.at(ID).count(TimeIn) > 0)
       {
-        const auto It = DataStreams.at(ID).find(TimeIn);
+        const auto It = DataStreams.at(ID).lower_bound(TimeIn);
         TimeOut = It->first;
         return true; /**< equal */
       }

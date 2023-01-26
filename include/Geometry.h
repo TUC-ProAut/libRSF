@@ -80,11 +80,8 @@ namespace libRSF
   }
 
   template<typename T>
-  QuaternionT<T> AngularVelocityToQuaternion (const VectorT<T, 3> &Omega, const double DeltaTime)
+  QuaternionT<T> QuaternionExpMap (const VectorT<T, 3> &Angle)
   {
-    /** vector of rotations */
-    VectorT<T, 3> Angle = Omega * DeltaTime;
-
     /** convert to quaternion using axis-angle definition */
     QuaternionT<T> Quat;
     const T Norm = Angle.norm();
@@ -103,7 +100,7 @@ namespace libRSF
   }
 
   template<typename T>
-  VectorT<T, 3> QuaternionToAngularVelocity (const QuaternionT<T> &Quat, const double DeltaTime)
+  VectorT<T, 3> QuaternionLogMap (const QuaternionT<T> &Quat)
   {
     const AngleAxisT<T> AARot(Quat);
 
@@ -118,7 +115,19 @@ namespace libRSF
       Angle = Quat.vec()*2.0;
     }
 
-    return Angle/DeltaTime;
+    return Angle;
+  }
+
+  template<typename T>
+  QuaternionT<T> AngularVelocityToQuaternion (const VectorT<T, 3> &Omega, const double DeltaTime)
+  {
+    return QuaternionExpMap<T>(Omega*DeltaTime);
+  }
+
+  template<typename T>
+  VectorT<T, 3> QuaternionToAngularVelocity (const QuaternionT<T> &Quat, const double DeltaTime)
+  {
+    return QuaternionLogMap<T>(Quat)/DeltaTime;
   }
 
   /** \brief Represents the operation Q1 - Q2 on a manifold
@@ -132,7 +141,7 @@ namespace libRSF
   inline VectorT<T, 3> QuaternionError(const QuaternionT<T> Q1,
                                        const QuaternionT<T> Q2)
   {
-    return (Q1 * Q2.conjugate()).vec() * 2.0;
+    return QuaternionLogMap<T>(Q1 * Q2.conjugate());
   }
 
   /** \brief Represents the operation Q12 - (Q2 - Q1) on a manifold

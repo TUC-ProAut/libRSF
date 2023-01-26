@@ -51,7 +51,8 @@ namespace libRSF
                            double * StatePointer,
                            const int Points,
                            const double Range,
-                           StateDataSet &Result)
+                           StateDataSet &Result,
+                           const bool OptimizeOtherStates = false)
   {
     using SizedVector = VectorStatic<Dim>;
 
@@ -64,6 +65,10 @@ namespace libRSF
     /** save original value */
     VectorRef<double, Dim> State(StatePointer);
     const SizedVector OriginalState = State;
+    if(OptimizeOtherStates)
+    {
+      Graph.SetParameterBlockConstant(StatePointer);
+    }
 
     /** create 1D point set */
     Vector Lin = Vector::LinSpaced(Points, -Range/2, Range/2);
@@ -89,6 +94,15 @@ namespace libRSF
       for (int nDim = 0; nDim < Dim; ++nDim)
       {
         State.segment(nDim,1) = Grid.at(nDim).segment(Index.at(nDim),1);
+      }
+
+      /** optimize if required (for complex error models with free variables like SC or DCE) */
+      if(OptimizeOtherStates)
+      {
+        ceres::Solver::Options Options;
+        ceres::Solver::Summary Summary;
+        Options.num_threads = static_cast<int>(std::thread::hardware_concurrency());
+        ceres::Solve(Options, &Graph, &Summary);
       }
 
       /** evaluate */
@@ -155,6 +169,10 @@ namespace libRSF
 
     /** restore original value */
     State = OriginalState;
+    if(OptimizeOtherStates)
+    {
+      Graph.SetParameterBlockVariable(StatePointer);
+    }
   }
 }
 

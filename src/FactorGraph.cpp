@@ -409,7 +409,7 @@ namespace libRSF
             for (const double Time : Times)
             {
               /** iterate over number */
-              int Numbers = StateData_.countElement(Name, Time);
+              const int Numbers = StateData_.countElement(Name, Time);
               for (int n = 0; n < Numbers; n++)
               {
                 States.emplace_back(StateID(Name, Time, n));
@@ -487,11 +487,12 @@ namespace libRSF
                                  const int Number,
                                  const int PointCount,
                                  const double Range,
-                                 StateDataSet &Result)
+                                 StateDataSet &Result,
+                                 const bool OptimizeOther)
   {
     EvaluateCostSurface<1>(
         Graph_,
-        StateData_.getElement(StateName, Timestamp, Number).getMeanPointer(), PointCount, Range, Result);
+        StateData_.getElement(StateName, Timestamp, Number).getMeanPointer(), PointCount, Range, Result, OptimizeOther);
   }
 
   void FactorGraph::sampleCost2D(const string& StateName,

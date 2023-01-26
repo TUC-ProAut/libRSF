@@ -57,8 +57,10 @@
 #include "factors/BaseFactor.h"
 #include "factors/ConstantValueFactor.h"
 #include "factors/ConstantDriftFactor.h"
+#include "factors/ConstantQuaternionFactor.h"
 #include "factors/PriorFactor.h"
 #include "factors/RangeFactor.h"
+#include "factors/RangeToPointFactor.h"
 #include "factors/PseudorangeFactor.h"
 #include "factors/OdometryFactor2D.h"
 #include "factors/OdometryFactor2DDifferential.h"
@@ -245,7 +247,8 @@ namespace libRSF
                         int Number,
                         int PointCount,
                         double Range,
-                        StateDataSet &Result);
+                        StateDataSet &Result,
+                        const bool OptimizeOther = false);
 
       void sampleCost2D(const string& StateName,
                         double Timestamp,

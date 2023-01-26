@@ -52,13 +52,15 @@ namespace libRSF
   {
     ConstVal1, ConstVal2, ConstVal3,
     ConstDrift1, ConstDrift2, ConstDrift3,
+    ConstQuaternion,
     BetweenValue1, BetweenValue2, BetweenValue3,
     BetweenPose2, BetweenPose3,
     BetweenQuaternion,
     BetweenBearingRange2,
     Point2Reg,
     Point2RegPose,
-    Range2, Range3, Pseudorange2, Pseudorange3, Pseudorange3_ECEF,
+    Range2, Range3, Pseudorange2, Pseudorange3, Pseudorange3_ECEF, Pseudorange3_Bias,
+    RangeToPoint2,RangeToPoint3,
     Odom2, Odom2Diff, Odom4, Odom4_ECEF, Odom6,
     Prior1, Prior2, Prior3, Prior4, Prior9, PriorQuat, PriorAngle,
     IMUSimple, IMUPretintegration,
@@ -90,8 +92,9 @@ namespace libRSF
     BoundingBox3,                                         /**< bounding boxes from object detection */
     ClockError, ClockDrift,                               /**< GNSS receiver clock error */
     IMUBias,                                              /**< IMU Speedbias [Vel, B_Acc, B_Gyr] */
-    GMM, Switch, Covariance1, Covariance2,                /**< dynamic error models */
+    GMM1, GMM2, Switch, Covariance1, Covariance2,         /**< dynamic error models */
     Range2, Range3,                                       /**< range to fixed point */
+    RangeLM2,RangeLM3,                                    /**< range to landmark with unknown position*/
     Pseudorange3, Pseudorange2,                           /**< GNSS pseudo-range */
     Odom2, Odom3, Odom2Diff,                              /**< wheel based odometry */
     Odom3Radar, Odom3Laser, Odom3VIO,                     /**< odometry based on other sensors */
@@ -104,12 +107,12 @@ namespace libRSF
     IterationSummary,                                     /**< timing of the optimizer */
     Error1, Error2, Error3, Error6,                       /**< residuals of cost functions */
     Cost, CostGradient1, CostGradient2, CostGradient3,    /**< cost of the optimizer */
-    Value1                                                /**< generic vector */
+    Value1,                                               /**< generic vector */
   };
 
   enum class DataElement  {Timestamp, TimestampRef,
                            Mean, Covariance, CovarianceDiagonal,
-                           SatPos, SatElevation, SNR, SatID,
+                           SatPos, SatElevation, SNR, SatID, SatSys,
                            Cost, Gradient, Hessian,
                            Weight,
                            WheelBase, TF, Velocity,
@@ -134,11 +137,14 @@ namespace libRSF
   {
     {FactorType::Range2, DataType::Range2},
     {FactorType::Range3, DataType::Range3},
+    {FactorType::RangeToPoint2, DataType::Range2},
+    {FactorType::RangeToPoint3, DataType::Range3},
     {FactorType::BetweenPose2, DataType::Pose2},
     {FactorType::BetweenPose3, DataType::Pose3},
     {FactorType::Point2Reg, DataType::Point2Set},
     {FactorType::Pseudorange2, DataType::Pseudorange2},
     {FactorType::Pseudorange3, DataType::Pseudorange3},
+    {FactorType::Pseudorange3_Bias, DataType::Pseudorange3},
     {FactorType::Pseudorange3_ECEF, DataType::Pseudorange3},
     {FactorType::IMUPretintegration, DataType::IMU},
     {FactorType::IMUSimple, DataType::IMU},
@@ -158,16 +164,21 @@ namespace libRSF
     {"const_drift1",FactorType::ConstDrift1},
     {"const_drift2",FactorType::ConstDrift2},
     {"const_drift3",FactorType::ConstDrift3},
+    {"const_quat",FactorType::ConstQuaternion},
     {"between_val1",FactorType::BetweenValue1},
     {"between_val2",FactorType::BetweenValue2},
     {"between_val3",FactorType::BetweenValue3},
+    {"between_quat",FactorType::BetweenQuaternion},
     {"between_pose2",FactorType::BetweenPose2},
     {"between_pose3",FactorType::BetweenPose3},
     {"between_bearing_range2",FactorType::BetweenBearingRange2},
     {"range2",FactorType::Range2},
     {"range3",FactorType::Range3},
+    {"range_point2",FactorType::RangeToPoint2},
+    {"range_point3",FactorType::RangeToPoint3},
     {"pseudorange2",FactorType::Pseudorange2},
     {"pseudorange3",FactorType::Pseudorange3},
+    {"pseudorange3_bias",FactorType::Pseudorange3_Bias},
     {"pseudorange3_ecef",FactorType::Pseudorange3_ECEF},
     {"odom2",FactorType::Odom2},
     {"odom2diff",FactorType::Odom2Diff},

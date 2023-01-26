@@ -89,6 +89,51 @@ namespace libRSF
   };
 
   template <typename ErrorType, int Dim>
+  class PseudorangeBiasFactorBase : public BaseFactor< ErrorType, true, false, Dim, 1, 1>
+  {
+   public:
+    /** construct factor and store measurement */
+    PseudorangeBiasFactorBase(ErrorType &Error, const Data &Pseudorange)
+    {
+      this->Error_ = Error;
+      this->MeasurementVector_.resize(Dim + 1);
+      this->MeasurementVector_[0] = Pseudorange.getMean()[0];
+      this->MeasurementVector_.tail(Dim) = Pseudorange.getValue(DataElement::SatPos);
+    }
+
+    /** geometric error model */
+    template <typename T>
+    VectorT<T, 1> Evaluate(const T* const EgoPos,
+                           const T* const Offset,
+                           const T* const InterSystemBias,
+                           const VectorStatic<Dim> &SatPos,
+                           const double &Range) const
+    {
+      VectorT<T, 1> Error;
+      Error(0) = VectorDistance<Dim, T, double>(EgoPos, SatPos.data())
+                 + Offset[0]
+                 + InterSystemBias[0]
+                 - Range;
+      return Error;
+    }
+
+    /** combine probabilistic and geometric model */
+    template <typename T, typename... ParamsType>
+    bool operator()(const T* const Position,
+                    const T* const Offset,
+                    const T* const InterSystemBias,
+                    ParamsType... Params) const
+    {
+      return this->Error_.template weight<T>(this->Evaluate(Position,
+                                                            Offset,
+                                                            InterSystemBias,
+                                                            this->MeasurementVector_.tail(Dim),
+                                                            this->MeasurementVector_(0)),
+                                             Params...);
+    }
+  };
+
+  template <typename ErrorType, int Dim>
   class PseudorangeSagnacFactorBase : public BaseFactor<ErrorType, true, false, Dim, 1>
   {
     public:
@@ -134,6 +179,8 @@ namespace libRSF
   struct FactorTypeTranslator<FactorType::Pseudorange2, ErrorType> {using Type = PseudorangeFactorBase<ErrorType, 2>;};
   template<typename ErrorType>
   struct FactorTypeTranslator<FactorType::Pseudorange3, ErrorType> {using Type = PseudorangeFactorBase<ErrorType, 3>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Pseudorange3_Bias, ErrorType> {using Type = PseudorangeBiasFactorBase<ErrorType, 3>;};
   template<typename ErrorType>
   struct FactorTypeTranslator<FactorType::Pseudorange3_ECEF, ErrorType> {using Type = PseudorangeSagnacFactorBase<ErrorType, 3>;};
 }

@@ -86,15 +86,15 @@ namespace libRSF
             Preintegration_.JacVelBiasTR.template cast<T>() * DeltaBiasTR;
 
         const QuaternionT<T> ApproxRotation =
-            Preintegration_.Rotation.template cast<T>() * AngularVelocityToQuaternion<T>(
-                Preintegration_.JacRotBiasTRLocal.template cast<T>() * DeltaBiasTR, 1.0);
+            Preintegration_.Rotation.template cast<T>() * QuaternionExpMap<T>(
+                Preintegration_.JacRotBiasTRLocal.template cast<T>() * DeltaBiasTR);
 
         /** calculate error */
         const double dt = Preintegration_.DeltaTime;
         VectorT<T, 15> Error;
         Error.template segment<3>(0) = Rot1.conjugate() * (P2 - P1 - dt * V1 + (0.5*dt*dt * GRAVITY_VECTOR).template cast<T>()) - ApproxTranslation;
         Error.template segment<3>(3) = Rot1.conjugate() * (V2 - V1 + (dt * GRAVITY_VECTOR).template cast<T>()) - ApproxVelocity;
-        Error.template segment<3>(6) = QuaternionToAngularVelocity<T>(ApproxRotation.conjugate()*Rot1.conjugate()*Rot2, 1.0);
+        Error.template segment<3>(6) = QuaternionLogMap<T>(ApproxRotation.conjugate()*Rot1.conjugate()*Rot2);
 
         /** simple constant model for bias error */
         Error.template segment<3>(9) = BiasAcc2 - BiasAcc1;

@@ -29,7 +29,7 @@ namespace libRSF
     addElement(Element.getName(),Element);
   }
 
-  void StateDataSet::addElement(const std::string& Name, Data &Element)
+  void StateDataSet::addElement(const std::string& Name, const Data &Element)
   {
     if (!this->checkID(Name))
     {
