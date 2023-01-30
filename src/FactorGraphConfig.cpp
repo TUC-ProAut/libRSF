@@ -310,9 +310,6 @@ namespace libRSF
         switch(Factor.Type)
         {
           case FactorType::ConstDrift1:
-            Factor.Parameter = ParseVectorFromYAML_(YAMLConfig["factors"][nFactor]["std_dev"]);
-            break;
-
           case FactorType::ConstVal1:
             Factor.Parameter = ParseVectorFromYAML_(YAMLConfig["factors"][nFactor]["std_dev"]);
             break;
@@ -344,6 +341,14 @@ namespace libRSF
           case FactorType::Pseudorange3_Bias:
             Factor.Parameter.resize(1);
             Factor.Parameter(0) = YAMLConfig["factors"][nFactor]["isb_std_dev"].as<double>();
+            break;
+
+          case FactorType::Loop1:
+          case FactorType::Loop2:
+          case FactorType::Loop3:
+            Factor.Parameter.resize(2);
+            Factor.Parameter(0) = YAMLConfig["factors"][nFactor]["threshold"].as<double>();
+            Factor.Parameter(1) = YAMLConfig["factors"][nFactor]["std_dev"].as<double>();
             break;
 
           default:

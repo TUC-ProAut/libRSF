@@ -98,7 +98,7 @@ for nError = 1:numel(Config.ErrorModel)
                         
                     case {'Hongkong_Loop_Small', 'Hongkong_Loop_Large',...
                           'UrbanNav_HK_1','UrbanNav_HK_2',...
-                          'UrbanNav_HK_Light','UrbanNav_HK_Medium','UrbanNav_HK_Dense',...
+                          'UrbanNav_HK_Medium_Urban','UrbanNav_HK_Deep_Urban','UrbanNav_HK_Harsh_Urban',...
                           'UrbanNav_TK_Shinjuku','UrbanNav_TK_Obaida'}
                         DefaultFile = 'Default_HK';
                         
@@ -170,6 +170,13 @@ for nError = 1:numel(Config.ErrorModel)
                         YamlOut{end}.config.factors{end}.error = YamlDefault.errors.(ErrorModel);
                     catch
                         error(['Error model ' ErrorModel ' does not exist in ' DefaultFile '!']);
+                    end
+                end
+
+                % manipulate loop closure parameter
+                if strcmp(Sensor, 'loop') && isfield(Config, 'Loop')
+                    if isfield(Config.Loop, 'Threshold')
+                        YamlOut{end}.config.factors{nSensor}.threshold = Config.Loop.Threshold;
                     end
                 end
                 

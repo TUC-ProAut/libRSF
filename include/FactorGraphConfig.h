@@ -113,7 +113,7 @@ namespace libRSF
       SolutionType Type;
 
       /** available time for one iteration */
-      double MaxTime;
+      double MaxTime; //TODO: check why unused???
       int MaxIterations;
 
       /** time handling */

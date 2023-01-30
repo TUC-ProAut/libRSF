@@ -500,6 +500,7 @@ namespace libRSF
       {
         {DataElement::Timestamp, 1},
         {DataElement::TimestampRef, 1},
+        {DataElement::Similarity, 1}
       }
     },
 

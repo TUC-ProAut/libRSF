@@ -86,6 +86,14 @@ namespace libRSF
   struct FactorTypeTranslator<FactorType::ConstVal2, ErrorType> {using Type = ConstantValueFactorBase<ErrorType, 2>;};
   template<typename ErrorType>
   struct FactorTypeTranslator<FactorType::ConstVal3, ErrorType> {using Type = ConstantValueFactorBase<ErrorType, 3>;};
+
+  /** loop closure factors have the same type*/
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Loop1, ErrorType> {using Type = ConstantValueFactorBase<ErrorType, 1>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Loop2, ErrorType> {using Type = ConstantValueFactorBase<ErrorType, 2>;};
+  template<typename ErrorType>
+  struct FactorTypeTranslator<FactorType::Loop3, ErrorType> {using Type = ConstantValueFactorBase<ErrorType, 3>;};
 }
 
 #endif // CONSTANTVALUEFACTOR_H

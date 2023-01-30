@@ -54,6 +54,7 @@ namespace libRSF
     ConstDrift1, ConstDrift2, ConstDrift3,
     ConstQuaternion,
     BetweenValue1, BetweenValue2, BetweenValue3,
+    Loop1, Loop2, Loop3,
     BetweenPose2, BetweenPose3,
     BetweenQuaternion,
     BetweenBearingRange2,
@@ -113,6 +114,7 @@ namespace libRSF
   enum class DataElement  {Timestamp, TimestampRef,
                            Mean, Covariance, CovarianceDiagonal,
                            SatPos, SatElevation, SNR, SatID, SatSys,
+                           Similarity,
                            Cost, Gradient, Hessian,
                            Weight,
                            WheelBase, TF, Velocity,
@@ -152,7 +154,10 @@ namespace libRSF
     {FactorType::Odom2Diff, DataType::Odom2Diff},
     {FactorType::Odom4_ECEF, DataType::Odom3},
     {FactorType::Odom4, DataType::Odom3},
-    {FactorType::Odom6, DataType::Odom3}
+    {FactorType::Odom6, DataType::Odom3},
+    {FactorType::Loop1, DataType::LoopClosure},
+    {FactorType::Loop2, DataType::LoopClosure},
+    {FactorType::Loop3, DataType::LoopClosure}
   };
 
   /** dictionaries translate strings (from files) to enums*/
@@ -199,7 +204,10 @@ namespace libRSF
     {"marginal",FactorType::Marginal},
     {"point2_reg",FactorType::Point2Reg},
     {"pressure_diff2",FactorType::PressureDiff2},
-    {"pressure_diff3",FactorType::PressureDiff3}
+    {"pressure_diff3",FactorType::PressureDiff3},
+    {"loop1",FactorType::Loop1},
+    {"loop2",FactorType::Loop2},
+    {"loop3",FactorType::Loop3}
   };
 
   const std::map<std::string, AbstractFactorType> AbstractFactorTypeDict =
