@@ -7,9 +7,9 @@ Copyright 2016-2022 by Pierre Reisdorf, Tim Pfeifer, Julia Breßler, Sven Bauer,
 Every line of the included text files contains one measurement. Files ending with "Input" contain sensor data, files ending with "GT" contain the ground truth.
 The string at the beginning identifies the measurement's type:
 
-range3  - pseudorange measurements (atmospheric error and satellite clock bias already removed)
-odom3   - odometry measurement
-point3  - ground truth
+pseudorange3  - pseudorange measurements (atmospheric error and satellite clock bias already removed)
+odom3         - odometry measurement
+point3        - ground truth
 
 Every column holds an measurement element corresponding to its identifier:
 
