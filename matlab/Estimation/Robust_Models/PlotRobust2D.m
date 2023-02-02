@@ -12,12 +12,12 @@ if(SavePlot)
     end
 end
 
-Axis.XLable = 'Residual in x';
-Axis.YLable = 'Residual in y';
-Axis.ZLable = 'Cost';
+Axis.XLabel = 'Residual in x';
+Axis.YLabel = 'Residual in y';
+Axis.ZLabel = 'Cost';
 
 % custom labels
-Lables = ["Max-Mixture", "Sum-Mixture",  "Max-Sum-Mixture"];
+Labels = ["Max-Mixture", "Sum-Mixture",  "Max-Sum-Mixture"];
 Width = 900;
 
 %% preprocessing
@@ -83,7 +83,7 @@ for n = 1:NumberAlgo
     hScatter{n}.MarkerEdgeColor = 'k';
     hScatter{n}.MarkerFaceColor = Config.Color.Default(n,:);
     
-    set(hScatter{n}, 'DisplayName', Lables(n));
+    set(hScatter{n}, 'DisplayName', Labels(n));
 end
 
 % plot global optimum
@@ -101,8 +101,8 @@ legend(hTile1, 'Location','southeast');
 axis equal
 box on
 
-%xlabel(Axis.XLable);
-ylabel(Axis.YLable);
+%xlabel(Axis.XLabel);
+ylabel(Axis.YLabel);
 
 xticks([min(ArrayErrorX,[],'all'):2:max(ArrayErrorX,[],'all')]);
 yticks([min(ArrayErrorY,[],'all'):2:max(ArrayErrorY,[],'all')]);
@@ -122,7 +122,7 @@ nexttile([1 2])
 hold on
 for n = 1:NumberAlgo
     hCostSlice{n} = plot(LineX, LineCostAlgo(:,n),'-', 'LineWidth', Config.Line.Width, 'Color', Config.Color.Default(n,:));
-    hCostSlice{n}.DisplayName = Lables(n);
+    hCostSlice{n}.DisplayName = Labels(n);
 end
 hold off
 
@@ -135,7 +135,7 @@ yticks([floor(min(LineCostAlgo,[],'all')):4:ceil(max(LineCostAlgo,[],'all'))]);
 xlim([min(ArrayErrorX,[],'all') max(ArrayErrorX,[],'all')]);
 ylim([min(LineCostAlgo,[],'all')-0.5 ceil(max(LineCostAlgo,[],'all'))-3]);
 
-xlabel(Axis.XLable);
+xlabel(Axis.XLabel);
 ylabel('Intersected Cost');
 box on
 
@@ -204,9 +204,9 @@ end
 %     set(hSurf, 'DisplayName', ['Cost - ' ErrorModels{n}]);
 %     legend('show');
 %     
-%     xlabel(Axis.XLable);
-%     ylabel(Axis.YLable);
-%     zlabel(Axis.ZLable);
+%     xlabel(Axis.XLabel);
+%     ylabel(Axis.YLabel);
+%     zlabel(Axis.ZLabel);
 %     plot.formatPlot(hCost, Config);
 %     
 %     % plot gradient
@@ -219,8 +219,8 @@ end
 %     hold off
 %     
 %     legend({['Cost - ' ErrorModels{n}], ['Gradient - ' ErrorModels{n}], ['Gradient Numerical  - ' ErrorModels{n}]});
-%     xlabel(Axis.XLable);
-%     ylabel(Axis.YLable);
+%     xlabel(Axis.XLabel);
+%     ylabel(Axis.YLabel);
 %     plot.formatPlot(hGradient, Config);
 %     
 % end
@@ -240,8 +240,8 @@ for n = 1:numel(ErrorModels)
 %     imagesc(Result.Raw(1).Cost2.Position(:,1), Result.Raw(1).Cost2.Position(:,2),  Hessian, [0 max(Result.HessianNorm, [], 'all')]);
     surf(X, Y, Hessian, 'FaceColor','interp', 'EdgeColor','none', 'FaceLighting','flat');
     
-    xlabel(Axis.XLable);
-    ylabel(Axis.YLable);
+    xlabel(Axis.XLabel);
+    ylabel(Axis.YLabel);
     zlabel('Hessian Norm');
     
     xlim([min(Result.Raw(1).Cost2.Position(:,1)) max(Result.Raw(1).Cost2.Position(:,1))])
@@ -249,7 +249,7 @@ for n = 1:numel(ErrorModels)
     
     caxis([0 max(Result.HessianNorm, [], 'all')])
     
-    title(Lables(n));
+    title(Labels(n));
     
     axis equal
     axis tight
@@ -275,8 +275,8 @@ for n = 1:numel(ErrorModels)
     % plot cost
     imagesc(Result.Raw(1).Cost2.Position(:,1), Result.Raw(1).Cost2.Position(:,2),  Hessian);
     
-    xlabel(Axis.XLable);
-    ylabel(Axis.YLable);
+    xlabel(Axis.XLabel);
+    ylabel(Axis.YLabel);
     zlabel('Hessian Norm');
     
     xlim([min(Result.Raw(1).Cost2.Position(:,1)) max(Result.Raw(1).Cost2.Position(:,1))])
@@ -284,7 +284,7 @@ for n = 1:numel(ErrorModels)
     
     caxis([0 max(Result.HessianNorm, [], 'all')])
     
-    title(Lables(n));
+    title(Labels(n));
     
     axis equal
     axis tight

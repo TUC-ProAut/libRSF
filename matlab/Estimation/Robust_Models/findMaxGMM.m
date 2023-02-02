@@ -10,7 +10,7 @@ GridMin = min(GMM.Mean, [], 'all');
 GridMax = max(GMM.Mean, [], 'all');
 
 % create sample points
-Samples1D = linspace(GridMin, GridMax, 1e4^(1/NumDim));
+Samples1D = linspace(GridMin, GridMax, 1e5^(1/NumDim));
 switch NumDim
     case 1
         Samples = Samples1D';

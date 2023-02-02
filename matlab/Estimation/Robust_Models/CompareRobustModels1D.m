@@ -95,7 +95,7 @@ end
 %% evaluation
 Metric = [];
 for n = numel(ErrorModels):-1:1
-    Metric(n).Lable = ErrorModels{n};
+    Metric(n).Label = ErrorModels{n};
     
     % accuracy
     if strcmp(ErrorModels{n}, 'MaxMix') || strcmp(ErrorModels{n}, 'SumMix') || strcmp(ErrorModels{n}, 'MaxSumMix')
@@ -116,7 +116,7 @@ for n = numel(ErrorModels):-1:1
     Metric(n).Prob_Integral = Result.Sum(n);
 end
 % print summary
-Algorithm = {Metric.Lable}';
+Algorithm = {Metric.Label}';
 EstimationError = [Metric.Error_RMS]';
 Runtime_ms = [Metric.Duration_Mean]'*1e3;
 Iterations = [Metric.Iterations_Mean]';

@@ -3,7 +3,7 @@ function [Summary] = printCombinedMetric(CombinedMetric)
 %   Detailed explanation goes here
 
 % create summary table
-Algorithm = {CombinedMetric.Lable}';
+Algorithm = {CombinedMetric.Label}';
 EstimationErrorRMS = [CombinedMetric.Error_RMS]';
 %EstimationErrorMax = [CombinedMetric.Error_Max]';
 Runtime_us = [CombinedMetric.Duration_Mean]'*1e6;

@@ -10,14 +10,14 @@ Config.DoCombinedPlot = true;
 Config.DoIndividualPlot = false;
 
 % select error model
-Config.ErrorModels = {};
+Config.ErrorModels = {}; Config.Labels = {};
 % Config.ErrorModels{end+1} = 'Gaussian'; % a simple Gaussian model
 % Config.ErrorModels{end+1} = 'DCS';      % Dynamic Covariance Scaling
 % Config.ErrorModels{end+1} = 'cDCE';     % closed-form Dynamic Covariance Estimation
 
-Config.ErrorModels{end+1} = 'MaxMix';   % approximated GMM
-Config.ErrorModels{end+1} = 'SumMix';   % exact, but badly converging GMM
-Config.ErrorModels{end+1} = 'MaxSumMix'; % proposed model
+Config.ErrorModels{end+1} = 'MaxMix'; Config.Labels{end+1} = "Max-Mixture";  % approximated GMM
+Config.ErrorModels{end+1} = 'SumMix'; Config.Labels{end+1}  = "Sum-Mixture";  % exact, but badly converging GMM
+Config.ErrorModels{end+1} = 'MaxSumMix'; Config.Labels{end+1}  = "Max-Sum-Mixture"; % proposed model
 
 % Config.ErrorModels{end+1} = 'SumMixSpecial'; % Sepcial version of Sum-Mixture with the normalization of Max-Sum Mixture
 
@@ -33,6 +33,10 @@ Config.NumPoints = 100;
 Config.RangePoints = 8;
 
 CombinedMetric = {};
+
+%% create parpool with limited amount of workers for optimal performance
+delete(gcp('nocreate'));
+parpool(4);
 
 %% Case 1 (1D Sym)
 Config.NumDim = 1;
@@ -63,6 +67,9 @@ CombinedMetric{end+1} = MonteCarloSingle(Config);
 Config.NumDim = 3;
 Config.SymmetricGMM = false;
 CombinedMetric{end+1} = MonteCarloSingle(Config);
+
+%% shut down pool
+delete(gcp('nocreate'));
 
 %% print Results
 for n = 1:numel(CombinedMetric)

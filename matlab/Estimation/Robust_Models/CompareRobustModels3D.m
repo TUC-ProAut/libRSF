@@ -15,11 +15,17 @@ if nargin < 4
     Points = round((1000)^(1/3));
     
     % default model    
-    GMM.Mean(1,:)= [0 0 0];
-    GMM.Mean(2,:) = [2 1 2];
-    GMM.Cov(:,:,1) = eye(3).^3;
-    GMM.Cov(:,:,2) = (eye(3)*2).^3;
-    GMM.Weight = [0.5, 0.5];
+%     GMM.Mean(1,:)= [0 0 0];
+%     GMM.Mean(2,:) = [2 1 2];
+%     GMM.Cov(:,:,1) = eye(3).^3;
+%     GMM.Cov(:,:,2) = (eye(3)*2).^3;
+%     GMM.Weight = [0.5, 0.5];
+
+    % bad model
+    GMM.Mean = [0,0,0;-0.126334299737932,-1.153057081351987,0.003960667797708];
+    GMM.Cov(:,:,1) = [0.424219361186582,0,0;0,0.050657073697039,0;0,0,0.293118938750423];
+    GMM.Cov(:,:,2) = [27.758321385477030,0,0;0,1.201355064259846,0;0,0,7.448733761166299];
+    GMM.Weight = [0.617504635390763,0.382495364609238];
     
     GMM.GlobalMax = -findMaxGMM(GMM);
 end
@@ -63,7 +69,7 @@ end
 %% evaluation
 Metric = [];
 for n = numel(ErrorModels):-1:1
-    Metric(n).Lable = ErrorModels{n};
+    Metric(n).Label = ErrorModels{n};
     
     % accuracy
     if strcmp(ErrorModels{n}, 'Gaussian') || strcmp(ErrorModels{n}, 'DCS') || strcmp(ErrorModels{n}, 'cDCE')
@@ -80,7 +86,7 @@ for n = numel(ErrorModels):-1:1
     Metric(n).Iterations_Mean = mean(Metric(n).Iterations);
 end
 % print summary
-Algorithm = {Metric.Lable}';
+Algorithm = {Metric.Label}';
 EstimationError = [Metric.Error_RMS]';
 Runtime_ms = [Metric.Duration_Mean]'*1e3;
 Iterations = [Metric.Iterations_Mean]';

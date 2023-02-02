@@ -61,7 +61,7 @@ while GMM.IsValid == false
         
         % estimates modes with multiple resolutions and crops
         Samples = [1e2 1e3 1e4 1e5];
-        Boarder = [0.05 0.1 0.15 0.2 0.25 0.3];
+        Boarder = [0.01 0.05 0.1 0.15 0.2 0.25 0.3];
         NumModes = zeros(numel(Samples),numel(Boarder));
         for nSample = 1:numel(Samples)
             for nBoarder = 1:numel(Boarder)

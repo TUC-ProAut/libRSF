@@ -12,10 +12,10 @@ if(SavePlot)
     end
 end
 
-Axis.XLable = 'Error';
-Axis.YLable1 = 'Cost';
-Axis.YLable2 = 'Gradient';
-Axis.YLable3 = 'Hessian';
+Axis.XLabel = 'Error';
+Axis.YLabel1 = 'Cost';
+Axis.YLabel2 = 'Gradient';
+Axis.YLabel3 = 'Hessian';
 
 %% plot cost
 % cost
@@ -29,8 +29,8 @@ end
 hold off
 
 legend('show');
-xlabel(Axis.XLable);
-ylabel(Axis.YLable1);
+xlabel(Axis.XLabel);
+ylabel(Axis.YLabel1);
 ylim([0 5]);
 
 % gradient
@@ -43,8 +43,8 @@ end
 hold off
 
 legend('show');
-xlabel(Axis.XLable);
-ylabel(Axis.YLable2);
+xlabel(Axis.XLabel);
+ylabel(Axis.YLabel2);
 
 
 % Hessian
@@ -59,8 +59,8 @@ set(h, 'DisplayName', 'Numerical Hessian');
 hold off
 
 legend('show');
-xlabel(Axis.XLable);
-ylabel(Axis.YLable3);
+xlabel(Axis.XLabel);
+ylabel(Axis.YLabel3);
 axis tight
 %xlim([min(Result.Error(:,1)) max(Result.Error(:,1))]);
 plot.formatPlot(hCost, Config);

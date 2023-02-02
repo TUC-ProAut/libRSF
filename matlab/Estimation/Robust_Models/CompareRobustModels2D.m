@@ -76,7 +76,7 @@ end
 %% evaluation
 Metric = [];
 for n = numel(ErrorModels):-1:1
-    Metric(n).Lable = ErrorModels{n};
+    Metric(n).Label = ErrorModels{n};
     
     % accuracy
     if strcmp(ErrorModels{n}, 'Gaussian') || strcmp(ErrorModels{n}, 'DCS') || strcmp(ErrorModels{n}, 'cDCE')
@@ -93,7 +93,7 @@ for n = numel(ErrorModels):-1:1
     Metric(n).Iterations_Mean = mean(Metric(n).Iterations);
 end
 % print summary
-Algorithm = {Metric.Lable}';
+Algorithm = {Metric.Label}';
 EstimationError = [Metric.Error_RMS]';
 Runtime_ms = [Metric.Duration_Mean]'*1e3;
 Iterations = [Metric.Iterations_Mean]';

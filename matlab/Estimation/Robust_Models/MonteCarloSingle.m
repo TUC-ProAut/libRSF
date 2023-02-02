@@ -14,15 +14,15 @@ end
 %% comparison
 switch Config.NumDim
     case 1
-        for n = Config.NumModel:-1:1
+        parfor n = 1:Config.NumModel
             [~, GMM{n}, Result{n}, Metric{n}] = CompareRobustModels1D(Config.ErrorModels, Config.RangePoints, Config.NumPoints, Models(n), false, false);
         end
     case 2
-        for n = Config.NumModel:-1:1
+        parfor n = 1:Config.NumModel
             [~, GMM{n}, Result{n}, Metric{n}] = CompareRobustModels2D(Config.ErrorModels, Config.RangePoints, floor(sqrt(Config.NumPoints)), Models(n), false, false);
         end
     case 3
-        for n = Config.NumModel:-1:1
+        parfor n = 1:Config.NumModel
             [~, GMM{n}, Result{n}, Metric{n}] = CompareRobustModels3D(Config.ErrorModels, Config.RangePoints, floor(sqrt(Config.NumPoints)), Models(n), false, false);
         end
     otherwise
@@ -33,24 +33,23 @@ end
 CombinedMetric = CombineRobustMetric(Metric);
 
 %% set ID of this run
+BaseName = [num2str(Config.NumModel) 'M_' num2str(Config.NumPoints) 'P_' num2str(Config.NumDim) 'D_' ];
+
 if Config.SymmetricGMM == true
-    ID = [num2str(Config.NumModel) 'M_' num2str(Config.NumDim) 'D_' 'Sym_' ];
+    BaseName = [BaseName 'Sym'];
 else
-    ID = [num2str(Config.NumModel) 'M_' num2str(Config.NumDim) 'D_' 'Asym_' ];
+    BaseName = [BaseName 'Asym'];
 end
 
 %% save results
-ResultPath = fileparts(fileparts(fileparts(mfilename('fullpath'))));
-ResultPath = [ResultPath '/Results/Estimation/Robust_Models/'];
-if isfolder(ResultPath) == false
-    mkdir(ResultPath)
-end
-ResultFilename = [ResultPath ID 'Result.mat'];
-save(ResultFilename, 'Config', 'Metric', 'Result', 'GMM', 'CombinedMetric', 'ID', 'Seeds');
+PlotPath = estimation.post.getPlotPath('Robust_Models');
+SavePath = estimation.post.getSavePath('Robust_Models');
+SaveFile = fullfile(SavePath, BaseName);
+save(SaveFile, 'Config', 'Metric', 'Result', 'GMM', 'CombinedMetric', 'BaseName', 'Seeds');
 
 %% combined plot
 if Config.DoCombinedPlot == true
-    PlotRobustCombined(CombinedMetric, ID, Config.SavePlot);
+    PlotRobustCombined(SaveFile, PlotPath, Config.SavePlot);
 end
 
 %% plot model-wise

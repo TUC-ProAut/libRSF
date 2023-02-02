@@ -7,7 +7,7 @@ NumError = numel(Metric{1});
 for n = 1:NumModel
     for m = 1:NumError
         if n == 1
-            CombinedMetric(m).Lable = Metric{n}(m).Lable;
+            CombinedMetric(m).Label = Metric{n}(m).Label;
             CombinedMetric(m).Error = [];
             CombinedMetric(m).Duration = [];
             CombinedMetric(m).Iterations = [];
