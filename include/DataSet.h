@@ -373,55 +373,33 @@ namespace libRSF
         return false;
       }
 
-      /** find closest iterators */
-      const auto ItLow = DataStreams.at(ID).lower_bound(Timestamp);
-      const auto ItHigh = DataStreams.at(ID).upper_bound(Timestamp);
+      double TimeLow = NAN;
+      double TimeHigh = NAN;
 
-      /** case 1: element is above all */
-      if (ItLow == DataStreams.at(ID).end())
+      /** get timestamps */
+      this->getTimeBelowOrEqual(ID, Timestamp, TimeLow);
+      this->getTimeAboveOrEqual(ID, Timestamp, TimeHigh);
+
+      /** catch nan */
+      if (std::isnan(TimeLow))
       {
-        TimestampClose = std::prev(ItLow)->first;
+        TimestampClose = TimeHigh;
+        return true;
       }
-      else if (ItHigh == DataStreams.at(ID).begin())
+      if (std::isnan(TimeHigh))
       {
-        /** case 2: element is below all */
-        TimestampClose = ItLow->first;
+        TimestampClose = TimeLow;
+        return true;
+      }
+
+      /** compare times */
+      if (abs(TimeLow - Timestamp) < abs(TimeHigh - Timestamp))
+      {
+        TimestampClose = TimeLow;
       }
       else
       {
-        /** general case: element is somewhere between */
-        double TimeLow;
-        double TimeHigh;
-
-        /** safely get time below lower bound */
-        if (ItLow == DataStreams.at(ID).begin())
-        {
-          TimeLow = ItLow->first;
-        }
-        else
-        {
-          TimeLow = std::prev(ItLow)->first;
-        }
-
-        /** safely get time at upper bound */
-        if (ItHigh == DataStreams.at(ID).end())
-        {
-          TimeHigh = std::prev(ItHigh)->first;
-        }
-        else
-        {
-          TimeHigh = ItHigh->first;
-        }
-
-        /** compare times */
-        if (abs(TimeLow - Timestamp) < abs(TimeHigh - Timestamp))
-        {
-          TimestampClose = TimeLow;
-        }
-        else
-        {
-          TimestampClose = TimeHigh;
-        }
+        TimestampClose = TimeHigh;
       }
 
       return true;
