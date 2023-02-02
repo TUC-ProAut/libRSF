@@ -56,6 +56,7 @@ namespace libRSF
 
     /** parse the command line Options */
     bool ReadCommandLineOptions(int argc, char** argv, std::vector<std::string> * Arguments = nullptr);
+    bool ReadCommandLineOptions(const std::vector<std::string> &Arguments);
 
     /** parse the YAML config file with yaml-cpp */
     bool ReadYAMLOptions(const std::string& YAMLFile);
@@ -79,14 +80,14 @@ namespace libRSF
       Vector Weight;
 
       /** parameters for the adaptive model */
-      int NumberComponents = 1;
+      int NumberComponents = 3;
       double BaseStandardDeviation = 1.0;
       bool IncrementalTuning = false;
 
       /** some of the prior parameters for adaptive estimation*/
-      double PriorDirichletConcentration = 0.1;
-      double PriorNormalInfoScaling = 1e-6;
-      double PriorWishartDOF = 2;
+      double PriorDirichletConcentration = 1;
+      double PriorNormalInfoScaling = 1e-4;
+      double PriorWishartDOF = 1;
     };
 
     struct ErrorModelConfig

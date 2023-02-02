@@ -38,10 +38,10 @@
 #include <string>
 #include <iostream>
 
-#define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-#define PRINT_ERROR(...) libRSF::PrintError(__FILENAME__, __FUNCTION__, __LINE__, __VA_ARGS__)
-#define PRINT_WARNING(...) libRSF::PrintWarning(__FILENAME__, __FUNCTION__, __LINE__, __VA_ARGS__)
-#define PRINT_LOGGING(...) libRSF::PrintLogging(__FILENAME__, __FUNCTION__, __LINE__, __VA_ARGS__)
+#define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#define PRINT_ERROR(...) libRSF::PrintError(FILENAME, __FUNCTION__, __LINE__, __VA_ARGS__)
+#define PRINT_WARNING(...) libRSF::PrintWarning(FILENAME, __FUNCTION__, __LINE__, __VA_ARGS__)
+#define PRINT_LOGGING(...) libRSF::PrintLogging(FILENAME, __FUNCTION__, __LINE__, __VA_ARGS__)
 
 namespace libRSF
 {

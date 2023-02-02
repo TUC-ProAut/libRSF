@@ -167,7 +167,7 @@ namespace libRSF
     /** write back */
     Vector9 CovOutVect(CovOut.data());
     State.setMean(MeanOut);
-    State.setCovarianceMatrix(CovOutVect);
+    State.setCovariance(CovOutVect);
   }
 
   void TangentPlaneConverter::convertStateToGlobal(Data &State)
@@ -191,7 +191,7 @@ namespace libRSF
     /** write back */
     Vector9 CovOutVect(CovOut.data());
     State.setMean(MeanOut);
-    State.setCovarianceMatrix(CovOutVect);
+    State.setCovariance(CovOutVect);
   }
 
   void TangentPlaneConverter::convertMeasurementToLocal(Data &Measurement)

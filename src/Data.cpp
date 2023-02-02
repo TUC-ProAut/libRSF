@@ -131,11 +131,21 @@ namespace libRSF
     }
   }
 
-  void Data::setCovarianceMatrix(const Vector& Cov)
+  void Data::setCovariance(const Vector& Cov)
   {
     /** we expect a row-major vector representation of the actual matrix here */
     this->setValue(DataElement::Covariance, Cov);
   }
+
+  void Data::setCovarianceMatrix(const Matrix& Cov)
+  {
+    /** map matrix to vector */
+    const Eigen::Map<const Vector> CovVect(Cov.data(), Cov.size());
+
+    /** we expect a row-major vector representation of the actual matrix here */
+    this->setValue(DataElement::Covariance, CovVect);
+  }
+
 
   void Data::setStdDevDiagonal(const Vector& StdDev)
   {

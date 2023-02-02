@@ -67,7 +67,8 @@ namespace libRSF
       void setTimestamp(double Timestamp);
       void setCovarianceDiagonal(const Vector& Cov);
       void setStdDevDiagonal(const Vector& StdDev);
-      void setCovarianceMatrix(const Vector& Cov);
+      void setCovariance(const Vector& Cov);
+      void setCovarianceMatrix(const Matrix& Cov);
 
     private:
 

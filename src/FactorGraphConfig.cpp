@@ -38,12 +38,12 @@ namespace libRSF
 
   Vector FactorGraphConfig::ParseVectorFromYAML_(const YAML::Node &VectorNode)
   {
-    int Length = static_cast<int>(VectorNode.size());
+    const int Length = static_cast<int>(VectorNode.size());
     Vector Vec(Length);
 
     if(Length == 0)
     {
-      PRINT_ERROR("Empty element in YAML config: ", VectorNode);
+      PRINT_ERROR("Empty element in YAML config: ", VectorNode.Tag());
     }
 
     for(int n = 0; n < Length; n++)
@@ -432,35 +432,41 @@ namespace libRSF
     return true;
   }
 
+  bool FactorGraphConfig::ReadCommandLineOptions(const std::vector<std::string> &Arguments)
+  {
+    if (Arguments.size() >= 3)
+    {
+      ConfigFile   = Arguments.at(0);
+      InputFile    = Arguments.at(1);
+      OutputFile   = Arguments.at(2);
+
+      /** parse yaml options if there are no other options */
+      if(Arguments.size() == 3)
+      {
+        return ReadYAMLOptions(ConfigFile);
+      }
+    }
+    else
+    {
+      PRINT_WARNING("Number of Arguments doesn't match standard convention [ConfigFile InputFile OutputFile]! It has size: ", Arguments.size());
+      return false;
+    }
+    return true;
+  }
+
   bool FactorGraphConfig::ReadCommandLineOptions(const int argc, char** argv, std::vector<std::string> * const Arguments)
   {
     /** assign all arguments to std::string vector*/
     std::vector<std::string> Args;
     Args.assign(argv+1, argv + argc);
 
+    /** copy arguments for passthrough*/
     if(Arguments != nullptr)
     {
       *Arguments = Args;
     }
 
-    if (Args.size() >= 3)
-    {
-      ConfigFile   = Args.at(0);
-      InputFile    = Args.at(1);
-      OutputFile   = Args.at(2);
-
-      /** parse yaml options if there are no other command line options */
-      if(Args.size() == 3)
-      {
-        return ReadYAMLOptions(ConfigFile);
-      }
-      return true;
-
-    }
-    else
-    {
-      PRINT_WARNING("Number of Arguments doesn't match standard convention [ConfigFile InputFile OutputFile]! It is: ", Args.size());
-      return false;
-    }
+    /** parse */
+    return this->ReadCommandLineOptions(Args);
   }
 }
