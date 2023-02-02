@@ -126,18 +126,9 @@ void InitGraph(libRSF::FactorGraph &Graph,
   }
 }
 
-int main(int ArgC, char ** ArgV)
+int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
+                        libRSF::StateDataSet &Result)
 {
-  (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
-
-  /** process command line parameter */
-  libRSF::FactorGraphConfig Config;
-  if (!Config.ReadCommandLineOptions(ArgC, ArgV))
-  {
-    PRINT_ERROR("Reading configuration gone wrong! Exit now!");
-    return 0;
-  }
 
   /** read input data */
   libRSF::SensorDataSet Measurements;
@@ -145,7 +136,6 @@ int main(int ArgC, char ** ArgV)
 
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
-  libRSF::StateDataSet Result;
 
   /** converter from an earth-centered frame to a local (ENU) frame */
   libRSF::TangentPlaneConverter LocalFrame;
@@ -160,12 +150,12 @@ int main(int ArgC, char ** ArgV)
   if (!GetFirstTimestamp(Measurements, Config, TimeFirst))
   {
     PRINT_ERROR("Could not find first Timestamp! Exit now!");
-    return 0;
+    return 1;
   }
   if (!GetLastTimestamp(Measurements, Config, TimeLast))
   {
     PRINT_ERROR("Could not find last Timestamp! Exit now!");
-    return 0;
+    return 1;
   }
 
   /** init factor graph */
@@ -219,8 +209,10 @@ int main(int ArgC, char ** ArgV)
   /** convert back in a global frame */
   if (Config.GNSS.IsActive && LocalFrame.isInitialized())
   {
-    /** save position in a local coordinate system */
+#ifndef TESTMODE
+    /** save position in a local coordinate system (don't do this for automated tests) */
     libRSF::WriteDataToFile(Config.OutputFile + string("_local"), POSITION_STATE, Result);
+#endif // TESTMODE
 
     /** convert to global frame */
     LocalFrame.convertAllStatesToGlobal(Result, POSITION_STATE);
@@ -229,13 +221,42 @@ int main(int ArgC, char ** ArgV)
   /** print last report */
   Graph.printReport();
 
-  /** export result to file */
-  libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
+  /** successful end */
+  return 0;
+}
 
-  /** additional info */
-  libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
-  libRSF::WriteDataToFile(Config.OutputFile, ANGLE_STATE, Result, true);
-  libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
+#ifndef TESTMODE // only compile main if not used in test context
+
+int main(int ArgC, char ** ArgV)
+{
+  google::InitGoogleLogging(ArgV[0]);
+
+  /** parse command line arguments */
+  libRSF::FactorGraphConfig Config;
+  Config.ReadCommandLineOptions(ArgC, ArgV);
+
+  /** data structure for estimates*/
+  libRSF::StateDataSet Result;
+
+  /** solve the estimation problem */
+  if (CreateGraphAndSolve(Config,Result) != 0)
+  {
+    PRINT_ERROR("Something gone wrong while estimating GNSS position!");
+  }
+  else
+  {
+    /** export position estimate to file */
+    libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
+
+    /** export additional estimates */
+    libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
+    libRSF::WriteDataToFile(Config.OutputFile, ANGLE_STATE, Result, true);
+
+    /** export timing information */
+    libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
+  }
 
   return 0;
 }
+
+#endif // TESTMODE

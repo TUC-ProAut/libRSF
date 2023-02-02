@@ -42,11 +42,24 @@ namespace libRSF
     const int LengthGT = GT.countElements(TypeGT);
     const int LengthEstimate = Estimate.countElements(TypeEstimate);
 
-    /** return error if not equal */
+    /** check for zero length, separately */
+    if (LengthGT == 0)
+    {
+      PRINT_ERROR("Length of GT is zero!");
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+    if (LengthEstimate == 0)
+    {
+      PRINT_ERROR("Length of estimate is zero!");
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    /** assign timestamps if not equal */
     if (LengthGT != LengthEstimate)
     {
-      PRINT_ERROR("Length of GT and estimate is not identical!");
-      return std::numeric_limits<double>::quiet_NaN();
+      PRINT_WARNING("Length of GT and estimate are not equal. Using closest GT points.");
+      PRINT_LOGGING("Length of GT: " + std::to_string(LengthGT));
+      PRINT_LOGGING("Length of estimate: " + std::to_string(LengthEstimate));
     }
 
     /** vector to store errors */
@@ -54,22 +67,27 @@ namespace libRSF
 
     /** get first timestamp */
     double Time = 0.0;
-    GT.getTimeFirst(TypeGT, Time);
+    Estimate.getTimeFirst(TypeEstimate, Time);
 
     /** fill error vector */
     int n = 0;
     do
     {
-      /** get data at this timestamp */
-      Data DataGT, DataEstimate;
+      /** get estimate at this timestamp */
+      Data DataEstimate;
       Estimate.getElement(TypeEstimate, Time, 0, DataEstimate);
-      GT.getElement(TypeGT, Time, 0, DataGT);
+
+      /** find closest GT */
+      double TimeGT = 0.0;
+      GT.getTimeCloseTo(TypeGT, Time, TimeGT);
+      Data DataGT;
+      GT.getElement(TypeGT, TimeGT, 0, DataGT);
 
       /** euclidean distance*/
       Error(n) = (DataEstimate.getMean() - DataGT.getMean()).norm();
       n++;
     }
-    while(GT.getTimeNext(TypeGT, Time, Time));
+    while(Estimate.getTimeNext(TypeEstimate, Time, Time));
 
     /** apply RMSE */
     return RMSE(Error);
@@ -133,5 +151,72 @@ namespace libRSF
 
     /** return overall maximum */
     return maxAbsError;
+  }
+
+  void AlignTrajectory2D(const SensorDataSet &GT,
+                         const std::string &PosID,
+                         const std::string &RotID,
+                         const StateDataSet &Estimate,
+                         StateDataSet &AlignedEstimate)
+  {
+      /** check length */
+      const int LengthGT = GT.countElements(DataType::Point2);
+      const int LengthEstimate = Estimate.countElements(PosID);
+
+      /** align rotation first */
+      Vector RotDiff(LengthEstimate);
+      int n = 0;
+      for(const Data &Rot : Estimate.getElementsOfID(RotID))
+      {
+        /** find GT time */
+        double TimeGT = 0.0;
+        GT.getTimeCloseTo(DataType::Angle, Rot.getTimestamp(), TimeGT);
+        Data RotGT;
+        GT.getElement(DataType::Angle, TimeGT, 0, RotGT);
+
+        RotDiff(n) = NormalizeAngle(RotGT.getMean()(0)  - Rot.getMean()(0));
+        n++;
+      }
+
+      /** use median of relative rotation because mean is more complicated */
+      const Matrix22 RotationMatrix = RotationMatrix2D(Median(RotDiff));
+
+      /** apply rotation*/
+      for(const Data &Pos : Estimate.getElementsOfID(PosID))
+      {
+        /** rotate estimate */
+        Data PosNew;
+        PosNew = Pos;
+        PosNew.setMean(RotationMatrix * Pos.getMean());
+        PosNew.setCovarianceMatrix(RotationMatrix * Pos.getCovarianceMatrix() * RotationMatrix.transpose());
+
+        /** copy in new dataset */
+        AlignedEstimate.addElement(PosID, PosNew);
+      }
+
+      /** find transformation */
+      Matrix PosDiff(LengthEstimate,2);
+      n = 0;
+      for(const Data &Pos : AlignedEstimate.getElementsOfID(PosID))
+      {
+        /** find GT time */
+        double TimeGT = 0.0;
+        GT.getTimeCloseTo(DataType::Point2, Pos.getTimestamp(), TimeGT);
+        Data PosGT;
+        GT.getElement(DataType::Point2, TimeGT, 0, PosGT);
+
+        /** evaluate position difference */
+        PosDiff(n, 0) = PosGT.getMean()(0) - Pos.getMean()(0);
+        PosDiff(n, 1) = PosGT.getMean()(1) - Pos.getMean()(1);
+        n++;
+      }
+      const Vector2 Translation = PosDiff.colwise().mean();
+
+      /** apply translation*/
+      for(const Data& Pos : AlignedEstimate.getElementsOfID(PosID))
+      {
+        /** translate estimate */
+        AlignedEstimate.getElement(PosID, Pos.getTimestamp(), 0).setMean(Pos.getMean() + Translation);
+      }
   }
 }

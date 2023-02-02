@@ -1,42 +1,20 @@
 ---
 
 # predefined Gaussian mixture model parameter
-gmm_params: &gmm_params
-    std_dev: 0.5
-    components: 3
-    incremental: false
 
-gmm_prior: &gmm_prior
-    dir_conc: 1.0
-    nw_dof: 2.0
-    nw_scale: 1e-4
-    
-gmm_fixed_params: &gmm_fixed_params
-    tuning_type: none
-    #2D GMM with 2 components
-    weight: [0.333, 0.333, 0.333]
-    mean: [0, 0, 0, 0, 0, 0]
-    std_dev: [0.5,0,0,0.5, 5,0,0,5, 50,0,0,50]
-    
-em_params: &em_params
-    <<: *gmm_params
-    tuning_type: em
-    
-em_map_params: &em_map_params
-    <<: *gmm_params
-    <<: *gmm_prior
-    tuning_type: em_map
-    
-vbi_params: &vbi_params
-    <<: *gmm_params
-    <<: *gmm_prior
-    tuning_type: vbi
-    
-vbi_full_params: &vbi_full_params
-    <<: *gmm_params
-    <<: *gmm_prior
-    tuning_type: vbi_full
-    
+#2D GMM with 2 components
+gmm_fixed_params:
+    weight: &gmm_weights [0.333, 0.333, 0.333]
+    mean: &gmm_means [0, 0, 0, 0, 0, 0]
+    std_dev: &gmm_std_devs [0.5,0,0,0.5, 5,0,0,5, 50,0,0,50]
+   
+# parameter for adaptive algorithms
+gmm_adaptive_params:
+    std_dev: &gmm_adapt_std 0.5
+    components: &gmm_adapt_comp 3
+    dir_conc: &gmm_adapt_conc 1.0
+    nw_dof: &gmm_adapt_dof 2.0
+    nw_scale: &gmm_adapt_scale 1e-4
 
 # error models that can be used
 errors:
@@ -60,96 +38,182 @@ errors:
   sm: &sm
     type: gmm
     mixture_type: sm
-    <<: *gmm_fixed_params
+    tuning_type: none
+    weight: *gmm_weights
+    mean: *gmm_means
+    std_dev: *gmm_std_devs
       
   mm: &mm
     type: gmm
     mixture_type: mm
-    <<: *gmm_fixed_params
+    tuning_type: none
+    weight: *gmm_weights
+    mean: *gmm_means
+    std_dev: *gmm_std_devs
     
   msm: &msm
     type: gmm
     mixture_type: msm
     tuning_type: none
-    <<: *gmm_fixed_params
+    weight: *gmm_weights
+    mean: *gmm_means
+    std_dev: *gmm_std_devs
       
   sm_em: &sm_em
     type: gmm
     mixture_type: sm
-    <<: *em_params
-    
+    tuning_type: em
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+
   mm_em: &mm_em
     type: gmm
     mixture_type: mm
-    <<: *em_params
+    tuning_type: em
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
     
   msm_em: &msm_em
     type: gmm
     mixture_type: msm
-    <<: *em_params
+    tuning_type: em
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
     
   sm_em_map: &sm_em_map
     type: gmm
     mixture_type: sm
-    <<: *em_map_params
+    tuning_type: em_map
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   mm_em_map: &mm_em_map
     type: gmm
     mixture_type: mm
-    <<: *em_map_params
+    tuning_type: em_map
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   msm_em_map: &msm_em_map
     type: gmm
     mixture_type: msm
-    <<: *em_map_params
+    tuning_type: em_map
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
       
   sm_vbi: &sm_vbi
     type: gmm
     mixture_type: sm
-    <<: *vbi_params
+    tuning_type: vbi
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   mm_vbi: &mm_vbi
     type: gmm
     mixture_type: mm
-    <<: *vbi_params
+    tuning_type: vbi
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   msm_vbi: &msm_vbi
     type: gmm
     mixture_type: msm
-    <<: *vbi_params
+    tuning_type: vbi
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   sm_vbi_full: &sm_vbi_full
     type: gmm
     mixture_type: sm
-    <<: *vbi_full_params
+    tuning_type: vbi_full
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   mm_vbi_full: &mm_vbi_full
     type: gmm
     mixture_type: mm
-    <<: *vbi_full_params
+    tuning_type: vbi_full
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   msm_vbi_full: &msm_vbi_full
     type: gmm
     mixture_type: msm
-    <<: *vbi_full_params   
+    tuning_type: vbi_full
+    incremental:  false
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale  
     
   sm_vbi_full_inc: &sm_vbi_full_inc
     type: gmm
     mixture_type: sm
-    <<: *vbi_full_params
-    incremental: true
+    tuning_type: vbi_full
+    incremental:  true
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
   mm_vbi_full_inc: &mm_vbi_full_inc
     type: gmm
     mixture_type: mm
-    <<: *vbi_full_params
-    incremental: true
+    tuning_type: vbi_full
+    incremental:  true
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
     
-  msm_vbi_full_inc: &msm_vbi_full_inc
+  msm_vbi_full_inc: &msm_vbi_full_inc 
     type: gmm
     mixture_type: msm
-    <<: *vbi_full_params  
-    incremental: true
+    tuning_type: vbi_full
+    incremental:  true
+    std_dev: *gmm_adapt_std
+    components: *gmm_adapt_comp
+    dir_conc: *gmm_adapt_conc
+    nw_dof: *gmm_adapt_dof
+    nw_scale: *gmm_adapt_scale
 
 # Sensors and models
 factors:

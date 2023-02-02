@@ -36,7 +36,7 @@
 
 namespace libRSF
 {
-  /**< maximum component-wise absolute difference between two datasets */
+  /** maximum component-wise absolute difference between two datasets */
   double MaxAbsError(DataType TypeGT,
                      const SensorDataSet &GT,
                      const std::string &TypeEstimate,
@@ -48,6 +48,13 @@ namespace libRSF
              const SensorDataSet &GT,
              const std::string &TypeEstimate,
              const StateDataSet &Estimate);
+
+  /** basic alignment*/
+  void AlignTrajectory2D(const SensorDataSet &GT,
+                         const std::string &PosID,
+                         const std::string &RotID,
+                         const StateDataSet &Estimate,
+                         StateDataSet &AlignedEstimate);
 }
 
 #endif // TESTUTILS_H

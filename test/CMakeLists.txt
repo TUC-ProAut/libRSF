@@ -55,3 +55,9 @@ package_add_test(Test_App_Robust_Models_2D Test_App_Robust_Models_2D.cpp TestUti
 package_add_test(Test_GMM_Estimation_1D Test_GMM_Estimation_1D.cpp TestUtils.cpp)
 
 package_add_test(Test_GMM_Estimation_2D Test_GMM_Estimation_2D.cpp TestUtils.cpp)
+
+package_add_test(Test_App_GNSS Test_App_GNSS.cpp TestUtils.cpp ../applications/App_GNSS.cpp ../applications/AppPool_Sensors.cpp ../applications/AppPool_Init.cpp ../applications/AppPool_Adaptive.cpp ../applications/AppPool_Defines.cpp ../applications/AppPool_Utility.cpp)
+
+package_add_test(Test_App_SLAM Test_App_SLAM.cpp TestUtils.cpp ../applications/App_SLAM.cpp ../applications/AppPool_Sensors.cpp ../applications/AppPool_Init.cpp ../applications/AppPool_Adaptive.cpp ../applications/AppPool_Defines.cpp ../applications/AppPool_Utility.cpp)
+
+package_add_test(Test_App_Ranging_2D Test_App_Ranging_2D.cpp TestUtils.cpp ../applications/App_Ranging_2D.cpp ../applications/AppPool_Sensors.cpp ../applications/AppPool_Init.cpp ../applications/AppPool_Adaptive.cpp ../applications/AppPool_Defines.cpp ../applications/AppPool_Utility.cpp)

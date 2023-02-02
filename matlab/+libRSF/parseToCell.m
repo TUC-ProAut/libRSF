@@ -282,6 +282,14 @@ if isfield(Data,'GT_Position2')
     GT2Cell(:,5:8)                          = num2cell(zeros(numel(Data.GT_Position2.Time),4));
 end
 
+GTAngleCell = cell(0,MaxCellWidth);
+if isfield(Data,'GT_Angle')
+    [GTAngleCell{1:length(Data.GT_Angle.Time),1}]    = deal('angle');
+    GTAngleCell(:,2)                            = num2cell(Data.GT_Angle.Time);
+    GTAngleCell(:,3)                            = num2cell(Data.GT_Angle.Mean);
+    GTAngleCell(:,4)                            = num2cell(zeros(numel(Data.GT_Angle.Time), 1));
+end
+
 GTPose2Cell = cell(0,MaxCellWidth);
 if isfield(Data,'GT_Pose2')
     [GTPose2Cell{1:length(Data.GT_Position2.Time),1}]    = deal('pose2');
@@ -313,7 +321,7 @@ MeasurementCell = [ Pos3Cell;Pos2Cell; PosID2Cell; PosConfID2Cell; BoundingBox3C
                     Pseudorange2Cell; Pseudorange3Cell;...
                     LoopCell; BearingRangeID2Cell];
                 
-GTCell = [GT2Cell; GTPose2Cell; GT3Cell];
+GTCell = [GT2Cell; GTAngleCell; GTPose2Cell; GT3Cell];
 
 end
 

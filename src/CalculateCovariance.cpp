@@ -52,7 +52,7 @@ namespace libRSF
       while (States.getTimeNext(Type, Timestamp, Timestamp));
 
       /** at first we try the more efficient algorithm */
-      bool Success = Covariance.Compute(CovarianceBlocks, &Graph);
+      bool const Success = Covariance.Compute(CovarianceBlocks, &Graph);
 
       if (Success)
       {

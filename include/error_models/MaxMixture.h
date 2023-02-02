@@ -80,7 +80,7 @@ namespace libRSF
           /** map the error pointer to a matrix */
           VectorRef<T, Dim+1> ErrorMap(Error);
 
-          T Loglike = T(NAN);
+          T Loglike = T(std::numeric_limits<double>::quiet_NaN());
 
           MatrixT<T, Dim + 1, 1> ErrorShadow, ErrorShadowBest;
 

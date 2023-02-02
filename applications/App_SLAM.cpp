@@ -27,7 +27,8 @@ void AddLoopClosure2(libRSF::FactorGraph &Graph,
                      const libRSF::Data &Loop)
 {
   /** find closest timestamps */
-  double Time1, Time2;
+  double Time1 = std::numeric_limits<double>::quiet_NaN();
+  double Time2 = std::numeric_limits<double>::quiet_NaN();
   Time1 = Loop.getTimestamp();
   Time2 = Loop.getValue(libRSF::DataElement::TimestampRef)(0);
   Graph.getStateData().getTimeCloseTo(POSITION_STATE, Time1, Time1);
@@ -160,19 +161,9 @@ void AddLoopClosure2(libRSF::FactorGraph &Graph,
   }
 }
 
-int main(int ArgC, char** ArgV)
+int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
+                        libRSF::StateDataSet &Result)
 {
-  google::InitGoogleLogging(ArgV[0]);
-  google::LogToStderr();
-  google::SetStderrLogging(google::GLOG_INFO);
-
-  /** process command line parameter */
-  libRSF::FactorGraphConfig Config;
-  if(!Config.ReadCommandLineOptions(ArgC, ArgV))
-  {
-    PRINT_ERROR("Reading configuration gone wrong! Exit now!");
-    return 0;
-  }
 
   /** read input data */
   libRSF::SensorDataSet Measurements;
@@ -180,7 +171,6 @@ int main(int ArgC, char** ArgV)
 
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
-  libRSF::StateDataSet Result;
 
   /** duration of different steps */
   libRSF::Data Summary(libRSF::DataType::IterationSummary, 0.0);
@@ -309,22 +299,40 @@ int main(int ArgC, char** ArgV)
   /** print last report */
   Graph.printReport();
 
-  /** export result to file */
-  libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
+  return 0;
+}
 
-  /** additional info */
-  libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
-  libRSF::WriteDataToFile(Config.OutputFile, ANGLE_STATE, Result, true);
-  libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
+#ifndef TESTMODE // only compile main if not used in test context
 
-//  if (Result.checkID(COV_STATE))
-//  {
-//    libRSF::WriteDataToFile(Config.OutputFile, COV_STATE, Result, true);
-//  }
+int main(int ArgC, char ** ArgV)
+{
+  google::InitGoogleLogging(ArgV[0]);
 
-  /** export raw error */
-//  Graph.computeUnweightedError(libRSF::FactorType::ConstVal2, "Error", Result);
-//  libRSF::WriteDataToFile(Config.OutputFile, "Error", Result, true);
+  /** parse command line arguments */
+  libRSF::FactorGraphConfig Config;
+  Config.ReadCommandLineOptions(ArgC, ArgV);
+
+  /** data structure for estimates*/
+  libRSF::StateDataSet Result;
+
+  /** solve the estimation problem */
+  if (CreateGraphAndSolve(Config,Result) != 0)
+  {
+    PRINT_ERROR("Something gone wrong while estimating GNSS position!");
+  }
+  else
+  {
+    /** export position estimate to file */
+    libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
+
+    /** additional estimates */
+    libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
+
+    /** export timing information */
+    libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
+  }
 
   return 0;
 }
+
+#endif // TESTMODE

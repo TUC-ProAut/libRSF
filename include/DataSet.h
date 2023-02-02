@@ -373,8 +373,8 @@ namespace libRSF
         return false;
       }
 
-      double TimeLow = NAN;
-      double TimeHigh = NAN;
+      double TimeLow = std::numeric_limits<double>::quiet_NaN();
+      double TimeHigh = std::numeric_limits<double>::quiet_NaN();
 
       /** get timestamps */
       this->getTimeBelowOrEqual(ID, Timestamp, TimeLow);

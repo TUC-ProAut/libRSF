@@ -22,18 +22,9 @@
 
 #include "App_Ranging_2D.h"
 
-
-int main(int ArgC, char** ArgV)
+int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
+                        libRSF::StateDataSet &Result)
 {
-  google::InitGoogleLogging(ArgV[0]);
-
-  /** process command line parameter */
-  libRSF::FactorGraphConfig Config;
-  if (!Config.ReadCommandLineOptions(ArgC, ArgV))
-  {
-    PRINT_ERROR("Reading configuration gone wrong! Exit now!");
-    return 0;
-  }
 
   /** read input data */
   libRSF::SensorDataSet Measurements;
@@ -49,7 +40,6 @@ int main(int ArgC, char** ArgV)
 
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
-  libRSF::StateDataSet Result;
 
   /** create prior noise models */
   libRSF::GaussianDiagonal<2> NoisePriorPoint;
@@ -99,7 +89,7 @@ int main(int ArgC, char** ArgV)
       if (!Measurements.getTimeBelowOrEqual(libRSF::DataType::Odom2, TimeNow, TimeOdom))
       {
         PRINT_ERROR("Could not find measurement below: ", TimeNow);
-        return 0;
+        return 1;
       }
       const libRSF::Data Odom = Measurements.getElement(libRSF::DataType::Odom2, TimeOdom);
 
@@ -124,16 +114,10 @@ int main(int ArgC, char** ArgV)
       AddRange2(Graph, Config, Range, TimeNow);
     }
 
-    /** solve */
-//    Solve(Graph, Config, Summary, false);
-
     /** adapt error model */
-    if(AdaptErrorModel(Graph, Config, Summary))
-    {
-      /** solve again*/
-//      Solve(Graph, Config, Summary, false);
-    }
+    AdaptErrorModel(Graph, Config, Summary);
 
+    /** solve */
     Solve(Graph, Config, Summary, false);
 
     /** save iteration timestamp */
@@ -152,9 +136,39 @@ int main(int ArgC, char** ArgV)
   Summary.setValueScalar(libRSF::DataElement::DurationTotal, IterationTimer.getSeconds());
   Save(Graph, Config, Summary, Result, true);
 
-  /** export result to file */
-  libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
-  libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
+  return 0;
+}
+
+
+#ifndef TESTMODE // only compile main if not used in test context
+
+int main(int ArgC, char ** ArgV)
+{
+  google::InitGoogleLogging(ArgV[0]);
+
+  /** parse command line arguments */
+  libRSF::FactorGraphConfig Config;
+  Config.ReadCommandLineOptions(ArgC, ArgV);
+
+  /** data structure for estimates*/
+  libRSF::StateDataSet Result;
+
+  /** solve the estimation problem */
+  if (CreateGraphAndSolve(Config,Result) != 0)
+  {
+    PRINT_ERROR("Something gone wrong while estimating position!");
+  }
+  else
+  {
+    /** export estimates to file */
+    libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
+    libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
+
+    /** export timing information */
+    libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
+  }
 
   return 0;
 }
+
+#endif // TESTMODE

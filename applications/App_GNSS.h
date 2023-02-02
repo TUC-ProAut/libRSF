@@ -40,4 +40,7 @@
 
 #include "libRSF.h"
 
+int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
+                        libRSF::StateDataSet &Result);
+
 #endif // APP_GNSS_H

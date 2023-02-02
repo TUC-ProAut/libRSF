@@ -348,7 +348,7 @@ void InitWithGNSS(libRSF::FactorGraph &Graph,
 //  PriorPoint.setMean(SimpleResult.getElement(POSITION_STATE, TimeInitial).getMean());
 //
 //  libRSF::GaussianFull<3> NoisePrior;
-//  NoisePrior.setCovarianceMatrix(SimpleResult.getElement(POSITION_STATE, TimeInitial).getCovarianceMatrix()*10);/**< we don't trust the initial result! */
+//  NoisePrior.setCovariance(SimpleResult.getElement(POSITION_STATE, TimeInitial).getCovarianceMatrix()*10);/**< we don't trust the initial result! */
 //  Graph.addFactor<libRSF::FactorType::Prior3>(libRSF::StateID(POSITION_STATE, TimeInitial), PriorPoint, NoisePrior);
 }
 
