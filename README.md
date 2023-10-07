@@ -20,7 +20,7 @@ Main features are:
 
 The libRSF is a CMake project that requires the installation of several dependencies.
 For convenience, we provide a simple bash script that installs required packages.
-It is tested **only for Ubuntu 18.04/20.04**:
+It is tested **only for Ubuntu 20.04/22.04**:
 
 ```bash
   git clone https://github.com/TUC-ProAut/libRSF.git
@@ -38,7 +38,7 @@ Alternatively, you can install them by your own:
 
 + **Eigen** (>= 3.3.5)
 
-  **Only for Ubuntu 18.04**, you have to install a current version of Eigen locally.
+  **Only for Ubuntu < 20.04**, you have to install a current version of Eigen locally.
 
   ```bash
   mkdir -p externals/install
