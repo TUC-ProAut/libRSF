@@ -263,7 +263,7 @@ bool ParseErrorModel(const std::string &ErrorModel, libRSF::FactorGraphConfig &C
 
 int main(int argc, char** argv)
 {
-  google::InitGoogleLogging(argv[0]);
+  google::InitGoogleLogging(*argv);
   libRSF::FactorGraphConfig Config;
 
   /** assign all arguments to string vector*/

@@ -24,6 +24,7 @@
   factors/ConstantValueFactor.cpp
   factors/ConstantDriftFactor.cpp
   factors/ConstantQuaternionFactor.cpp
+  factors/ConstantPose2Factor.cpp
   factors/BetweenValueFactor.cpp
   factors/BetweenPose2Factor.cpp
   factors/BetweenPose3Factor.cpp

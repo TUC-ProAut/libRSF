@@ -147,6 +147,9 @@ namespace libRSF
       double Normalization_{0};
   };
 
+  template <int Dim>
+  using MaxSumMix = MaxSumMixture<Dim, GaussianMixture<Dim>>;
+
   using MaxSumMix1 = MaxSumMixture<1, GaussianMixture<1>>;
   using MaxSumMix2 = MaxSumMixture<2, GaussianMixture<2>>;
   using MaxSumMix3 = MaxSumMixture<3, GaussianMixture<3>>;

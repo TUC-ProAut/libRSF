@@ -1,7 +1,7 @@
 /***************************************************************************
  * libRSF - A Robust Sensor Fusion Library
  *
- * Copyright (C) 2020 Chair of Automation Technology / TU Chemnitz
+ * Copyright (C) 2022 Chair of Automation Technology / TU Chemnitz
  * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
@@ -20,18 +20,29 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-#include "App_Ranging_2D.h"
+#include <cmath>
 
-int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
-                        libRSF::StateDataSet &Result)
+#include "App_SLAM_RO_2D.h"
+
+
+int main(int ArgC, char** ArgV)
 {
+  google::InitGoogleLogging(*ArgV);
+
+  /** process command line parameter */
+  libRSF::FactorGraphConfig Config;
+  if (!Config.ReadCommandLineOptions(ArgC, ArgV))
+  {
+    PRINT_ERROR("Reading configuration gone wrong! Exit now!");
+    return 0;
+  }
 
   /** read input data */
   libRSF::SensorDataSet Measurements;
   libRSF::ReadDataFromFile(Config.InputFile, Measurements);
 
   /** find first time stamp */
-  double TimeFirst;
+  double TimeFirst = NAN;
   if (!Measurements.getTimeFirstOverall(TimeFirst))
   {
     PRINT_ERROR("Dataset is empty!");
@@ -40,13 +51,14 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
 
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
+  libRSF::StateDataSet Result;
 
   /** create prior noise models */
   libRSF::GaussianDiagonal<2> NoisePriorPoint;
-  NoisePriorPoint.setStdDevSharedDiagonal(10.0);
+  NoisePriorPoint.setStdDevSharedDiagonal(0.1);
 
   libRSF::GaussianDiagonal<1> NoisePriorAngle;
-  NoisePriorAngle.setStdDevSharedDiagonal(2 * M_PI);
+  NoisePriorAngle.setStdDevSharedDiagonal(0.01);
 
   /** create prior measurements */
   libRSF::Data PriorPoint(libRSF::DataType::Point2, TimeFirst);
@@ -57,6 +69,10 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
   /** add first states */
   Graph.addState(POSITION_STATE, libRSF::DataType::Point2, TimeFirst);
   Graph.addState(ORIENTATION_STATE, libRSF::DataType::Angle, TimeFirst);
+
+  /** set constant*/
+  Graph.setConstant(POSITION_STATE, TimeFirst);
+  Graph.setConstant(ORIENTATION_STATE, TimeFirst);
 
   /** add prior */
   Graph.addFactor<libRSF::FactorType::Prior2>(libRSF::StateID(POSITION_STATE, TimeFirst), PriorPoint, NoisePriorPoint);
@@ -89,7 +105,7 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
       if (!Measurements.getTimeBelowOrEqual(libRSF::DataType::Odom2, TimeNow, TimeOdom))
       {
         PRINT_ERROR("Could not find measurement below: ", TimeNow);
-        return 1;
+        return 0;
       }
       const libRSF::Data Odom = Measurements.getElement(libRSF::DataType::Odom2, TimeOdom);
 
@@ -106,18 +122,24 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
     }
 
     /** get range measurements */
-    const std::vector<libRSF::Data> Ranges = Measurements.getElements(libRSF::DataType::Range2, TimeNow);
+    const std::vector<libRSF::Data> Ranges = Measurements.getElements(libRSF::DataType::RangeLM2, TimeNow);
 
     /** add range measurements */
     for (const libRSF::Data &Range: Ranges)
     {
-      AddRange2(Graph, Config, Range, TimeNow);
+      AddRangeToPoint2(Graph, Config, Range, TimeNow);
     }
 
-    /** adapt error model */
-    AdaptErrorModel(Graph, Config, Summary);
-
     /** solve */
+//    Solve(Graph, Config, Summary, false);
+
+    /** adapt error model */
+    if(AdaptErrorModel(Graph, Config, Summary))
+    {
+      /** solve again*/
+//      Solve(Graph, Config, Summary, false);
+    }
+
     Solve(Graph, Config, Summary, false);
 
     /** save iteration timestamp */
@@ -128,7 +150,7 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
 
     TimePrev = TimeNow;
   }
-  while (Measurements.getTimeNext(libRSF::DataType::Range2, TimePrev, TimeNow));
+  while (Measurements.getTimeNext(libRSF::DataType::RangeLM2, TimePrev, TimeNow));
 
   /** calculate and save final solution*/
   Summary.setTimestamp(TimeNow);
@@ -136,39 +158,10 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
   Summary.setValueScalar(libRSF::DataElement::DurationTotal, IterationTimer.getSeconds());
   Save(Graph, Config, Summary, Result, true);
 
-  return 0;
-}
-
-
-#ifndef TESTMODE // only compile main if not used in test context
-
-int main(int ArgC, char ** ArgV)
-{
-  google::InitGoogleLogging(*ArgV);
-
-  /** parse command line arguments */
-  libRSF::FactorGraphConfig Config;
-  Config.ReadCommandLineOptions(ArgC, ArgV);
-
-  /** data structure for estimates*/
-  libRSF::StateDataSet Result;
-
-  /** solve the estimation problem */
-  if (CreateGraphAndSolve(Config,Result) != 0)
-  {
-    PRINT_ERROR("Something gone wrong while estimating position!");
-  }
-  else
-  {
-    /** export estimates to file */
-    libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
-    libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
-
-    /** export timing information */
-    libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
-  }
+  /** export result to file */
+  libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
+  libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
+  libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
 
   return 0;
 }
-
-#endif // TESTMODE

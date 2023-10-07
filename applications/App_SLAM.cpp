@@ -306,7 +306,7 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
 
 int main(int ArgC, char ** ArgV)
 {
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   /** parse command line arguments */
   libRSF::FactorGraphConfig Config;

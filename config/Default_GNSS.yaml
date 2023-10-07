@@ -34,6 +34,12 @@ errors:
   sc: &sc
     type: sc
     parameter: 1e-2
+
+  dcs1: &dcs1
+    type: dcs1
+      
+  sc1: &sc1
+    type: sc1
       
   sm: &sm
     type: gmm

@@ -34,7 +34,7 @@
 int main(int ArgC, char** ArgV)
 {
   (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   /** define distribution parameter */
   const int N = 1000;

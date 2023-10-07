@@ -55,6 +55,7 @@ namespace libRSF
     ConstQuaternion,
     BetweenValue1, BetweenValue2, BetweenValue3,
     Loop1, Loop2, Loop3,
+    LoopPose2,
     BetweenPose2, BetweenPose3,
     BetweenQuaternion,
     BetweenBearingRange2,
@@ -95,7 +96,7 @@ namespace libRSF
     IMUBias,                                              /**< IMU Speedbias [Vel, B_Acc, B_Gyr] */
     GMM1, GMM2, Switch, Covariance1, Covariance2,         /**< dynamic error models */
     Range2, Range3,                                       /**< range to fixed point */
-    RangeLM2,RangeLM3,                                    /**< range to landmark with unknown position*/
+    RangeLM2, RangeLM3,                                   /**< range to landmark with unknown position*/
     Pseudorange3, Pseudorange2,                           /**< GNSS pseudo-range */
     Odom2, Odom3, Odom2Diff,                              /**< wheel based odometry */
     Odom3Radar, Odom3Laser, Odom3VIO,                     /**< odometry based on other sensors */
@@ -157,7 +158,8 @@ namespace libRSF
     {FactorType::Odom6, DataType::Odom3},
     {FactorType::Loop1, DataType::LoopClosure},
     {FactorType::Loop2, DataType::LoopClosure},
-    {FactorType::Loop3, DataType::LoopClosure}
+    {FactorType::Loop3, DataType::LoopClosure},
+    {FactorType::LoopPose2, DataType::LoopClosure}
   };
 
   /** dictionaries translate strings (from files) to enums*/
@@ -207,7 +209,8 @@ namespace libRSF
     {"pressure_diff3",FactorType::PressureDiff3},
     {"loop1",FactorType::Loop1},
     {"loop2",FactorType::Loop2},
-    {"loop3",FactorType::Loop3}
+    {"loop3",FactorType::Loop3},
+    {"loop_pose2",FactorType::LoopPose2}
   };
 
   const std::map<std::string, AbstractFactorType> AbstractFactorTypeDict =
@@ -231,6 +234,8 @@ namespace libRSF
     {"gauss",ErrorModelType::Gaussian},
     {"sc",ErrorModelType::SC},
     {"dcs",ErrorModelType::DCS},
+    {"sc1",ErrorModelType::SC},
+    {"dcs1",ErrorModelType::DCS},
     {"dce",ErrorModelType::DCE},
     {"cdce",ErrorModelType::cDCE},
     {"gmm",ErrorModelType::GMM}

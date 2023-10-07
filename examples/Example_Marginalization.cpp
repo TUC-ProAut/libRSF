@@ -147,7 +147,7 @@ void CreateGraphs(libRSF::FactorGraph &TranslationGraph,
 int main(int ArgC, char** ArgV)
 {
   (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   /** create data */
   libRSF::StateDataSet DataGT;

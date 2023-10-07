@@ -1,7 +1,7 @@
 /***************************************************************************
  * libRSF - A Robust Sensor Fusion Library
  *
- * Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
+ * Copyright (C) 2020 Chair of Automation Technology / TU Chemnitz
  * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
@@ -20,29 +20,24 @@
  * Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
  ***************************************************************************/
 
-/**
-* @file App_Robust_Models_1D.h
-* @author Tim Pfeifer and Leopold Mauersberger
-* @date 18.03.2021
-* @brief Header for a simple application to evaluate the robust error functions for the scalar case and the corresponding test.
-* @copyright GNU Public License.
-*
-*/
+ /**
+ * @file App_SLAM_RO_2D.h
+ * @author Tim Pfeifer
+ * @date 9 Jun 2022
+ * @brief Simple 2D range-only SLAM with robust factor graphs.
+ * @copyright GNU Public License.
+ *
+ */
 
-#ifndef APP_ROBUST_MODELS_1D_H_INCLUDED
-#define APP_ROBUST_MODELS_1D_H_INCLUDED
+#ifndef APP_SLAM_RO_2D_H
+#define APP_SLAM_RO_2D_H
 
-#include <string>
+#include "AppPool_Adaptive.h"
+#include "AppPool_Defines.h"
+#include "AppPool_Init.h"
+#include "AppPool_Sensors.h"
+#include "AppPool_Utility.h"
+
 #include "libRSF.h"
 
-/** use define to prevent typos*/
-#define POSITION_STATE "Position"
-#define SOLVE_TIME_STATE "SolveTime"
-
-int CreateGraphAndSolve(std::vector<std::string> &Arguments,
-                       libRSF::StateDataSet &CostSurfaceData,
-                       libRSF::StateDataSet &PreOptimizationData,
-                       libRSF::StateDataSet &PostOptimizationData,
-                       libRSF::StateDataSet &SolverData);
-
-#endif // APP_ROBUST_MODELS_1D_H_INCLUDED
+#endif // APP_SLAM_RO_2D_H

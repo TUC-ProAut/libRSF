@@ -34,7 +34,7 @@
 int main(int ArgC, char** ArgV)
 {
   (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   /** define distribution parameter */
 //  int N = 10000000; //original 11s (only EM)

@@ -289,6 +289,23 @@ for n = 1:size(ResultCell,1)
             ResultStruct.GMM.Cov(end+1,1:NumComp) = cell2mat(ResultCell(n,2+NumComp + (1:NumComp)));
             ResultStruct.GMM.Weight(end+1,1:NumComp) = cell2mat(ResultCell(n,2+NumComp*2 + (1:NumComp)));
 
+        case 'mmd'
+            if ~isfield(ResultStruct,'MMD')
+                ResultStruct.MMD = [];
+                ResultStruct.MMD.Time = [];
+                ResultStruct.MMD.Mean = [];
+            end
+            ResultStruct.MMD.Time(end+1,1) = cell2mat(ResultCell(n,2));
+            ResultStruct.MMD.Mean(end+1,1) = cell2mat(ResultCell(n,3));
+
+        case 'sinkhorn'
+            if ~isfield(ResultStruct,'Sinkhorn')
+                ResultStruct.Sinkhorn = [];
+                ResultStruct.Sinkhorn.Time = [];
+                ResultStruct.Sinkhorn.Loss = [];
+            end
+            ResultStruct.Sinkhorn.Time(end+1,1) = cell2mat(ResultCell(n,2));
+            ResultStruct.Sinkhorn.Loss(end+1,1) = cell2mat(ResultCell(n,3));
         otherwise
             error(['Wrong StateName: ' ResultCell{n,1}]);
     end

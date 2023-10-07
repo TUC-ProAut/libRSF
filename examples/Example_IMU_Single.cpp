@@ -38,7 +38,7 @@
 int main(int ArgC, char** ArgV)
 {
   (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   /** create measurement mean */
   libRSF::Vector6 MeanIMU;

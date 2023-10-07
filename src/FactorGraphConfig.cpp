@@ -89,7 +89,15 @@ namespace libRSF
     {
       case ErrorModelType::SC:
       case ErrorModelType::DCS:
-        Model.Parameter = ErrorModelNode["parameter"].as<double>();
+        if (ErrorTypeString == "sc1" || ErrorTypeString == "dcs1")
+        {
+          /** set default parameter */
+          Model.Parameter = 1.0;
+        }
+        else
+        {
+          Model.Parameter = ErrorModelNode["parameter"].as<double>();
+        }
         break;
 
       case ErrorModelType::GMM:
@@ -350,6 +358,13 @@ namespace libRSF
             Factor.Parameter(0) = YAMLConfig["factors"][nFactor]["threshold"].as<double>();
             Factor.Parameter(1) = YAMLConfig["factors"][nFactor]["std_dev"].as<double>();
             break;
+
+          case FactorType::LoopPose2:
+            Factor.Parameter.resize(4);
+            Factor.Parameter(0) = YAMLConfig["factors"][nFactor]["threshold"].as<double>();
+            Factor.Parameter.tail(3) = ParseVectorFromYAML_(YAMLConfig["factors"][nFactor]["std_dev"]);
+            break;
+
 
           default:
 //          PRINT_WARNING("Factor not handled: ", FactorTypeString);

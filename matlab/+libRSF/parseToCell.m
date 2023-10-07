@@ -260,7 +260,7 @@ if isfield(Data,'Loop')
     [LoopCell{1:length(Data.Loop.Time),1}]    = deal('loop');
     LoopCell(:,2)                             = num2cell(Data.Loop.Time);
     LoopCell(:,3)                             = num2cell(Data.Loop.TimeRef);
-    LoopCell(:,4)                             = num2cell(Data.Loop.Prob);
+    LoopCell(:,4)                             = num2cell(Data.Loop.Similarity);
 end
 
 BearingRangeID2Cell = cell(0,MaxCellWidth);

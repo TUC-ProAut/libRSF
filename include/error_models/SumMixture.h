@@ -53,7 +53,8 @@ namespace libRSF
   {
   public:
     SumMixture()
-    { Normalization_ = 0;
+    {
+      this->clear();
     }
 
     virtual ~SumMixture() = default;
@@ -131,8 +132,11 @@ namespace libRSF
     }
 
     MixtureType Mixture_;
-    double Normalization_;
+    double Normalization_{0};
   };
+
+  template <int Dim>
+  using SumMix = SumMixture<Dim, GaussianMixture<Dim>, false>;
 
   using SumMix1 = SumMixture<1, GaussianMixture<1>, false>;
   using SumMix2 = SumMixture<2, GaussianMixture<2>, false>;

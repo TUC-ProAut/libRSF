@@ -193,7 +193,7 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
 int main(int argc, char** argv)
 {
   /** init google logging for ceres */
-  google::InitGoogleLogging(argv[0]);
+  google::InitGoogleLogging(*argv);
 
   /** get command line arguments */
   std::vector<std::string> Arguments;

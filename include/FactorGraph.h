@@ -58,6 +58,7 @@
 #include "factors/ConstantValueFactor.h"
 #include "factors/ConstantDriftFactor.h"
 #include "factors/ConstantQuaternionFactor.h"
+#include "factors/ConstantPose2Factor.h"
 #include "factors/PriorFactor.h"
 #include "factors/RangeFactor.h"
 #include "factors/RangeToPointFactor.h"

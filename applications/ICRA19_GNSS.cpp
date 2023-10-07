@@ -392,7 +392,7 @@ int CreateGraphAndSolve(std::vector<std::string> &Arguments,
 
 int main(int argc, char** argv)
 {
-  google::InitGoogleLogging(argv[0]);
+  google::InitGoogleLogging(*argv);
 
   /** assign all arguments to string vector*/
   std::vector<std::string> Arguments;

@@ -63,7 +63,20 @@ bool AdaptErrorModel(libRSF::FactorGraph &Graph,
     {
       if (Config.LoopClosure.ErrorModel.GMM.TuningType != libRSF::ErrorModelTuningType::None)
       {
-        AdaptGeneric2D(Graph, Config.LoopClosure.Type, Config.LoopClosure.ErrorModel, true);
+        switch (Config.LoopClosure.Type)
+        {
+          case libRSF::FactorType::LoopPose2:
+            AdaptGeneric<3>(Graph, Config.LoopClosure.Type, Config.LoopClosure.ErrorModel, true);
+            break;
+
+          case libRSF::FactorType::Loop2:
+            AdaptGeneric<2>(Graph, Config.LoopClosure.Type, Config.LoopClosure.ErrorModel, true);
+            break;
+
+          default:
+            PRINT_ERROR("Unknown LoopClosure Type: ", Config.LoopClosure.Type);
+            break;
+        }
         HasAdapted = true;
       }
     }
@@ -145,112 +158,21 @@ void AdaptGeneric1D(libRSF::FactorGraph &Graph,
   {
   case libRSF::ErrorModelMixtureType::MaxMix:
     {
-      libRSF::MaxMix1 NewModel(GMM);
+      const libRSF::MaxMix1 NewModel(GMM);
       Graph.setNewErrorModel(Factor, NewModel);
     }
     break;
 
   case libRSF::ErrorModelMixtureType::SumMix:
     {
-      libRSF::SumMix1 NewModel(GMM);
+      const libRSF::SumMix1 NewModel(GMM);
       Graph.setNewErrorModel(Factor, NewModel);
     }
     break;
 
   case libRSF::ErrorModelMixtureType::MaxSumMix:
     {
-      libRSF::MaxSumMix1 NewModel(GMM);
-      Graph.setNewErrorModel(Factor, NewModel);
-    }
-    break;
-
-  default:
-    PRINT_ERROR("Wrong mixture type!");
-      break;
-  }
-}
-
-void AdaptGeneric2D(libRSF::FactorGraph &Graph,
-                    const libRSF::FactorType Factor,
-                    const libRSF::FactorGraphConfig::ErrorModelConfig &ErrorConfig,
-                    const bool EstimateMean)
-{
-  /** only tune with enough samples */
-  if (Graph.countFactorsOfType(Factor) < 15)
-  {
-    return;
-  }
-
-  /** calculate error */
-  libRSF::Matrix Error;
-  Graph.computeUnweightedErrorMatrix(Factor, Error);
-
-  /** init model */
-  static libRSF::GaussianMixture<2> GMM;
-
-  if (ErrorConfig.GMM.IncrementalTuning)
-  {
-      /** add first component if empty */
-      if(GMM.getNumberOfComponents() == 0)
-      {
-          GMM.initSpread(1, ErrorConfig.GMM.BaseStandardDeviation);
-      }
-
-      /** remove smallest component if limit exceeded */
-      if(GMM.getNumberOfComponents() >= 8)
-      {
-        GMM.sortComponentsByWeight();
-        GMM.removeLastComponent();
-      }
-
-      /** calculate statistics for GMM initialization*/
-      const libRSF::Vector2 Mean = -Error.rowwise().mean();
-      const libRSF::Matrix22 Covariance = libRSF::EstimateSampleCovariance<2>(Error);
-      const libRSF::Vector1 Weight = libRSF::Vector1::Ones() / GMM.getNumberOfComponents();
-
-      /** add just one component per timestamp */
-      libRSF::GaussianComponent<2> Component;
-      Component.setParamsCovariance(Covariance, Mean, Weight);
-
-      GMM.addComponent(Component);
-  }
-  else
-  {
-    /** init with a simple default model */
-    GMM.initSpread(ErrorConfig.GMM.NumberComponents, ErrorConfig.GMM.BaseStandardDeviation);
-  }
-
-  /** set GMM estimation config */
-  libRSF::GaussianMixture<2>::EstimationConfig Config = libRSF::GaussianMixture<2>::ConvertConfig(ErrorConfig.GMM);
-  Config.EstimateMean = EstimateMean;
-  Config.MergeSimilarComponents = false;
-
-  /** adapt error model */
-  if(!GMM.estimate(Error, Config))
-  {
-    return;
-  }
-
-  /** replace model */
-  switch (ErrorConfig.GMM.MixtureType)
-  {
-  case libRSF::ErrorModelMixtureType::MaxMix:
-    {
-      libRSF::MaxMix2 NewModel(GMM);
-      Graph.setNewErrorModel(Factor, NewModel);
-    }
-    break;
-
-  case libRSF::ErrorModelMixtureType::SumMix:
-    {
-      libRSF::SumMix2 NewModel(GMM);
-      Graph.setNewErrorModel(Factor, NewModel);
-    }
-    break;
-
-  case libRSF::ErrorModelMixtureType::MaxSumMix:
-    {
-      libRSF::MaxSumMix2 NewModel(GMM);
+      const libRSF::MaxSumMix1 NewModel(GMM);
       Graph.setNewErrorModel(Factor, NewModel);
     }
     break;

@@ -38,7 +38,7 @@
 #include <string>
 #include <iostream>
 
-#define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#define FILENAME (std::string(__FILE__).substr(std::string(__FILE__).find_last_of('/') + 1))
 #define PRINT_ERROR(...) libRSF::PrintError(FILENAME, __FUNCTION__, __LINE__, __VA_ARGS__)
 #define PRINT_WARNING(...) libRSF::PrintWarning(FILENAME, __FUNCTION__, __LINE__, __VA_ARGS__)
 #define PRINT_LOGGING(...) libRSF::PrintLogging(FILENAME, __FUNCTION__, __LINE__, __VA_ARGS__)

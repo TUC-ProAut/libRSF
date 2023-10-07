@@ -32,6 +32,8 @@
 #ifndef APPPOOL_SENSORS_H
 #define APPPOOL_SENSORS_H
 
+#include <cmath>
+
 #include "AppPool_Adaptive.h"
 #include "AppPool_Defines.h"
 #include "libRSF.h"
@@ -125,9 +127,103 @@ bool AddLoopClosures(libRSF::FactorGraph &Graph,
                      double TimeOld,
                      double TimeNow);
 
-void AddLoopClosure3(libRSF::FactorGraph &Graph,
-                     const libRSF::FactorGraphConfig &Config,
-                     const libRSF::Data &Loop);
+template <libRSF::FactorType FactorType, int Dim>
+void AddLoopClosureGeneric(libRSF::FactorGraph &Graph,
+                           const libRSF::FactorGraphConfig &Config,
+                           const libRSF::Data &Loop)
+{
+  /** get standard deviation in [m] */
+  libRSF::VectorStatic<Dim> StdDev;
+
+  /** find closest timestamps */
+  double Time1 = NAN, Time2 = NAN;
+  Time1 = Loop.getTimestamp();
+  Time2 = Loop.getValue(libRSF::DataElement::TimestampRef)(0);
+  Graph.getStateData().getTimeCloseTo(POSITION_STATE, Time1, Time1);
+  Graph.getStateData().getTimeCloseTo(POSITION_STATE, Time2, Time2);
+
+  /** add rotations if required */
+  libRSF::StateList ListOfStates;
+  if (FactorType == libRSF::FactorType::LoopPose2)
+  {
+      /** add  full pose */
+      ListOfStates.add(libRSF::StateID(POSITION_STATE, Time1));
+      ListOfStates.add(libRSF::StateID(ORIENTATION_STATE, Time1));
+      ListOfStates.add(libRSF::StateID(POSITION_STATE, Time2));
+      ListOfStates.add(libRSF::StateID(ORIENTATION_STATE, Time2));
+
+      StdDev = Config.LoopClosure.Parameter.tail(Dim);
+  }
+  else
+  {
+      /** add only position */
+      ListOfStates.add(libRSF::StateID(POSITION_STATE, Time1));
+      ListOfStates.add(libRSF::StateID(POSITION_STATE, Time2));
+
+      StdDev = libRSF::VectorStatic<Dim>::Ones() * Config.LoopClosure.Parameter(1);
+  }
+
+  /** add factor with right error model */
+  switch(Config.LoopClosure.ErrorModel.Type)
+  {
+    case libRSF::ErrorModelType::Gaussian:
+    {
+      libRSF::GaussianDiagonal<Dim> Noise;
+      Noise.setStdDevDiagonal(StdDev);
+
+      Graph.addFactor<FactorType>(ListOfStates, Noise, false);
+    }
+    break;
+    case libRSF::ErrorModelType::GMM:
+    {
+      /** init model */
+      const libRSF::GaussianMixture<Dim> GMM(Config.LoopClosure.ErrorModel.GMM);
+
+      /** Max-Mixture GMM [Olson et al.]*/
+      if(Config.LoopClosure.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
+      {
+        libRSF::MaxMix<Dim> MixtureNoise(GMM);
+        Graph.addFactor<FactorType>(ListOfStates, MixtureNoise, false);
+      }
+      /** Sum-Mixture GMM [Rosen et al.]*/
+      else if(Config.LoopClosure.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
+      {
+        libRSF::SumMix<Dim> MixtureNoise(GMM);
+        Graph.addFactor<FactorType>(ListOfStates, MixtureNoise, false);
+      }
+      /** Max-Sum-Mix-Mixture GMM [Pfeifer et al.]*/
+      else if(Config.LoopClosure.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxSumMix)
+      {
+        libRSF::MaxSumMix<Dim> MixtureNoise(GMM);
+        Graph.addFactor<FactorType>(ListOfStates, MixtureNoise, false);
+      }
+      else
+      {
+        PRINT_ERROR("Wrong mixture type!");
+      }
+    }
+    break;
+
+    case libRSF::ErrorModelType::SC:
+    {
+      libRSF::GaussianDiagonal<Dim> Noise;
+      Noise.setStdDevDiagonal(StdDev);
+
+      /**add switch variable */
+      Graph.addState(SWITCH_STATE, libRSF::DataType::Switch, Time2);
+      ListOfStates.add(libRSF::StateID(SWITCH_STATE, Time2));
+
+      /** create Switchable Constraints error model */
+      libRSF::SwitchableConstraints<Dim, libRSF::GaussianDiagonal<Dim>> SC(Noise, Config.LoopClosure.ErrorModel.Parameter);
+      Graph.addFactor<FactorType>(ListOfStates, SC);
+    }
+    break;
+
+    default:
+      PRINT_ERROR("Wrong error type: ", Config.LoopClosure.ErrorModel.Type);
+      break;
+  }
+}
 
 template <libRSF::FactorType RangeFactorType>
 void AddRangeGeneric(libRSF::FactorGraph &Graph,
@@ -135,7 +231,7 @@ void AddRangeGeneric(libRSF::FactorGraph &Graph,
                      const libRSF::Data &Range,
                      const double TimePosition)
 {
-  double TimeRange = Range.getTimestamp();
+  double const TimeRange = Range.getTimestamp();
 
   /** construct states if missing and create state list */
   libRSF::StateList ListOfPoints;
@@ -159,7 +255,16 @@ void AddRangeGeneric(libRSF::FactorGraph &Graph,
 
       /** landmark position*/
       const std::string LM_ID_STATE = LANDMARK_STATE + std::to_string(Range.getValue(libRSF::DataElement::SatID)(0));
-      Graph.addStateWithCheck(LM_ID_STATE, libRSF::DataType::Point2, 0.0);
+      if (!Graph.getStateData().checkElement(LM_ID_STATE, 0.0))
+      {
+        /** add landmark state */
+        Graph.addStateWithCheck(LM_ID_STATE, libRSF::DataType::PointID2, 0.0);
+        /** store ID of landmark */
+        Graph.getStateData().getElement(LM_ID_STATE, 0.0).setValue(libRSF::DataElement::ID, Range.getValue(libRSF::DataElement::SatID));
+        /** initialize landmark at current position */
+        Graph.getStateData().getElement(LM_ID_STATE, 0.0).setMean(Graph.getStateData().getElement(POSITION_STATE, TimePosition).getMean());
+      }
+
       ListOfPoints.add(LM_ID_STATE, 0.0);
       break;
     }
@@ -172,7 +277,15 @@ void AddRangeGeneric(libRSF::FactorGraph &Graph,
 
       /** landmark position*/
       const std::string LM_ID_STATE = LANDMARK_STATE + std::to_string(Range.getValue(libRSF::DataElement::SatID)(0));
-      Graph.addStateWithCheck(LM_ID_STATE, libRSF::DataType::Point3, 0.0);
+      if (!Graph.getStateData().checkElement(LM_ID_STATE, 0.0))
+      {
+        /** add landmark state */
+        Graph.addStateWithCheck(LM_ID_STATE, libRSF::DataType::Point3, 0.0);
+        /** store ID of landmark */
+        Graph.getStateData().getElement(LM_ID_STATE, 0.0).setValue(libRSF::DataElement::ID, Range.getValue(libRSF::DataElement::SatID));
+        /** initialize landmark at current position */
+        Graph.getStateData().getElement(LM_ID_STATE, 0.0).setMean(Graph.getStateData().getElement(POSITION_STATE, TimePosition).getMean());
+      }
       ListOfPoints.add(LM_ID_STATE, 0.0);
       break;
     }
@@ -201,7 +314,7 @@ void AddRangeGeneric(libRSF::FactorGraph &Graph,
     case libRSF::ErrorModelType::GMM:
     {
       /** Use default init */
-      libRSF::GaussianMixture<1> GMM(Config.Ranging.ErrorModel.GMM);
+      libRSF::GaussianMixture<1> const GMM(Config.Ranging.ErrorModel.GMM);
 
       /**Max-Mixture GMM [Olson et al.]*/
       if (Config.Ranging.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
@@ -343,7 +456,7 @@ void AddPseudorange3Generic(libRSF::FactorGraph &Graph,
     const std::string InterSystemBiasName = addSatSysToName(SYSTEM_BIAS_STATE, static_cast<int>(Pseudorange.getValue(libRSF::DataElement::SatSys)(0)));
 
     /** find closest ISB variable*/
-    double TimeISB;
+    double TimeISB = NAN;
     Graph.getStateData().getTimeCloseTo(InterSystemBiasName, TimeGNSS, TimeISB);
     States.add(InterSystemBiasName, TimeISB);
   }
@@ -363,7 +476,7 @@ void AddPseudorange3Generic(libRSF::FactorGraph &Graph,
     case libRSF::ErrorModelType::GMM:
     {
       /** Use default init */
-      libRSF::GaussianMixture<1> GMM(Config.GNSS.ErrorModel.GMM);
+      libRSF::GaussianMixture<1> const GMM(Config.GNSS.ErrorModel.GMM);
 
       /**Max-Mixture GMM [Olson et al.]*/
       if (Config.GNSS.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)

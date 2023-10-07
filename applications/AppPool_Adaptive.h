@@ -44,9 +44,114 @@ void AdaptGeneric1D(libRSF::FactorGraph &Graph,
                     bool RemoveOffset,
                     bool UseAsymmetricInit);
 
-void AdaptGeneric2D(libRSF::FactorGraph &Graph,
-                    libRSF::FactorType Factor,
-                    const libRSF::FactorGraphConfig::ErrorModelConfig &ErrorConfig,
-                    bool EstimateMean);
+template <int Dim>
+void AdaptGeneric(libRSF::FactorGraph &Graph,
+                  libRSF::FactorType Factor,
+                  const libRSF::FactorGraphConfig::ErrorModelConfig &ErrorConfig,
+                  bool EstimateMean)
+{
+  /** only tune with enough samples */
+  if (Graph.countFactorsOfType(Factor) < std::pow(2, Dim))
+  {
+    PRINT_LOGGING("Not enough samples to adapt error model for factor type ", Factor , ": ", Graph.countFactorsOfType(Factor) , " < " , std::pow(2, Dim));
+    return;
+  }
+
+  /** calculate error */
+  libRSF::Matrix Error;
+  Graph.computeUnweightedErrorMatrix(Factor, Error);
+
+  /** handle SE(2)*/
+  if (Factor == libRSF::FactorType::LoopPose2)
+  {
+    /** normalize angle*/
+    Error.col(2) = libRSF::NormalizeAngleVector<double, Dim>(Error.col(2));
+
+    /** TODO: find circular mean */
+
+    /** TODO: substract mean */
+  }
+
+  /** init model */
+  static libRSF::GaussianMixture<Dim> GMM;
+
+  if (ErrorConfig.GMM.IncrementalTuning)
+  {
+    /** add first component if empty */
+    if(GMM.getNumberOfComponents() == 0)
+    {
+      GMM.initSpread(1, ErrorConfig.GMM.BaseStandardDeviation);
+    }
+
+    /** remove smallest component if limit exceeded */
+    if(GMM.getNumberOfComponents() >= 8)
+    {
+      GMM.sortComponentsByWeight();
+      GMM.removeLastComponent();
+    }
+
+    /** calculate statistics for GMM initialization*/
+    const libRSF::VectorStatic<Dim> Mean = -Error.rowwise().mean();
+    const libRSF::MatrixStatic<Dim,Dim> Covariance = libRSF::EstimateSampleCovariance<Dim>(Error);
+    const libRSF::Vector1 Weight = libRSF::Vector1::Ones() / GMM.getNumberOfComponents();
+
+    /** add just one component per timestamp */
+    libRSF::GaussianComponent<Dim> Component;
+    Component.setParamsCovariance(Covariance, Mean, Weight);
+
+    GMM.addComponent(Component);
+  }
+  else
+  {
+    /** init with a simple default model */
+    GMM.initSpread(ErrorConfig.GMM.NumberComponents, ErrorConfig.GMM.BaseStandardDeviation);
+  }
+
+  /** set GMM estimation config */
+  typename libRSF::GaussianMixture<Dim>::EstimationConfig Config = libRSF::GaussianMixture<Dim>::ConvertConfig(ErrorConfig.GMM);
+  Config.EstimateMean = EstimateMean;
+  Config.MergeSimilarComponents = false;
+
+  /** adapt error model */
+  if(!GMM.estimate(Error, Config))
+  {
+    return;
+  }
+
+  /** handle SE(2) case */
+  if (Factor == libRSF::FactorType::LoopPose2)
+  {
+    /**TODO: add circular mean*/
+  }
+
+  /** replace model */
+  switch (ErrorConfig.GMM.MixtureType)
+  {
+    case libRSF::ErrorModelMixtureType::MaxMix:
+    {
+      libRSF::MaxMix<Dim> NewModel(GMM);
+      Graph.setNewErrorModel(Factor, NewModel);
+    }
+    break;
+
+    case libRSF::ErrorModelMixtureType::SumMix:
+    {
+      libRSF::SumMix<Dim> NewModel(GMM);
+      Graph.setNewErrorModel(Factor, NewModel);
+    }
+    break;
+
+    case libRSF::ErrorModelMixtureType::MaxSumMix:
+    {
+      libRSF::MaxSumMix<Dim> NewModel(GMM);
+      Graph.setNewErrorModel(Factor, NewModel);
+    }
+    break;
+
+    default:
+      PRINT_ERROR("Wrong mixture type!");
+      break;
+  }
+}
 
 #endif // APPPOOL_ADAPTIVE_H

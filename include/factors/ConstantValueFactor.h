@@ -21,7 +21,7 @@
  ***************************************************************************/
 
 /**
- * @file ConstantDriftFactor.h
+ * @file ConstantValueFactor.h
  * @author Tim Pfeifer
  * @date 18.09.2018
  * @brief A Factor that connects two values with a constant value model.

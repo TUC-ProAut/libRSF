@@ -51,7 +51,7 @@ void SaveResult(libRSF::FactorGraph &Graph,
 
 int main(int ArgC, char** ArgV)
 {
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   /** process command line parameter */
   libRSF::FactorGraphConfig Config;

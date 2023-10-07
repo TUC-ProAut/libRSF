@@ -18,14 +18,32 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
+add_executable(App_multiFusion App_multiFusion.cpp AppPool_Sensors.cpp AppPool_Init.cpp AppPool_Adaptive.cpp AppPool_Defines.cpp AppPool_Utility.cpp)
+target_link_libraries(App_multiFusion libRSF)
+
 add_executable(App_GNSS App_GNSS.cpp AppPool_Sensors.cpp AppPool_Init.cpp AppPool_Adaptive.cpp AppPool_Defines.cpp AppPool_Utility.cpp)
 target_link_libraries(App_GNSS libRSF)
 
 add_executable(App_SLAM App_SLAM.cpp AppPool_Adaptive.cpp AppPool_Defines.cpp AppPool_Utility.cpp)
 target_link_libraries(App_SLAM libRSF)
 
+add_executable(App_SLAM_BR_2D App_SLAM_BR_2D.cpp AppPool_Adaptive.cpp AppPool_Defines.cpp AppPool_Utility.cpp)
+target_link_libraries(App_SLAM_BR_2D libRSF)
+
 add_executable(App_Ranging_2D App_Ranging_2D.cpp AppPool_Adaptive.cpp AppPool_Defines.cpp AppPool_Utility.cpp AppPool_Sensors.cpp)
 target_link_libraries(App_Ranging_2D libRSF)
+
+add_executable(App_SLAM_RO_2D App_SLAM_RO_2D.cpp AppPool_Adaptive.cpp AppPool_Defines.cpp AppPool_Utility.cpp AppPool_Sensors.cpp)
+target_link_libraries(App_SLAM_RO_2D libRSF)
+
+add_executable(App_SLAM_Range_Loop_2D App_SLAM_Range_Loop_2D.cpp AppPool_Adaptive.cpp AppPool_Defines.cpp AppPool_Utility.cpp AppPool_Sensors.cpp)
+target_link_libraries(App_SLAM_Range_Loop_2D libRSF)
+
+add_executable(App_PointSetRegistration App_PointSetRegistration.cpp AppPool_Defines.cpp)
+target_link_libraries(App_PointSetRegistration libRSF)
+
+add_executable(App_PointSetRegistration_Simple App_PointSetRegistration_Simple.cpp AppPool_Defines.cpp)
+target_link_libraries(App_PointSetRegistration_Simple libRSF)
 
 add_executable(App_Robust_Models_1D App_Robust_Models_1D.cpp)
 target_link_libraries(App_Robust_Models_1D libRSF)

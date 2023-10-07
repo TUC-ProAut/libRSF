@@ -74,7 +74,7 @@ void CreateData (libRSF::SensorDataSet &RangeMeasurements)
 int main(int ArgC, char** ArgV)
 {
   (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   libRSF::Vector1 StdDev;
   StdDev << STDDEV_RANGE;

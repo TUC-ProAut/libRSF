@@ -1,7 +1,7 @@
 /***************************************************************************
  * libRSF - A Robust Sensor Fusion Library
  *
- * Copyright (C) 2023 Chair of Automation Technology / TU Chemnitz
+ * Copyright (C) 2019 Chair of Automation Technology / TU Chemnitz
  * For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
  *
  * libRSF is free software: you can redistribute it and/or modify
@@ -21,15 +21,18 @@
  ***************************************************************************/
 
 /**
- * @file App_GNSS.cpp
+ * @file App_multiFusion.cpp
  * @author Tim Pfeifer
- * @date 26 Jan 2023
- * @brief File containing an flexible estimator for many GNSS problems.
+ * @date 02 May 2019
+ * @brief File containing an universal application for arbitrary factor graphs.
  * @copyright GNU Public License.
  *
  */
 
-#include "App_GNSS.h"
+#include "AppPool_Adaptive.h"
+#include "AppPool_Init.h"
+#include "AppPool_Sensors.h"
+#include "AppPool_Utility.h"
 
 void Predict(libRSF::FactorGraph &Graph,
              const libRSF::FactorGraphConfig &Config,
@@ -37,6 +40,12 @@ void Predict(libRSF::FactorGraph &Graph,
              const double TimeOld,
              const double TimeNow)
 {
+  /** Motion Model */
+  if (Config.MotionModel.IsActive)
+  {
+    AddMotionModel(Graph, Config, TimeOld, TimeNow);
+  }
+
   /** IMU */
   if (Config.IMU.IsActive)
   {
@@ -47,6 +56,34 @@ void Predict(libRSF::FactorGraph &Graph,
   if (Config.Odom.IsActive)
   {
     AddOdometry(Graph, Config.Odom.Type, libRSF::DataType::Odom3, Measurements, TimeOld, TimeNow);
+  }
+
+  /** Radar odometry */
+  if (Config.Radar.IsActive)
+  {
+    AddOdometry(Graph, Config.Radar.Type, libRSF::DataType::Odom3Radar, Measurements, TimeOld, TimeNow);
+  }
+
+  /** Laser odometry */
+  if (Config.Laser.IsActive)
+  {
+    AddOdometry(Graph, Config.Laser.Type, libRSF::DataType::Odom3Laser, Measurements, TimeOld, TimeNow);
+  }
+
+  /** Barometric pressure */
+  if (Config.Pressure.IsActive)
+  {
+    AddPressure(Graph, Config.Pressure.Type, Measurements, TimeOld, TimeNow);
+  }
+
+  /** add position state if nobody does this before */
+  Graph.addStateWithCheck(POSITION_STATE, libRSF::DataType::Point3, TimeNow);
+
+  /** marginalize filter state */
+  if (Config.Solution.Type == libRSF::SolutionType::Filter)
+  {
+    /** marginalize current states */
+    Graph.marginalizeAllStatesOutsideWindow((TimeNow - TimeOld) / 2.0, TimeNow, 1.01);
   }
 }
 
@@ -60,6 +97,24 @@ void Measure(libRSF::FactorGraph &Graph,
   if (Config.GNSS.IsActive)
   {
     AddGNSS(Graph, Config, Measurements, TimeOld, TimeNow);
+  }
+
+  /** absolute ranging */
+  if (Config.Ranging.IsActive)
+  {
+    AddUWB(Graph, Config, Measurements, TimeOld, TimeNow);
+  }
+
+  /** relative loop closures */
+  if (Config.LoopClosure.IsActive)
+  {
+    const bool HasLoop = AddLoopClosures(Graph, Config, Measurements, TimeOld, TimeNow);
+
+    /** in case of loop closures, optimize complete graph */
+    if (HasLoop && Config.Solution.Type == libRSF::SolutionType::SmootherRT)
+    {
+      Graph.setAllVariable();
+    }
   }
 
   /** optional prior for the first position*/
@@ -97,6 +152,13 @@ void InitGraph(libRSF::FactorGraph &Graph,
     IsInitialized = true;
   }
 
+  if (Config.Ranging.IsActive)
+  {
+    /** uses all range measurements in the first 4 second to init the position, use at least 30 */
+    InitWithUWB(Graph, Measurements, Config, TimeInitial, 6.0, 30);
+    IsInitialized = true;
+  }
+
   if (Config.IMU.IsActive)
   {
     /** uses all IMU measurements in the first 2 seconds to init the IMU biases */
@@ -106,6 +168,14 @@ void InitGraph(libRSF::FactorGraph &Graph,
   {
     /** add generic rotation prior */
     InitOdom(Graph, Config.Odom.Type, TimeInitial);
+  }
+  else if (Config.Laser.IsActive)
+  {
+    InitOdom(Graph, Config.Laser.Type, TimeInitial);
+  }
+  else if (Config.Radar.IsActive)
+  {
+    InitOdom(Graph, Config.Radar.Type, TimeInitial);
   }
 
   /** add prior if no initialization was done */
@@ -126,9 +196,24 @@ void InitGraph(libRSF::FactorGraph &Graph,
   }
 }
 
-int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
-                        libRSF::StateDataSet &Result)
+int main(int ArgC, char ** ArgV)
 {
+  (void)ArgC;
+  google::InitGoogleLogging(*ArgV);
+
+  /** enable extended logging on debug mode */
+#ifndef NDEBUG
+  google::LogToStderr();
+  google::SetStderrLogging(google::GLOG_INFO);
+#endif
+
+  /** process command line parameter */
+  libRSF::FactorGraphConfig Config;
+  if (!Config.ReadCommandLineOptions(ArgC, ArgV))
+  {
+    PRINT_ERROR("Reading configuration gone wrong! Exit now!");
+    return 0;
+  }
 
   /** read input data */
   libRSF::SensorDataSet Measurements;
@@ -136,6 +221,7 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
 
   /** Build optimization problem from sensor data */
   libRSF::FactorGraph Graph;
+  libRSF::StateDataSet Result;
 
   /** converter from an earth-centered frame to a local (ENU) frame */
   libRSF::TangentPlaneConverter LocalFrame;
@@ -150,12 +236,12 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
   if (!GetFirstTimestamp(Measurements, Config, TimeFirst))
   {
     PRINT_ERROR("Could not find first Timestamp! Exit now!");
-    return 1;
+    return 0;
   }
   if (!GetLastTimestamp(Measurements, Config, TimeLast))
   {
     PRINT_ERROR("Could not find last Timestamp! Exit now!");
-    return 1;
+    return 0;
   }
 
   /** init factor graph */
@@ -209,10 +295,8 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
   /** convert back in a global frame */
   if (Config.GNSS.IsActive && LocalFrame.isInitialized())
   {
-#ifndef TESTMODE
-    /** save position in a local coordinate system (don't do this for automated tests) */
+    /** save position in a local coordinate system */
     libRSF::WriteDataToFile(Config.OutputFile + string("_local"), POSITION_STATE, Result);
-#endif // TESTMODE
 
     /** convert to global frame */
     LocalFrame.convertAllStatesToGlobal(Result, POSITION_STATE);
@@ -221,42 +305,34 @@ int CreateGraphAndSolve(const libRSF::FactorGraphConfig &Config,
   /** print last report */
   Graph.printReport();
 
-  /** successful end */
-  return 0;
-}
+  /** export result to file */
+  libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
 
-#ifndef TESTMODE // only compile main if not used in test context
+  /** additional info */
+  libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
+  libRSF::WriteDataToFile(Config.OutputFile, ANGLE_STATE, Result, true);
+  libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
+  //  libRSF::WriteDataToFile(Config.OutputFile, IMU_STATE, Result, true);
 
-int main(int ArgC, char ** ArgV)
-{
-  google::InitGoogleLogging(*ArgV);
-
-  /** parse command line arguments */
-  libRSF::FactorGraphConfig Config;
-  Config.ReadCommandLineOptions(ArgC, ArgV);
-
-  /** data structure for estimates*/
-  libRSF::StateDataSet Result;
-
-  /** solve the estimation problem */
-  if (CreateGraphAndSolve(Config,Result) != 0)
-  {
-    PRINT_ERROR("Something gone wrong while estimating GNSS position!");
-  }
-  else
-  {
-    /** export position estimate to file */
-    libRSF::WriteDataToFile(Config.OutputFile, POSITION_STATE, Result, false);
-
-    /** export additional estimates */
-    libRSF::WriteDataToFile(Config.OutputFile, ORIENTATION_STATE, Result, true);
-    libRSF::WriteDataToFile(Config.OutputFile, ANGLE_STATE, Result, true);
-
-    /** export timing information */
-    libRSF::WriteDataToFile(Config.OutputFile, SOLVE_TIME_STATE, Result, true);
-  }
+  /** additional debugging output */
+  //  if (Config.GNSS.IsActive)
+  //  {
+  //    libRSF::StateDataSet Error;
+  //    Graph.computeUnweightedError(Config.GNSS.Type, ERROR_STATE, Error);
+  //    libRSF::WriteDataToFile(Config.OutputFile, ERROR_STATE, Error, true);
+  //  }
+  //  if (Config.Ranging.IsActive)
+  //  {
+  //    libRSF::StateDataSet Error;
+  //    Graph.computeUnweightedError(Config.Ranging.Type, ERROR_STATE, Error);
+  //    libRSF::WriteDataToFile(Config.OutputFile, ERROR_STATE, Error, true);
+  //  }
+  //  if (Config.Odom.IsActive)
+  //  {
+  //    libRSF::StateDataSet Error;
+  //    Graph.computeUnweightedError(Config.Odom.Type, ERROR_STATE, Error);
+  //    libRSF::WriteDataToFile(Config.OutputFile, ERROR_STATE, Error, true);
+  //  }
 
   return 0;
 }
-
-#endif // TESTMODE

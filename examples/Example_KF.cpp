@@ -95,7 +95,7 @@ void CreateData (libRSF::SensorDataSet &RangeMeasurements)
 int main(int ArgC, char** ArgV)
 {
   (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   double Time = 0.0, TimeOld = 0.0;
 

@@ -54,8 +54,7 @@ void AddIMU(libRSF::FactorGraph &Graph,
       /** fake a new measurement */
       MeasurementsIMU.back().setTimestamp(TimeNow);
 
-      PRINT_WARNING("There is no IMU measurement between ", TimeOld, " and ", TimeNow,
-                    ". Instead ", TimeIMU, " is used.");
+      PRINT_WARNING("There is no IMU measurement between ", TimeOld, " and ", TimeNow, ". Instead ", TimeIMU, " is used.");
     }
     else
     {
@@ -110,19 +109,19 @@ void AddIMU(libRSF::FactorGraph &Graph,
       }
 
       /** construct noise model */
-      double DeltaTime = Time2 - Time1;
-      double StdDevAcc = Config.IMU.Parameter(0) * sqrt(1/DeltaTime);
-      double StdDevTR = Config.IMU.Parameter(1) * sqrt(1/DeltaTime);
-      double StdDevBiasAcc = Config.IMU.Parameter(2) * sqrt(DeltaTime);
-      double StdDevBiasTR = Config.IMU.Parameter(3) * sqrt(DeltaTime);
-      double StdDevDynamic = Config.IMU.Parameter(4);
+      const double DeltaTime = Time2 - Time1;
+      const double StdDevAcc = Config.IMU.Parameter(0) * sqrt(1 / DeltaTime);
+      const double StdDevTR = Config.IMU.Parameter(1) * sqrt(1 / DeltaTime);
+      const double StdDevBiasAcc = Config.IMU.Parameter(2) * sqrt(DeltaTime);
+      const double StdDevBiasTR = Config.IMU.Parameter(3) * sqrt(DeltaTime);
+      const double StdDevDynamic = Config.IMU.Parameter(4);
 
       libRSF::Vector15 NoiseVect;
       NoiseVect << StdDevAcc, StdDevAcc, StdDevAcc,
-                StdDevDynamic, StdDevDynamic, StdDevDynamic,
-                StdDevTR, StdDevTR, StdDevTR,
-                StdDevBiasAcc, StdDevBiasAcc, StdDevBiasAcc,
-                StdDevBiasTR, StdDevBiasTR, StdDevBiasTR;
+          StdDevDynamic, StdDevDynamic, StdDevDynamic,
+          StdDevTR, StdDevTR, StdDevTR,
+          StdDevBiasAcc, StdDevBiasAcc, StdDevBiasAcc,
+          StdDevBiasTR, StdDevBiasTR, StdDevBiasTR;
 
       libRSF::GaussianDiagonal<15> IMUNoise;
       IMUNoise.setStdDevDiagonal(NoiseVect);
@@ -157,10 +156,7 @@ void AddIMU(libRSF::FactorGraph &Graph,
         RotID1 = libRSF::StateID(ORIENTATION_IMU_STATE, Time1);
         RotID2 = libRSF::StateID(ORIENTATION_IMU_STATE, Time2);
       }
-      Graph.addFactor<libRSF::FactorType::IMUSimple>(PosID1, RotID1, libRSF::StateID(IMU_STATE, Time1),
-          PosID2, RotID2, libRSF::StateID(IMU_STATE, Time2),
-          IMU,
-          IMUNoise);
+      Graph.addFactor<libRSF::FactorType::IMUSimple>(PosID1, RotID1, libRSF::StateID(IMU_STATE, Time1), PosID2, RotID2, libRSF::StateID(IMU_STATE, Time2), IMU, IMUNoise);
       Time1 = Time2;
     }
   }
@@ -168,12 +164,7 @@ void AddIMU(libRSF::FactorGraph &Graph,
   {
     /** create pre-integration */
     const libRSF::Vector6 Bias = Graph.getStateData().getElement(IMU_STATE, TimeOld).getMean().tail(6);
-    libRSF::IMUPreintegrator PreInt(Bias.head(3), Bias.tail(3),
-                                    Config.IMU.Parameter(0),
-                                    Config.IMU.Parameter(1),
-                                    Config.IMU.Parameter(2),
-                                    Config.IMU.Parameter(3),
-                                    TimeOld);
+    libRSF::IMUPreintegrator PreInt(Bias.head(3), Bias.tail(3), Config.IMU.Parameter(0), Config.IMU.Parameter(1), Config.IMU.Parameter(2), Config.IMU.Parameter(3), TimeOld);
     /** pre-integrate measurements */
     for (const libRSF::Data &IMU : MeasurementsIMU)
     {
@@ -213,41 +204,40 @@ void AddClockModel(libRSF::FactorGraph &Graph,
   switch (Config.ClockModel.Type)
   {
     case libRSF::FactorType::ConstDrift1:
-      {
-        /** add drift states if missing */
-        Graph.addStateWithCheck(ClockDriftNameStart, libRSF::DataType::ClockDrift, TimeOld);
-        Graph.addStateWithCheck(ClockDriftNameEnd, libRSF::DataType::ClockDrift, TimeNow);
+    {
+      /** add drift states if missing */
+      Graph.addStateWithCheck(ClockDriftNameStart, libRSF::DataType::ClockDrift, TimeOld);
+      Graph.addStateWithCheck(ClockDriftNameEnd, libRSF::DataType::ClockDrift, TimeNow);
 
-        libRSF::GaussianDiagonal<2> NoiseCCED;
-        NoiseCCED.setStdDevDiagonal(Config.ClockModel.Parameter);
+      libRSF::GaussianDiagonal<2> NoiseCCED;
+      NoiseCCED.setStdDevDiagonal(Config.ClockModel.Parameter);
 
-        Graph.addFactor<libRSF::FactorType::ConstDrift1>(
+      Graph.addFactor<libRSF::FactorType::ConstDrift1>(
           libRSF::StateID(ClockErrorNameStart, TimeOld),
           libRSF::StateID(ClockDriftNameStart, TimeOld),
           libRSF::StateID(ClockErrorNameEnd, TimeNow),
           libRSF::StateID(ClockDriftNameEnd, TimeNow),
           NoiseCCED);
-      }
-      break;
+    }
+    break;
 
     case libRSF::FactorType::ConstVal1:
-      {
-        libRSF::GaussianDiagonal<1> NoiseCCE;
-        NoiseCCE.setStdDevDiagonal(Config.ClockModel.Parameter);
+    {
+      libRSF::GaussianDiagonal<1> NoiseCCE;
+      NoiseCCE.setStdDevDiagonal(Config.ClockModel.Parameter);
 
-        Graph.addFactor<libRSF::FactorType::ConstVal1>(
+      Graph.addFactor<libRSF::FactorType::ConstVal1>(
           libRSF::StateID(ClockErrorNameStart, TimeOld),
           libRSF::StateID(ClockErrorNameEnd, TimeNow),
           NoiseCCE);
-      }
-      break;
+    }
+    break;
 
     default:
       PRINT_ERROR("Wrong clock model type!");
       break;
   }
 }
-
 
 void AddOdometry(libRSF::FactorGraph &Graph,
                  const libRSF::FactorType FactorConfig,
@@ -282,15 +272,14 @@ void AddOdometry(libRSF::FactorGraph &Graph,
       Measurements.getElement(SensorConfig, TimeOdom, 0, Odom);
       MeasurementsOdom.emplace_back(Odom);
 
-      PRINT_WARNING("There is no Odometry measurement between ", TimeOld, " and ", TimeNow,
-                    ". Instead ", TimeOdom, " is used.");
+      PRINT_WARNING("There is no Odometry measurement between ", TimeOld, " and ", TimeNow, ". Instead ", TimeOdom, " is used.");
     }
     else
     {
       /** create fake zero measurement */
       libRSF::Data OdomZero(libRSF::DataType::Odom3, TimeNow);
-      libRSF::Vector6 MeanZero = libRSF::Vector6::Zero();
-      libRSF::Vector6 CovZero = libRSF::Vector6::Ones() * 1e-4;
+      const libRSF::Vector6 MeanZero = libRSF::Vector6::Zero();
+      const libRSF::Vector6 CovZero = libRSF::Vector6::Ones() * 1e-4;
       OdomZero.setMean(MeanZero);
       OdomZero.setCovarianceDiagonal(CovZero);
       MeasurementsOdom.emplace_back(OdomZero);
@@ -306,115 +295,114 @@ void AddOdometry(libRSF::FactorGraph &Graph,
   switch (FactorConfig)
   {
     case libRSF::FactorType::BetweenPose3:
+    {
+      /** integrate odometry to relative pose */
+      libRSF::OdometryIntegrator Integrator;
+      double T1 = TimeOld;
+      double T2 = 0.0;
+      for (const libRSF::Data &Odom : MeasurementsOdom)
       {
-        /** integrate odometry to relative pose */
-        libRSF::OdometryIntegrator Integrator;
-        double T1 = TimeOld;
-        double T2 = 0.0;
-        for (const libRSF::Data &Odom : MeasurementsOdom)
-        {
-          T2 = Odom.getTimestamp();
-          Integrator.addMeasurement(Odom, T2 - T1);
-          T1 = T2;
-        }
-        /** add last measurement again to cover the full period between TimeOld and TimeNow */
-        Integrator.addMeasurement(MeasurementsOdom.back(), TimeNow - T2);
-
-        /** convert to relative measurement */
-        libRSF::Data PoseInt(libRSF::DataType::Pose3, TimeNow);
-        PoseInt.setMean(Integrator.getJointPose());
-
-        libRSF::GaussianFull<6> NoiseInt;
-        NoiseInt.setCovarianceMatrix(Integrator.getJointCovOnManifold());
-
-        /** construct orientation states if missing */
-        Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeOld);
-        Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeNow);
-
-        /** add factor */
-        Graph.addFactor<libRSF::FactorType::BetweenPose3>(libRSF::StateID(POSITION_STATE, TimeOld),
-                                                          libRSF::StateID(ORIENTATION_STATE, TimeOld),
-                                                          libRSF::StateID(POSITION_STATE, TimeNow),
-                                                          libRSF::StateID(ORIENTATION_STATE, TimeNow),
-                                                          PoseInt,
-                                                          NoiseInt);
-
+        T2 = Odom.getTimestamp();
+        Integrator.addMeasurement(Odom, T2 - T1);
+        T1 = T2;
       }
-      break;
+      /** add last measurement again to cover the full period between TimeOld and TimeNow */
+      Integrator.addMeasurement(MeasurementsOdom.back(), TimeNow - T2);
+
+      /** convert to relative measurement */
+      libRSF::Data PoseInt(libRSF::DataType::Pose3, TimeNow);
+      PoseInt.setMean(Integrator.getJointPose());
+
+      libRSF::GaussianFull<6> NoiseInt;
+      NoiseInt.setCovarianceMatrix(Integrator.getJointCovOnManifold());
+
+      /** construct orientation states if missing */
+      Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeOld);
+      Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeNow);
+
+      /** add factor */
+      Graph.addFactor<libRSF::FactorType::BetweenPose3>(libRSF::StateID(POSITION_STATE, TimeOld),
+                                                        libRSF::StateID(ORIENTATION_STATE, TimeOld),
+                                                        libRSF::StateID(POSITION_STATE, TimeNow),
+                                                        libRSF::StateID(ORIENTATION_STATE, TimeNow),
+                                                        PoseInt,
+                                                        NoiseInt);
+    }
+    break;
 
     case libRSF::FactorType::Odom4:
-      {
-        /** average if required */
-        libRSF::Data Odom = libRSF::AverageMeasurement(MeasurementsOdom);
+    {
+      /** average if required */
+      const libRSF::Data Odom = libRSF::AverageMeasurement(MeasurementsOdom);
 
-        /** construct orientation states if missing */
-        Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeOld);
-        Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeNow);
+      /** construct orientation states if missing */
+      Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeOld);
+      Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeNow);
 
-        /** construct error model */
-        libRSF::Vector4 Cov;
-        Cov << Odom.getCovarianceDiagonal().head(3), Odom.getCovarianceDiagonal().tail(1);
-        libRSF::GaussianDiagonal<4> NoiseOdom;
-        NoiseOdom.setCovarianceDiagonal(Cov);
+      /** construct error model */
+      libRSF::Vector4 Cov;
+      Cov << Odom.getCovarianceDiagonal().head(3), Odom.getCovarianceDiagonal().tail(1);
+      libRSF::GaussianDiagonal<4> NoiseOdom;
+      NoiseOdom.setCovarianceDiagonal(Cov);
 
-        /** add factor */
-        Graph.addFactor<libRSF::FactorType::Odom4>(libRSF::StateID(POSITION_STATE, TimeOld),
-                                                   libRSF::StateID(ANGLE_STATE, TimeOld),
-                                                   libRSF::StateID(POSITION_STATE, TimeNow),
-                                                   libRSF::StateID(ANGLE_STATE, TimeNow),
-                                                   Odom,
-                                                   NoiseOdom);
-      }
-      break;
+      /** add factor */
+      Graph.addFactor<libRSF::FactorType::Odom4>(libRSF::StateID(POSITION_STATE, TimeOld),
+                                                 libRSF::StateID(ANGLE_STATE, TimeOld),
+                                                 libRSF::StateID(POSITION_STATE, TimeNow),
+                                                 libRSF::StateID(ANGLE_STATE, TimeNow),
+                                                 Odom,
+                                                 NoiseOdom);
+    }
+    break;
 
     case libRSF::FactorType::Odom4_ECEF:
-      {
-        /** average if required */
-        libRSF::Data Odom = libRSF::AverageMeasurement(MeasurementsOdom);
+    {
+      /** average if required */
+      const libRSF::Data Odom = libRSF::AverageMeasurement(MeasurementsOdom);
 
-        /** construct orientation states if missing */
-        Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeOld);
-        Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeNow);
+      /** construct orientation states if missing */
+      Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeOld);
+      Graph.addStateWithCheck(ANGLE_STATE, libRSF::DataType::Angle, TimeNow);
 
-        /** construct error model */
-        libRSF::Vector4 Cov;
-        Cov << Odom.getCovarianceDiagonal().head(3), Odom.getCovarianceDiagonal().tail(1);
-        libRSF::GaussianDiagonal<4> NoiseOdom;
-        NoiseOdom.setCovarianceDiagonal(Cov);
+      /** construct error model */
+      libRSF::Vector4 Cov;
+      Cov << Odom.getCovarianceDiagonal().head(3), Odom.getCovarianceDiagonal().tail(1);
+      libRSF::GaussianDiagonal<4> NoiseOdom;
+      NoiseOdom.setCovarianceDiagonal(Cov);
 
-        /** add factor */
-        Graph.addFactor<libRSF::FactorType::Odom4_ECEF>(libRSF::StateID(POSITION_STATE, TimeOld),
-                                                        libRSF::StateID(ANGLE_STATE, TimeOld),
-                                                        libRSF::StateID(POSITION_STATE, TimeNow),
-                                                        libRSF::StateID(ANGLE_STATE, TimeNow),
-                                                        Odom,
-                                                        NoiseOdom);
-      }
-      break;
+      /** add factor */
+      Graph.addFactor<libRSF::FactorType::Odom4_ECEF>(libRSF::StateID(POSITION_STATE, TimeOld),
+                                                      libRSF::StateID(ANGLE_STATE, TimeOld),
+                                                      libRSF::StateID(POSITION_STATE, TimeNow),
+                                                      libRSF::StateID(ANGLE_STATE, TimeNow),
+                                                      Odom,
+                                                      NoiseOdom);
+    }
+    break;
 
     case libRSF::FactorType::Odom6:
-      {
-        /** average if required */
-        libRSF::Data Odom = libRSF::AverageMeasurement(MeasurementsOdom);
+    {
+      /** average if required */
+      const libRSF::Data Odom = libRSF::AverageMeasurement(MeasurementsOdom);
 
-        /** construct orientation states if missing */
-        Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeOld);
-        Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeNow);
+      /** construct orientation states if missing */
+      Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeOld);
+      Graph.addStateWithCheck(ORIENTATION_STATE, libRSF::DataType::Quaternion, TimeNow);
 
-        /** construct error model */
-        libRSF::GaussianDiagonal<6> NoiseOdom;
-        NoiseOdom.setCovarianceDiagonal(Odom.getCovarianceDiagonal());
+      /** construct error model */
+      libRSF::GaussianDiagonal<6> NoiseOdom;
+      NoiseOdom.setCovarianceDiagonal(Odom.getCovarianceDiagonal());
 
-        /** add factor */
-        Graph.addFactor<libRSF::FactorType::Odom6>(libRSF::StateID(POSITION_STATE, TimeOld),
-                                                   libRSF::StateID(ORIENTATION_STATE, TimeOld),
-                                                   libRSF::StateID(POSITION_STATE, TimeNow),
-                                                   libRSF::StateID(ORIENTATION_STATE, TimeNow),
-                                                   Odom,
-                                                   NoiseOdom);
-      }
+      /** add factor */
+      Graph.addFactor<libRSF::FactorType::Odom6>(libRSF::StateID(POSITION_STATE, TimeOld),
+                                                 libRSF::StateID(ORIENTATION_STATE, TimeOld),
+                                                 libRSF::StateID(POSITION_STATE, TimeNow),
+                                                 libRSF::StateID(ORIENTATION_STATE, TimeNow),
+                                                 Odom,
+                                                 NoiseOdom);
+    }
 
-      break;
+    break;
 
     default:
       PRINT_ERROR("Wrong odometry type!");
@@ -427,7 +415,7 @@ void AddMotionModel(libRSF::FactorGraph &Graph,
                     const double TimeOld,
                     const double TimeNow)
 {
-  //TODO...
+  // TODO...
 }
 
 void AddPressure(libRSF::FactorGraph &Graph,
@@ -528,9 +516,9 @@ void AddRange2(libRSF::FactorGraph &Graph,
 }
 
 void AddRangeToPoint2(libRSF::FactorGraph &Graph,
-               const libRSF::FactorGraphConfig &Config,
-               const libRSF::Data &Range,
-               const double TimePosition)
+                      const libRSF::FactorGraphConfig &Config,
+                      const libRSF::Data &Range,
+                      const double TimePosition)
 {
   AddRangeGeneric<libRSF::FactorType::RangeToPoint2>(Graph, Config, Range, TimePosition);
 }
@@ -587,7 +575,7 @@ void AddGNSS(libRSF::FactorGraph &Graph,
              const double TimeNow)
 {
   /** get measurements */
-  double TimeOldNext;
+  double TimeOldNext = NAN;
   std::vector<libRSF::Data> MeasurementsGNSS;
   if (Measurements.getTimeAbove(libRSF::DataType::Pseudorange3, TimeOld, TimeOldNext))
   {
@@ -597,23 +585,20 @@ void AddGNSS(libRSF::FactorGraph &Graph,
   if (!MeasurementsGNSS.empty())
   {
     /** loop over measurements */
-    double TimeState;
+    double TimeState = NAN;
     double TimeGNSSOld = MeasurementsGNSS.at(0).getTimestamp() - 1;
-    for (const libRSF::Data& Pseudorange : MeasurementsGNSS)
+    for (const libRSF::Data &Pseudorange : MeasurementsGNSS)
     {
       const double TimeGNSS = Pseudorange.getTimestamp();
 
       /** check if clock error already exists*/
-      if(!Graph.getStateData().checkElement(CLOCK_ERROR_STATE, TimeGNSS))
+      if (!Graph.getStateData().checkElement(CLOCK_ERROR_STATE, TimeGNSS))
       {
         if (Config.ClockModel.IsActive)
         {
-          if(Graph.getStateData().countElements(CLOCK_ERROR_STATE) > 0)
+          if (Graph.getStateData().countElements(CLOCK_ERROR_STATE) > 0)
           {
-            AddClockModel(Graph, Config,
-                          CLOCK_ERROR_STATE,CLOCK_DRIFT_STATE,
-                          CLOCK_ERROR_STATE, CLOCK_DRIFT_STATE,
-                          TimeGNSS);
+            AddClockModel(Graph, Config, CLOCK_ERROR_STATE, CLOCK_DRIFT_STATE, CLOCK_ERROR_STATE, CLOCK_DRIFT_STATE, TimeGNSS);
           }
         }
         else
@@ -629,10 +614,10 @@ void AddGNSS(libRSF::FactorGraph &Graph,
         const std::string InterSysBiasName = addSatSysToName(SYSTEM_BIAS_STATE, static_cast<int>(Pseudorange.getValue(libRSF::DataElement::SatSys)(0)));
 
         /** check if inter-system bias exists*/
-        if(Graph.getStateData().countElements(InterSysBiasName)  < 1)
+        if (Graph.getStateData().countElements(InterSysBiasName) < 1)
         {
           /** create a single ISB state so far in the future, that it will never be marginalized */
-          AddInterSystemBiasModel(Graph,Config,InterSysBiasName,TimeGNSS + 1e20);
+          AddInterSystemBiasModel(Graph, Config, InterSysBiasName, TimeGNSS + 1e20);
         }
       }
 
@@ -695,7 +680,7 @@ void AddPseudorange3(libRSF::FactorGraph &Graph,
   {
     AddPseudorange3Generic<libRSF::FactorType::Pseudorange3>(Graph, Config, Pseudorange, TimePosition);
   }
-  else if(Config.GNSS.Type == libRSF::FactorType::Pseudorange3_Bias)
+  else if (Config.GNSS.Type == libRSF::FactorType::Pseudorange3_Bias)
   {
     AddPseudorange3Generic<libRSF::FactorType::Pseudorange3_Bias>(Graph, Config, Pseudorange, TimePosition);
   }
@@ -719,7 +704,7 @@ bool AddLoopClosures(libRSF::FactorGraph &Graph,
   if (Measurements.checkID(libRSF::DataType::LoopClosure))
   {
     /** get measurements */
-    double TimeOldNext;
+    double TimeOldNext = NAN;
     std::vector<libRSF::Data> Loops;
     if (Measurements.getTimeAbove(libRSF::DataType::LoopClosure, TimeOld, TimeOldNext))
     {
@@ -730,110 +715,34 @@ bool AddLoopClosures(libRSF::FactorGraph &Graph,
       }
     }
 
-    /** loop over measurements */
-    if (Config.LoopClosure.Type == libRSF::FactorType::ConstVal3)
+    /** add loop closure factors */
+    for (const libRSF::Data &Loop : Loops)
     {
-      for(const libRSF::Data &Loop : Loops)
+      if (Loop.getValue(libRSF::DataElement::Similarity)(0) >= Config.LoopClosure.Parameter(0))
       {
-        AddLoopClosure3(Graph, Config, Loop);
+        switch (Config.LoopClosure.Type)
+        {
+          case libRSF::FactorType::ConstVal3:
+            AddLoopClosureGeneric<libRSF::FactorType::ConstVal3, 3>(Graph, Config, Loop);
+            break;
+
+          case libRSF::FactorType::Loop2:
+            AddLoopClosureGeneric<libRSF::FactorType::Loop2, 2>(Graph, Config, Loop);
+            break;
+
+          case libRSF::FactorType::LoopPose2:
+            AddLoopClosureGeneric<libRSF::FactorType::LoopPose2, 3>(Graph, Config, Loop);
+            break;
+
+          default:
+            PRINT_WARNING("No handler for factor type: ", Config.LoopClosure.Type);
+            break;
+        }
+        HasLoop = true;
       }
-      HasLoop = true;
-    }
-    else
-    {
-      PRINT_WARNING("No handler for factor type: ", Config.LoopClosure.Type);
     }
   }
   return HasLoop;
-}
-
-void AddLoopClosure3(libRSF::FactorGraph &Graph,
-                     const libRSF::FactorGraphConfig &Config,
-                     const libRSF::Data &Loop)
-{
-  /** default standard deviation in [m] */
-  const double StdDev = 1.0;
-
-  /** find closest timestamps */
-  double Time1, Time2;
-  Time1 = Loop.getTimestamp();
-  Time2 = Loop.getValue(libRSF::DataElement::TimestampRef)(0);
-  Graph.getStateData().getTimeCloseTo(POSITION_STATE, Time1, Time1);
-  Graph.getStateData().getTimeCloseTo(POSITION_STATE, Time2, Time2);
-
-  /** add factor with right error model */
-  switch(Config.LoopClosure.ErrorModel.Type)
-  {
-    case libRSF::ErrorModelType::Gaussian:
-      {
-        libRSF::GaussianDiagonal<3> Noise;
-        Noise.setStdDevDiagonal(libRSF::Vector3::Ones() * StdDev);
-
-        Graph.addFactor<libRSF::FactorType::ConstVal3>(libRSF::StateID(POSITION_STATE, Time1),
-                                                       libRSF::StateID(POSITION_STATE, Time2),
-                                                       Noise,
-                                                       false);
-      }
-      break;
-    case libRSF::ErrorModelType::GMM:
-      {
-        /** init model */
-        libRSF::GaussianMixture<3> GMM(Config.LoopClosure.ErrorModel.GMM);
-
-        /**Max-Mixture GMM [Olson et al.]*/
-        if(Config.LoopClosure.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxMix)
-        {
-          libRSF::MaxMix3 MixtureNoise(GMM);
-          Graph.addFactor<libRSF::FactorType::ConstVal3>(libRSF::StateID(POSITION_STATE, Time1),
-                                                         libRSF::StateID(POSITION_STATE, Time2),
-                                                         MixtureNoise);
-        }
-        /**Sum-Mixture GMM [Rosen et al.]*/
-        else if(Config.LoopClosure.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::SumMix)
-        {
-          libRSF::SumMix3 MixtureNoise(GMM);
-          Graph.addFactor<libRSF::FactorType::ConstVal3>(libRSF::StateID(POSITION_STATE, Time1),
-                                                         libRSF::StateID(POSITION_STATE, Time2),
-                                                         MixtureNoise);
-        }
-        /**Max-Sum-Mix-Mixture GMM [Pfeifer et al.]*/
-        else if(Config.LoopClosure.ErrorModel.GMM.MixtureType == libRSF::ErrorModelMixtureType::MaxSumMix)
-        {
-          libRSF::MaxSumMix3 MixtureNoise(GMM);
-          Graph.addFactor<libRSF::FactorType::ConstVal3>(libRSF::StateID(POSITION_STATE, Time1),
-                                                         libRSF::StateID(POSITION_STATE, Time2),
-                                                         MixtureNoise);
-        }
-        else
-        {
-          PRINT_ERROR("Wrong mixture type!");
-        }
-      }
-      break;
-
-    case libRSF::ErrorModelType::SC:
-      {
-        libRSF::GaussianDiagonal<3> Noise;
-        Noise.setStdDevDiagonal(libRSF::Vector3::Ones() * StdDev);
-
-        /**add switch variable */
-        Graph.addState(SWITCH_STATE, libRSF::DataType::Switch, Time2);
-
-        /** create Switchable Constraints error model */
-        libRSF::SwitchableConstraints<3, libRSF::GaussianDiagonal<3>> SC(Noise, Config.LoopClosure.ErrorModel.Parameter);
-
-
-        Graph.addFactor<libRSF::FactorType::ConstVal3>(libRSF::StateID(POSITION_STATE, Time1),
-                                                       libRSF::StateID(POSITION_STATE, Time2),
-                                                       libRSF::StateID(SWITCH_STATE, Time2),
-                                                       SC);
-      }
-      break;
-
-    default:
-      PRINT_ERROR("Wrong error type: ", Config.LoopClosure.ErrorModel.Type);
-      break;
-  }
 }
 
 std::string addSatSysToName(const std::string &BaseName, const int SatSys)

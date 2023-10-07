@@ -36,7 +36,7 @@
 int main(int ArgC, char** ArgV)
 {
   (void)ArgC;
-  google::InitGoogleLogging(ArgV[0]);
+  google::InitGoogleLogging(*ArgV);
 
   /** create our own graph object */
   libRSF::FactorGraph SimpleGraph;
