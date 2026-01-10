@@ -118,7 +118,7 @@ namespace libRSF
 
       case DataType::Pose2:
         {
-          ceres::LocalParameterization *LocalParamPose2 = new ceres::ProductParameterization(new ceres::IdentityParameterization(2), AngleLocalParameterization::Create());
+          ceres::Manifold *LocalParamPose2 = new ceres::ProductManifold(new ceres::EuclideanManifold<2>(), AngleLocalParameterization::Create());
           Graph_.AddParameterBlock(StatePointer, StateSize, LocalParamPose2);
           break;
         }
@@ -130,7 +130,7 @@ namespace libRSF
           Pose3 << 0,0,0, 0,0,0,1;
           StateData_.getElement(Name, Timestamp, StateNumber).setMean(Pose3);
 
-          ceres::LocalParameterization *LocalParamPose3 = new ceres::ProductParameterization(new ceres::IdentityParameterization(3), QuaternionLocalParameterization::Create());
+          ceres::Manifold *LocalParamPose3 = new ceres::ProductManifold(new ceres::EuclideanManifold<3>(), QuaternionLocalParameterization::Create());
           Graph_.AddParameterBlock(StatePointer, StateSize, LocalParamPose3);
           break;
         }
@@ -211,9 +211,9 @@ namespace libRSF
 
   void FactorGraph::setSubsetConstant(const string& Name, const double Timestamp, const int Number, const std::vector<int> &ConstantIndex)
   {
-    Graph_.SetParameterization(
+    Graph_.SetManifold(
         StateData_.getElement(Name, Timestamp, Number).getMeanPointer(),
-                               new ceres::SubsetParameterization(
+                               new ceres::SubsetManifold(
             StateData_.getElement(Name, Timestamp, Number).getMean().size(), ConstantIndex));
   }
 
@@ -283,7 +283,7 @@ namespace libRSF
           StateData_.getElement(State.ID, State.Timestamp, State.Number).getMeanPointer());
 
       /** compute size of the marginalized system */
-      MarginalSize += Graph_.ParameterBlockLocalSize(MarginalStates.back());
+      MarginalSize += Graph_.ParameterBlockTangentSize(MarginalStates.back());
     }
 
     /** get connected states */

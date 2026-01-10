@@ -36,7 +36,8 @@
 #include "VectorMath.h"
 #include "Geometry.h"
 
-#include <ceres/local_parameterization.h>
+#include <ceres/manifold.h>
+#include <ceres/ceres.h>
 
 namespace libRSF
 {
@@ -46,15 +47,22 @@ namespace libRSF
     public:
 
       template <typename T>
-      bool operator()(const T* Angle, const T* DeltaAngle, T* AnglePlusDelta) const
+      bool Plus(const T* Angle, const T* DeltaAngle, T* AnglePlusDelta) const
       {
         *AnglePlusDelta = NormalizeAngle(*Angle + *DeltaAngle);
         return true;
       }
 
-      static ceres::LocalParameterization* Create()
+      template <typename T>
+      bool Minus(const T* y, const T* x, T* y_minus_x) const
       {
-        return (new ceres::AutoDiffLocalParameterization<AngleLocalParameterization, 1, 1>);
+        *y_minus_x = NormalizeAngle(*y) - NormalizeAngle(*x);
+        return true;
+      }
+
+      static ceres::Manifold* Create()
+      {
+        return (new ceres::AutoDiffManifold<AngleLocalParameterization, 1, 1>);
       }
   };
 
@@ -64,7 +72,7 @@ namespace libRSF
     public:
 
       template <typename T>
-      bool operator()(const T* Circle, const T* DeltaCircle, T* CirclePlusDelta) const
+      bool Plus(const T* Circle, const T* DeltaCircle, T* CirclePlusDelta) const
       {
         /** real part --> cos() */
         CirclePlusDelta[0] = Circle[0] * cos(DeltaCircle[0]) - Circle[1] * sin(DeltaCircle[0]);
@@ -75,9 +83,17 @@ namespace libRSF
         return true;
       }
 
-      static ceres::LocalParameterization* Create()
+      template <typename T>
+      bool Minus(const T* y, const T* x, T* y_minus_x) const
       {
-        return (new ceres::AutoDiffLocalParameterization<UnitCircleLocalParameterization, 2, 1>);
+        /** extract angle from unit circle representation [cos(θ), sin(θ)] and compute normalized difference */
+        *y_minus_x = NormalizeAngle(ceres::atan2(y[1], y[0]) - ceres::atan2(x[1], x[0]));
+        return true;
+      }
+
+      static ceres::Manifold* Create()
+      {
+        return (new ceres::AutoDiffManifold<UnitCircleLocalParameterization, 2, 1>);
       }
   };
 
@@ -87,7 +103,7 @@ namespace libRSF
     public:
 
       template <typename T>
-      bool operator()(const T* Quaternion, const T* Delta, T* QuaternionPlusDelta) const
+      bool Plus(const T* Quaternion, const T* Delta, T* QuaternionPlusDelta) const
       {
         QuaternionRefConst<T> Q(Quaternion);
         VectorRefConst<T, 3> DeltaVec(Delta);
@@ -114,9 +130,22 @@ namespace libRSF
         return true;
       }
 
-      static ceres::LocalParameterization* Create()
+      template <typename T>
+      bool Minus(const T* y, const T* x, T* y_minus_x) const
       {
-        return (new ceres::AutoDiffLocalParameterization<QuaternionLocalParameterization, 4, 3>);
+        QuaternionRefConst<T> Qy(y);
+        QuaternionRefConst<T> Qx(x);
+        VectorRef<T, 3> DeltaVec(y_minus_x);
+
+        /** compute quaternion difference in tangent space using log map */
+        DeltaVec = QuaternionError<T>(Qy, Qx);
+
+        return true;
+      }
+
+      static ceres::Manifold* Create()
+      {
+        return (new ceres::AutoDiffManifold<QuaternionLocalParameterization, 4, 3>);
       }
   };
 }
