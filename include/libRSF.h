@@ -32,6 +32,8 @@
 #ifndef LIBRSF_H_INCLUDED
 #define LIBRSF_H_INCLUDED
 
+#include <glog/logging.h>
+
 /** most important functions */
 #include "FactorGraph.h"
 #include "FactorGraphConfig.h"
