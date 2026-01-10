@@ -57,11 +57,11 @@ Alternatively, you can install them by your own:
   sudo apt-get install libeigen3-dev
   ```
 
-+ **Ceres** (>= 2.0) and its dependencies
++ **Ceres** (>= 2.1.0) and its dependencies
 
   ```bash
   sudo apt-get install libgoogle-glog-dev
-  sudo apt-get libgflags-dev
+  sudo apt-get install libgflags-dev
   sudo apt-get install libatlas-base-dev
   sudo apt-get install libsuitesparse-dev
   
@@ -85,7 +85,7 @@ Alternatively, you can install them by your own:
 + **GeographicLib**
 
   ```bash
-  sudo apt-get install libgeographic-dev
+  sudo apt-get install libgeographiclib-dev
   ```
 
 The library and its applications can be build following this instructions:
