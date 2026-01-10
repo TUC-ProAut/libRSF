@@ -439,7 +439,7 @@ namespace libRSF
       /** default settings for new ceres::Problems, especially enable_fast_removal = true */
       const ceres::Problem::Options DefaultProblemOptions_ = {ceres::Ownership::TAKE_OWNERSHIP, // cost_function_ownership
                                                               ceres::Ownership::TAKE_OWNERSHIP, // loss_function_ownership
-                                                              ceres::Ownership::TAKE_OWNERSHIP, // local_parameterization_ownership
+                                                              ceres::Ownership::TAKE_OWNERSHIP, // manifold_ownership
                                                               true, // enable_fast_removal
                                                               false, // disable_all_safety_checks
                                                               nullptr, // context
