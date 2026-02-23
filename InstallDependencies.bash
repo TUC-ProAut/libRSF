@@ -33,9 +33,8 @@ readonly linux_version=$(lsb_release -rs)
 if [ "$linux_distributor" != "Ubuntu" ]; then
     echo "ERROR: Unsupported operation system, this script covers only Ubuntu systems!"
     exit 1 # terminate and indicate error
-elif [ "$linux_version" == "16.04" ]; then 
-    # Ubuntu 16.04 does not support C++17 out-of-the-box
-    echo "WARNING: C++17 is required! Please set it up manually!" 
+elif [ "$linux_version" != "22.04" ] && [ "$linux_version" != "24.04" ]; then
+    echo "WARNING: This script is tested only for Ubuntu 22.04 and 24.04!"
 fi
 
 # function to check dependencies
@@ -59,8 +58,16 @@ fi
 # install libRSF dependencies
 install_if_not_exist build-essential
 install_if_not_exist cmake
-install_if_not_exist libgeographic-dev
+install_if_not_exist ninja-build
 install_if_not_exist libyaml-cpp-dev
+install_if_not_exist libeigen3-dev
+
+# GeographicLib package name changed in Ubuntu 24.04
+if [ "$linux_version" == "24.04" ]; then
+  install_if_not_exist libgeographiclib-dev
+else
+  install_if_not_exist libgeographic-dev
+fi
 
 # install ceres dependencies
 install_if_not_exist libgoogle-glog-dev
@@ -68,35 +75,15 @@ install_if_not_exist libgflags-dev
 install_if_not_exist libatlas-base-dev
 install_if_not_exist libsuitesparse-dev
 
-# prepare external dependencies
+# install ceres locally (not yet available as system package on all versions)
 mkdir -p externals/install
-
-# install eigen locally
-if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]; then # Eigen < 3.3.5 is to old for libRSF & Ceres
-  echo "WARNING: Your Eigen version is below 3.3.5, we install it locally!"
-  git submodule update --init externals/eigen
-  cd externals/eigen
-  
-  mkdir -p build && cd build
-  cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
-  make install
-  cd ../../..
-else
-    install_if_not_exist libeigen3-dev
-fi
-
-# install ceres locally
 git submodule update --init externals/ceres-solver
 cd externals/ceres-solver
 
 mkdir -p build && cd build
-if [ "$linux_version" == "16.04" ] || [ "$linux_version" == "18.04" ]; then
-    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF -DEigen3_DIR=../install/share/eigen3/cmake ..
-else
-    cmake -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF  ..
-fi
-make all -j$(getconf _NPROCESSORS_ONLN)
-make install
+cmake -G Ninja -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF -DSUITESPARSE=OFF -DCXSPARSE=OFF ..
+ninja
+ninja install
 cd ../..
 
 # leave externals
