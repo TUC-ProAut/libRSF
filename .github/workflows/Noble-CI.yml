@@ -1,0 +1,84 @@
+name: Noble CI
+on:
+  push:
+    paths-ignore:
+      - 'datasets/**'
+      - 'docs/**'
+      - 'matlab/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README.md'
+  pull_request:
+    paths-ignore:
+      - 'datasets/**'
+      - 'docs/**'
+      - 'matlab/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README.md'
+
+  # enable manual trigger
+  workflow_dispatch:
+
+  # run on first day of the month
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  Build:
+    name: Build libRSF
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: ./InstallDependencies.bash
+        shell: bash
+
+      - name: Configure
+        run: cmake -S . -B build -DLIBRSF_BUILD_TEST=ON
+
+      - name: Build
+        run: cmake --build build -j$(getconf _NPROCESSORS_ONLN)
+
+      - name: Install
+        run: sudo cmake --install build
+
+      - name: Uninstall
+        run: sudo cmake --build build --target uninstall
+
+      - name: Tar build directory
+        run: tar -czf noble-build.tar.gz build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: noble-build
+          path: noble-build.tar.gz
+          if-no-files-found: error
+
+  Test:
+    name: Test libRSF
+    runs-on: ubuntu-24.04
+    needs: [Build]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: noble-build
+
+      - name: Extract build directory
+        run: tar -xzf noble-build.tar.gz
+
+      - name: Install dependencies
+        run: ./InstallDependencies.bash
+        shell: bash
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
