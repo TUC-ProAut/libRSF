@@ -1,6 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
+# Copyright (C) 2026 Tim Pfeifer
 # For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
@@ -19,9 +20,7 @@
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
 # do not compile the main functions of the apps used for testing
-add_definitions(-DTESTMODE)
-# After migration to CMAKE to 3.12.4, we can use the following instead
-#add_compile_definitions(TESTMODE)
+add_compile_definitions(TESTMODE)
 
 # convenience macro to add tests
 macro(package_add_test TESTNAME)
@@ -31,6 +30,7 @@ macro(package_add_test TESTNAME)
     target_link_libraries(${TESTNAME} libRSF gtest_main)
     # add test to ctest, https://cmake.org/cmake/help/v3.10/module/GoogleTest.html for more info
     gtest_discover_tests(${TESTNAME}
+        DISCOVERY_MODE PRE_TEST
         # set a working directory so that tests can find dataset files
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
