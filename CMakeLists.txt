@@ -23,7 +23,7 @@
 # configure project
 ##################################
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
 
 project(libRSF VERSION "2.0.0" LANGUAGES CXX)
 
@@ -43,10 +43,10 @@ option(LIBRSF_BUILD_TEST "If enabled, the tests get build." OFF)
 ##################################
 
 # path for custom find scripts
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 # path for locally installed dependencies
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SOURCE_DIR}/externals/install)
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/externals/install)
 
 # Eigen for vectorized calculations
 find_package(Eigen3 3.3.5 REQUIRED NO_MODULE)
