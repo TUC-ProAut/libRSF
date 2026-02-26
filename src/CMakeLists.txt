@@ -91,9 +91,14 @@ add_library(libRSF STATIC ${SOURCEFILES} ${HEADERFILES})
 # require at least C++ 17
 target_compile_features(libRSF PUBLIC cxx_std_17)
 
+set(LIBRSF_YAML_TARGET yaml-cpp::yaml-cpp)
+if(NOT TARGET yaml-cpp::yaml-cpp)
+  set(LIBRSF_YAML_TARGET yaml-cpp)
+endif()
+
 # to allow shared libraries to link against static libRSF
 set_target_properties(libRSF PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                        CMAKE_CXX_EXTENSIONS OFF)
+                                        CXX_EXTENSIONS OFF)
 
 # set include dir of library depending on current tree (build/install)
 target_include_directories(libRSF
@@ -105,7 +110,7 @@ target_include_directories(libRSF
 )
 
 # set target (libRSF) dependencies
-target_link_libraries(libRSF PUBLIC Threads::Threads Eigen3::Eigen Ceres::ceres yaml-cpp ${GeographicLib_LIBRARIES})
+target_link_libraries(libRSF PUBLIC Threads::Threads Eigen3::Eigen Ceres::ceres ${LIBRSF_YAML_TARGET} GeographicLib::GeographicLib)
 
 # enable all warnings for libRSF (this is just enabled from time to time to check the code quality)
 #target_compile_options(libRSF PUBLIC -Wextra -Wpedantic -Wall -fmax-errors=100 -Wno-unused-parameter)
