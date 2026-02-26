@@ -3,6 +3,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2023 Chair of Automation Technology / TU Chemnitz
+# Copyright (C) 2026 Tim Pfeifer
 # For more information see https://www.tu-chemnitz.de/etit/proaut/self-tuning
 #
 # libRSF is free software: you can redistribute it and/or modify
@@ -20,12 +21,19 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-# This script builds the libRSF
+# This script builds the libRSF using CMake presets
 
 # stop script on any error
 set -e
 
-# build libRSF
-mkdir -p build && cd build
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
-make all -j$(getconf _NPROCESSORS_ONLN)
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  echo "Usage: $0 [preset]"
+  echo "Build libRSF using a CMake preset (default: release)."
+  echo "Available presets: release, debug, ci"
+  exit 0
+fi
+
+preset="${1:-release}"
+
+cmake --preset "${preset}"
+cmake --build --preset "${preset}" -j"$(getconf _NPROCESSORS_ONLN)"

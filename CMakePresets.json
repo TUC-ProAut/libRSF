@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "LIBRSF_BUILD_TEST": "OFF"
+      }
+    },
+    {
+      "name": "debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "LIBRSF_BUILD_TEST": "OFF"
+      }
+    },
+    {
+      "name": "ci",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/ci",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "LIBRSF_BUILD_TEST": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

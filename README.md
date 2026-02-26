@@ -13,14 +13,14 @@ Main features are:
 
 | Platform     | Status  |
 |:------------:|:-------------:|
-| Ubuntu 22.04 | ![Focal Build](https://github.com/TUC-ProAut/libRSF/workflows/Jammy%20CI/badge.svg) |
-| Ubuntu 20.04 | ![Focal Build](https://github.com/TUC-ProAut/libRSF/workflows/Focal%20CI/badge.svg) |
+| Ubuntu 22.04 | ![Jammy CI](https://github.com/TUC-ProAut/libRSF/workflows/Jammy%20CI/badge.svg) |
+| Ubuntu 24.04 | ![Noble CI](https://github.com/TUC-ProAut/libRSF/workflows/Noble%20CI/badge.svg) |
 
 ## Installation
 
 The libRSF is a CMake project that requires the installation of several dependencies.
 For convenience, we provide a simple bash script that installs required packages.
-It is tested **only for Ubuntu 20.04/22.04**:
+It is tested **only for Ubuntu 22.04/24.04**:
 
 ```bash
   git clone https://github.com/TUC-ProAut/libRSF.git
@@ -30,28 +30,13 @@ It is tested **only for Ubuntu 20.04/22.04**:
 
 Alternatively, you can install them by your own:
 
-+ **CMake** (>= 3.5)
++ **CMake** (>= 3.20)
 
   ```bash
   sudo apt-get install cmake
   ```
 
 + **Eigen** (>= 3.3.5)
-
-  **Only for Ubuntu < 20.04**, you have to install a current version of Eigen locally.
-
-  ```bash
-  mkdir -p externals/install
-  git submodule update --init externals/eigen
-  
-  cd externals/eigen
-  mkdir -p build && cd build
-  cmake -DCMAKE_INSTALL_PREFIX=../../install/ ..
-  make install
-  cd ../../..
-  ```
-
-  **For  Ubuntu >= 20.04** you can install Eigen straight-forward.
 
   ```bash
   sudo apt-get install libeigen3-dev
@@ -84,30 +69,43 @@ Alternatively, you can install them by your own:
 
 + **GeographicLib**
 
+  Ubuntu 22.04:
   ```bash
   sudo apt-get install libgeographic-dev
   ```
+  Ubuntu 24.04:
+  ```bash
+  sudo apt-get install libgeographiclib-dev
+  ```
 
-The library and its applications can be build following this instructions:
+The library and its applications can be built with CMake presets:
 
 ```bash
   git clone https://github.com/TUC-ProAut/libRSF.git
   cd libRSF
-  mkdir build && cd build
-  cmake ..
-  make all -j$(getconf _NPROCESSORS_ONLN)
+  bash InstallDependencies.bash
+  cmake --preset release
+  cmake --build --preset release
+```
+
+To build and run tests:
+
+```bash
+  cmake --preset ci
+  cmake --build --preset ci
+  ctest --preset ci
 ```
 
 You can install the libRSF using:
 
 ```bash
-  make install
+  cmake --install build/release
 ```
 
 And remove it using:
 
 ```bash
-  make uninstall
+  cmake --build build/release --target uninstall
 ```
 
 ## Usage
@@ -146,3 +144,4 @@ This library also contains the implementation of [1-3]. Further references will 
 ### License
 
 This work is released under the GNU General Public License version 3.
+See [LICENSE](LICENSE) for details.
