@@ -1,6 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
+# Copyright (C) 2026 Tim Pfeifer
 # For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
@@ -18,20 +19,15 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-#set source files for library
-  set(SOURCEFILES ${SOURCEFILES}
-  error_models/ErrorModel.cpp
-  error_models/Gaussian.cpp
-  error_models/GaussianComponent.cpp
-  error_models/GaussianMixture.cpp
-  error_models/SumMixture.cpp
-  error_models/MaxMixture.cpp
-  error_models/MaxSumMixture.cpp
-  error_models/LossFunction.cpp
-  error_models/DynamicCovarianceEstimation.cpp
-  error_models/SwitchableConstraints.cpp
-  PARENT_SCOPE
-  )
-
-#set include directory
-string(CONCAT INCLUDEDIR ${PROJECT_SOURCE_DIR}/../ "include/error_models/")
+target_sources(libRSF PRIVATE
+  ErrorModel.cpp
+  Gaussian.cpp
+  GaussianComponent.cpp
+  GaussianMixture.cpp
+  SumMixture.cpp
+  MaxMixture.cpp
+  MaxSumMixture.cpp
+  LossFunction.cpp
+  DynamicCovarianceEstimation.cpp
+  SwitchableConstraints.cpp
+)

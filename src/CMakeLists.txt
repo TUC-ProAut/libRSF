@@ -1,6 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
+# Copyright (C) 2026 Tim Pfeifer
 # For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
@@ -18,14 +19,9 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-project(libRSF_library VERSION "2.0.0" LANGUAGES CXX)
-
 ##################################
 # add library files
 ##################################
-
-# Add main header
-list(APPEND HEADERFILES ../include/libRSF.h)
 
 # set source files for library
 set(SOURCEFILES
@@ -62,6 +58,12 @@ set(SOURCEFILES
   NumericalRobust.cpp
   )
 
+# collect header files for IDE visibility
+file(GLOB_RECURSE HEADERFILES "${CMAKE_SOURCE_DIR}/include/*.h")
+
+add_library(libRSF STATIC ${SOURCEFILES} ${HEADERFILES})
+add_library(libRSF::libRSF ALIAS libRSF)
+
 # factors of the graph
 add_subdirectory(factors)
 
@@ -71,23 +73,6 @@ add_subdirectory(error_models)
 # geometric models to represent the relation between states and measurements
 add_subdirectory(geometric_models)
 
-# set include directory
-string(CONCAT INCLUDEDIR ${PROJECT_SOURCE_DIR}/../include/)
-
-# construct path to header files manually to pass them to the project files of an IDE
-list(LENGTH SOURCEFILES LIST_NUMBER_MAX)
-set(LIST_NUMBER 0)
-
-WHILE( LIST_NUMBER  LESS LIST_NUMBER_MAX )
-  list(GET SOURCEFILES ${LIST_NUMBER} LIST_ELEMENT)
-  string(REPLACE "cpp" "h" LIST_ELEMENT ${LIST_ELEMENT})
-  string(CONCAT LIST_ELEMENT ${INCLUDEDIR} ${LIST_ELEMENT})
-  list(APPEND HEADERFILES ${LIST_ELEMENT})
-  MATH( EXPR LIST_NUMBER "${LIST_NUMBER} + 1" )
-ENDWHILE( LIST_NUMBER  LESS LIST_NUMBER_MAX )
-
-add_library(libRSF STATIC ${SOURCEFILES} ${HEADERFILES})
-
 # require at least C++ 17
 target_compile_features(libRSF PUBLIC cxx_std_17)
 
@@ -96,9 +81,7 @@ if(NOT TARGET yaml-cpp::yaml-cpp)
   set(LIBRSF_YAML_TARGET yaml-cpp)
 endif()
 
-# to allow shared libraries to link against static libRSF
-set_target_properties(libRSF PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                        CXX_EXTENSIONS OFF)
+set_target_properties(libRSF PROPERTIES CXX_EXTENSIONS OFF)
 
 # set include dir of library depending on current tree (build/install)
 target_include_directories(libRSF
@@ -112,8 +95,11 @@ target_include_directories(libRSF
 # set target (libRSF) dependencies
 target_link_libraries(libRSF PUBLIC Threads::Threads Eigen3::Eigen Ceres::ceres ${LIBRSF_YAML_TARGET} GeographicLib::GeographicLib)
 
-# enable all warnings for libRSF (this is just enabled from time to time to check the code quality)
-#target_compile_options(libRSF PUBLIC -Wextra -Wpedantic -Wall -fmax-errors=100 -Wno-unused-parameter)
+# optional extra warnings — enable with -DLIBRSF_EXTRA_WARNINGS=ON
+option(LIBRSF_EXTRA_WARNINGS "Enable extra compiler warnings for libRSF" OFF)
+if(LIBRSF_EXTRA_WARNINGS)
+  target_compile_options(libRSF PRIVATE -Wextra -Wpedantic -Wall -fmax-errors=100 -Wno-unused-parameter)
+endif()
 
 ##################################
 # install library
@@ -129,7 +115,7 @@ install(TARGETS libRSF
 )
 
 # copy all header files
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include/libRSF)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
 
 # export to script
 install(EXPORT librsf-targets

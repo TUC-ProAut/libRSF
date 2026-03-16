@@ -1,6 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2020 Chair of Automation Technology / TU Chemnitz
+# Copyright (C) 2026 Tim Pfeifer
 # For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
@@ -18,15 +19,10 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-#set source files for library
-  set(SOURCEFILES ${SOURCEFILES}
-  geometric_models/RelativePoseModel.cpp
-  geometric_models/OdometryModel.cpp
-  geometric_models/OdometryIntegrator.cpp
-  geometric_models/IMUModel.cpp
-  geometric_models/IMUPreintegrator.cpp
-  PARENT_SCOPE
-  )
-
-#set include directory
-string(CONCAT INCLUDEDIR ${PROJECT_SOURCE_DIR}/../ "include/geometric_models/")
+target_sources(libRSF PRIVATE
+  RelativePoseModel.cpp
+  OdometryModel.cpp
+  OdometryIntegrator.cpp
+  IMUModel.cpp
+  IMUPreintegrator.cpp
+)

@@ -1,6 +1,7 @@
 # libRSF - A Robust Sensor Fusion Library
 #
 # Copyright (C) 2018 Chair of Automation Technology / TU Chemnitz
+# Copyright (C) 2026 Tim Pfeifer
 # For more information see https://www.tu-chemnitz.de/etit/proaut/libRSF
 #
 # libRSF is free software: you can redistribute it and/or modify
@@ -18,34 +19,29 @@
 #
 # Author: Tim Pfeifer (tim.pfeifer@etit.tu-chemnitz.de)
 
-#set source files for library
-  set(SOURCEFILES ${SOURCEFILES}
-  factors/BaseFactor.cpp
-  factors/ConstantValueFactor.cpp
-  factors/ConstantDriftFactor.cpp
-  factors/ConstantQuaternionFactor.cpp
-  factors/ConstantPose2Factor.cpp
-  factors/BetweenValueFactor.cpp
-  factors/BetweenPose2Factor.cpp
-  factors/BetweenPose3Factor.cpp
-  factors/BetweenQuaternionFactor.cpp
-  factors/PriorFactor.cpp
-  factors/RangeFactor.cpp
-  factors/RangeToPointFactor.cpp
-  factors/PseudorangeFactor.cpp
-  factors/OdometryFactor2D.cpp
-  factors/OdometryFactor2DDifferential.cpp
-  factors/OdometryFactor3D.cpp
-  factors/IMUFactor.cpp
-  factors/IMUPreintegrationFactor.cpp
-  factors/PressureDifferenceFactor.cpp
-  factors/TrackingFactor.cpp
-  factors/TrackingDetectionFactor.cpp
-  factors/MarginalPrior.cpp
-  factors/PointRegistrationFactor.cpp
-  factors/BearingRangeFactor.cpp
-  PARENT_SCOPE
-  )
-
-#set include directory
-string(CONCAT INCLUDEDIR ${PROJECT_SOURCE_DIR}/../ "include/factors/")
+target_sources(libRSF PRIVATE
+  BaseFactor.cpp
+  ConstantValueFactor.cpp
+  ConstantDriftFactor.cpp
+  ConstantQuaternionFactor.cpp
+  ConstantPose2Factor.cpp
+  BetweenValueFactor.cpp
+  BetweenPose2Factor.cpp
+  BetweenPose3Factor.cpp
+  BetweenQuaternionFactor.cpp
+  PriorFactor.cpp
+  RangeFactor.cpp
+  RangeToPointFactor.cpp
+  PseudorangeFactor.cpp
+  OdometryFactor2D.cpp
+  OdometryFactor2DDifferential.cpp
+  OdometryFactor3D.cpp
+  IMUFactor.cpp
+  IMUPreintegrationFactor.cpp
+  PressureDifferenceFactor.cpp
+  TrackingFactor.cpp
+  TrackingDetectionFactor.cpp
+  MarginalPrior.cpp
+  PointRegistrationFactor.cpp
+  BearingRangeFactor.cpp
+)
