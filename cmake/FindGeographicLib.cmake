@@ -41,10 +41,22 @@ if (NOT GeographicLib_BINARY_DIRS)
   unset (_GeographicLib_TOOL)
 endif ()
 
+# Extract version from GeographicLib/Config.h so that version constraints are enforced
+if(GeographicLib_INCLUDE_DIRS)
+  file(STRINGS "${GeographicLib_INCLUDE_DIRS}/GeographicLib/Config.h"
+    _geo_version_str
+    REGEX "^#define GEOGRAPHICLIB_VERSION_STRING \"[^\"]*\"")
+  if(_geo_version_str)
+    string(REGEX REPLACE ".*\"([^\"]+)\".*" "\\1"
+      GeographicLib_VERSION "${_geo_version_str}")
+  endif()
+  unset(_geo_version_str)
+endif()
+
 include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (GeographicLib DEFAULT_MSG
-  GeographicLib_LIBRARY_DIRS GeographicLib_LIBRARIES
-  GeographicLib_INCLUDE_DIRS)
+find_package_handle_standard_args(GeographicLib
+  REQUIRED_VARS GeographicLib_LIBRARY_DIRS GeographicLib_LIBRARIES GeographicLib_INCLUDE_DIRS
+  VERSION_VAR GeographicLib_VERSION)
 
 if(GeographicLib_FOUND)
   set(GEOGRAPHICLIB_FOUND TRUE)
