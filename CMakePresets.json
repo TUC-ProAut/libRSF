@@ -12,7 +12,8 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "LIBRSF_BUILD_TEST": "OFF"
+        "LIBRSF_BUILD_TEST": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -26,11 +27,11 @@
       }
     },
     {
-      "name": "ci",
+      "name": "test",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/ci",
+      "binaryDir": "${sourceDir}/build/test",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_BUILD_TYPE": "Release",
         "LIBRSF_BUILD_TEST": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
@@ -46,14 +47,14 @@
       "configurePreset": "debug"
     },
     {
-      "name": "ci",
-      "configurePreset": "ci"
+      "name": "test",
+      "configurePreset": "test"
     }
   ],
   "testPresets": [
     {
-      "name": "ci",
-      "configurePreset": "ci",
+      "name": "test",
+      "configurePreset": "test",
       "output": {
         "outputOnFailure": true
       }

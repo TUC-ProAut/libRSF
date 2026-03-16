@@ -38,19 +38,19 @@ jobs:
         shell: bash
 
       - name: Configure
-        run: cmake --preset ci
+        run: cmake --preset test
 
       - name: Build
-        run: cmake --build --preset ci
+        run: cmake --build --preset test
 
       - name: Install
-        run: sudo cmake --install build/ci
+        run: sudo cmake --install build/test
 
       - name: Uninstall
-        run: sudo cmake --build build/ci --target uninstall
+        run: sudo cmake --build build/test --target uninstall
 
       - name: Tar build directory
-        run: tar -czf jammy-build.tar.gz build/ci
+        run: tar -czf jammy-build.tar.gz build/test
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v6
@@ -81,4 +81,4 @@ jobs:
         shell: bash
 
       - name: Test
-        run: ctest --preset ci
+        run: ctest --preset test
