@@ -21,7 +21,8 @@
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "LIBRSF_BUILD_TEST": "OFF"
+        "LIBRSF_BUILD_TEST": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -30,7 +31,8 @@
       "binaryDir": "${sourceDir}/build/ci",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "LIBRSF_BUILD_TEST": "ON"
+        "LIBRSF_BUILD_TEST": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
