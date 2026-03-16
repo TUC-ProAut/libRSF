@@ -38,19 +38,19 @@ jobs:
         shell: bash
 
       - name: Configure
-        run: cmake -S . -B build -DLIBRSF_BUILD_TEST=ON
+        run: cmake --preset ci
 
       - name: Build
-        run: cmake --build build -j$(getconf _NPROCESSORS_ONLN)
+        run: cmake --build --preset ci
 
       - name: Install
-        run: sudo cmake --install build
+        run: sudo cmake --install build/ci
 
       - name: Uninstall
-        run: sudo cmake --build build --target uninstall
+        run: sudo cmake --build build/ci --target uninstall
 
       - name: Tar build directory
-        run: tar -czf jammy-build.tar.gz build
+        run: tar -czf jammy-build.tar.gz build/ci
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -81,4 +81,4 @@ jobs:
         shell: bash
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --preset ci
