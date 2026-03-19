@@ -91,9 +91,9 @@ The library and its applications can be built with CMake presets:
 To build and run tests:
 
 ```bash
-  cmake --preset ci
-  cmake --build --preset ci
-  ctest --preset ci
+  cmake --preset test
+  cmake --build --preset test
+  ctest --preset test
 ```
 
 You can install the libRSF using:
