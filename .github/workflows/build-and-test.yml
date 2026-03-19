@@ -75,6 +75,9 @@ jobs:
       - name: Extract build directory
         run: tar -xzf build.tar.gz
 
+      - name: Install dependencies
+        run: ./InstallDependencies.bash
+
       - name: Install
         run: sudo cmake --install build/test
 
