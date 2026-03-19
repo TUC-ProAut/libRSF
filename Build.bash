@@ -29,7 +29,7 @@ set -e
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo "Usage: $0 [preset]"
   echo "Build libRSF using a CMake preset (default: release)."
-  echo "Available presets: release, debug, ci"
+  echo "Available presets: release, debug, test"
   exit 0
 fi
 
