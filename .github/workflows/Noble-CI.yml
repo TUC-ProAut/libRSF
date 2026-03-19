@@ -50,10 +50,10 @@ jobs:
         run: sudo cmake --build build/test --target uninstall
 
       - name: Tar build directory
-        run: tar -czf noble-build.tar.gz build/test
+        run: tar -czf noble-build.tar.gz build/test externals/install
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: noble-build
           path: noble-build.tar.gz
