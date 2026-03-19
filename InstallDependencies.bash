@@ -76,15 +76,19 @@ install_if_not_exist libatlas-base-dev
 install_if_not_exist libsuitesparse-dev
 
 # install ceres locally (not yet available as system package on all versions)
-mkdir -p externals/install
-git submodule update --init externals/ceres-solver
-cd externals/ceres-solver
+if compgen -G "externals/install/lib/libceres*" > /dev/null 2>&1; then
+  echo "Ceres already installed, skipping build."
+else
+  mkdir -p externals/install
+  git submodule update --init externals/ceres-solver
+  cd externals/ceres-solver
 
-mkdir -p build && cd build
-cmake -G Ninja -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF -DSUITESPARSE=OFF -DCXSPARSE=OFF ..
-ninja
-ninja install
-cd ../..
+  mkdir -p build && cd build
+  cmake -G Ninja -DCMAKE_INSTALL_PREFIX=../../install/ -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DSCHUR_SPECIALIZATIONS=OFF -DSUITESPARSE=OFF -DCXSPARSE=OFF ..
+  ninja
+  ninja install
+  cd ../..
+fi
 
 # leave externals
 cd ..
