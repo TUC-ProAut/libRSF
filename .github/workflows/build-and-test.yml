@@ -1,0 +1,82 @@
+name: Build and Test
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  Build:
+    name: Build
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: ./InstallDependencies.bash
+
+      - name: Configure
+        run: cmake --preset test
+
+      - name: Build
+        run: cmake --build --preset test
+
+      - name: Tar build directory
+        run: tar -czf build.tar.gz build/test externals/install
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-${{ inputs.os }}
+          path: build.tar.gz
+          if-no-files-found: error
+
+  Test:
+    name: Test
+    runs-on: ${{ inputs.os }}
+    needs: [Build]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: build-${{ inputs.os }}
+
+      - name: Extract build directory
+        run: tar -xzf build.tar.gz
+
+      - name: Install dependencies
+        run: ./InstallDependencies.bash
+
+      - name: Test
+        run: ctest --preset test
+
+  Install:
+    name: Install
+    runs-on: ${{ inputs.os }}
+    needs: [Build]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: build-${{ inputs.os }}
+
+      - name: Extract build directory
+        run: tar -xzf build.tar.gz
+
+      - name: Install
+        run: sudo cmake --install build/test
+
+      - name: Uninstall
+        run: sudo cmake --build build/test --target uninstall

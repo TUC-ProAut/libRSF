@@ -13,8 +13,8 @@ Main features are:
 
 | Platform     | Status  |
 |:------------:|:-------------:|
-| Ubuntu 22.04 | ![Jammy CI](https://github.com/TUC-ProAut/libRSF/workflows/Jammy%20CI/badge.svg) |
-| Ubuntu 24.04 | ![Noble CI](https://github.com/TUC-ProAut/libRSF/workflows/Noble%20CI/badge.svg) |
+| Ubuntu 22.04 | ![Jammy CI](https://github.com/TUC-ProAut/libRSF/actions/workflows/Jammy-CI.yml/badge.svg) |
+| Ubuntu 24.04 | ![Noble CI](https://github.com/TUC-ProAut/libRSF/actions/workflows/Noble-CI.yml/badge.svg) |
 
 ## Installation
 
