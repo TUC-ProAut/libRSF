@@ -25,60 +25,7 @@ on:
     - cron: '0 0 1 * *'
 
 jobs:
-  Build:
-    name: Build libRSF
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Install dependencies
-        run: ./InstallDependencies.bash
-        shell: bash
-
-      - name: Configure
-        run: cmake --preset test
-
-      - name: Build
-        run: cmake --build --preset test
-
-      - name: Install
-        run: sudo cmake --install build/test
-
-      - name: Uninstall
-        run: sudo cmake --build build/test --target uninstall
-
-      - name: Tar build directory
-        run: tar -czf noble-build.tar.gz build/test externals/install
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: noble-build
-          path: noble-build.tar.gz
-          if-no-files-found: error
-
-  Test:
-    name: Test libRSF
-    runs-on: ubuntu-24.04
-    needs: [Build]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: noble-build
-
-      - name: Extract build directory
-        run: tar -xzf noble-build.tar.gz
-
-      - name: Install dependencies
-        run: ./InstallDependencies.bash
-        shell: bash
-
-      - name: Test
-        run: ctest --preset test
+  noble:
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      os: ubuntu-24.04
