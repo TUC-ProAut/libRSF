@@ -97,7 +97,7 @@ namespace libRSF
     {
       ConnectedStates.emplace_back(State);
       StateDims.emplace_back(Graph_->ParameterBlockSize(State));
-      StateDimsLocal.emplace_back(Graph_->ParameterBlockLocalSize(State));
+      StateDimsLocal.emplace_back(Graph_->ParameterBlockTangentSize(State));
 
       /** find state info */
       StateInfo Info = States_.at(State);

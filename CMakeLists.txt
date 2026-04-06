@@ -52,7 +52,7 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/externals/install)
 find_package(Eigen3 3.3.5 REQUIRED NO_MODULE)
 
 # Ceres to solve the NLS problem
-find_package(Ceres 2.0 REQUIRED)
+find_package(Ceres 2.1 REQUIRED)
 
 # Simple multi-threading
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
