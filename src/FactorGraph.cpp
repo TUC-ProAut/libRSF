@@ -283,7 +283,7 @@ namespace libRSF
           StateData_.getElement(State.ID, State.Timestamp, State.Number).getMeanPointer());
 
       /** compute size of the marginalized system */
-      MarginalSize += Graph_.ParameterBlockLocalSize(MarginalStates.back());
+      MarginalSize += Graph_.ParameterBlockTangentSize(MarginalStates.back());
     }
 
     /** get connected states */

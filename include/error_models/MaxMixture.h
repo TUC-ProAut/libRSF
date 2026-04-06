@@ -93,7 +93,7 @@ namespace libRSF
                            sqrt(ceres::fmax(-2.0 * T(log(Mixture_.template getLinearPartOfComponent<T>(nComponent, RawError) / Normalization_)), T(1e-10)));/** fmax() is required to handle numeric tolerances */
 
             /** keep only the most likely component */
-            if(ErrorShadow.squaredNorm() < Loglike || ceres::IsNaN(Loglike))
+            if(ErrorShadow.squaredNorm() < Loglike || ceres::isnan(Loglike))
             {
               Loglike = ErrorShadow.squaredNorm();
               ErrorShadowBest = ErrorShadow;
